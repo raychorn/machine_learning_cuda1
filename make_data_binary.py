@@ -86,21 +86,40 @@ if (os.path.exists(data_file) and os.path.isfile(data_file)):
 
     charts_dirname = 'charts'
 
-    iCnt = 0
-    with timer.Timer() as timer0:
-        for chunk_size in range(2,102,1): # len(protocols)-2
-            with timer.Timer() as timer3:
-                protocols_analysis = []
-                for protocol_seg in group_elements(chunk_size,protocols):
-                    m = np.mean(normalize_numbers(protocol_seg), dtype=np.float32)
-                    protocols_analysis.append(m)
-            print('protocols_analysis: {} --> {} in {:.2f} secs'.format(len(protocols_analysis), protocols_analysis[:10], timer3.duration))
+    if (0):
+        iCnt = 0
+        with timer.Timer() as timer0:
+            for chunk_size in range(2,102,1): # len(protocols)-2
+                with timer.Timer() as timer3:
+                    protocols_analysis = []
+                    for protocol_seg in group_elements(chunk_size,protocols):
+                        m = np.mean(normalize_numbers(protocol_seg), dtype=np.float32)
+                        protocols_analysis.append(m)
+                print('protocols_analysis: {} --> {} in {:.2f} secs'.format(len(protocols_analysis), protocols_analysis[:10], timer3.duration))
 
+                with timer.Timer() as timer1:
+                    protocols_freqs = frequency_analysis_of(protocols_analysis)
+
+                ifpath = os.path.join(os.path.dirname(__file__), charts_dirname, 'sx-vpclogss3-filtered-09-25-2021-expanded-protocols-freqs-{}.png'.format(chunk_size))
+                scatter_plot_list(protocols_analysis, freqs=protocols_freqs, title='protocols_analysis', xlabel='mean', ylabel='frequency', image_fpath=ifpath, xlim=None, ylim=None, save_path=None)
+
+                jfpath = os.path.splitext(ifpath)[0] + '.json'
+                with open(jfpath, 'w') as f:
+                    pfreqs = {'{:.2f}'.format(k):v for k,v in protocols_freqs.items()}
+                    json.dump(pfreqs, f)
+
+                assert os.path.exists(ifpath) and os.path.isfile(ifpath), '{} does not exist or is not a file'.format(ifpath)
+            iCnt += 1
+    else:
+        with timer.Timer() as timer0:
             with timer.Timer() as timer1:
-                protocols_freqs = frequency_analysis_of(protocols_analysis)
+                protocols_freqs = frequency_analysis_of(protocols)
 
-            ifpath = os.path.join(os.path.dirname(__file__), charts_dirname, 'sx-vpclogss3-filtered-09-25-2021-expanded-protocols-freqs-{}.png'.format(chunk_size))
-            scatter_plot_list(protocols_analysis, freqs=protocols_freqs, title='protocols_analysis', xlabel='mean', ylabel='frequency', image_fpath=ifpath, xlim=None, ylim=None, save_path=None)
+            print('protocols freq analysis: {} --> {:.2f} secs'.format(len(protocols), timer1.duration))
+
+
+            ifpath = os.path.join(os.path.dirname(__file__), charts_dirname, 'sx-vpclogss3-filtered-09-25-2021-expanded-protocols-freqs-{}.png'.format(0))
+            scatter_plot_list([], freqs=protocols_freqs, title='protocols freqs analysis', xlabel='protocol', ylabel='frequency', image_fpath=ifpath, xlim=None, ylim=None, save_path=None)
 
             jfpath = os.path.splitext(ifpath)[0] + '.json'
             with open(jfpath, 'w') as f:
@@ -108,5 +127,4 @@ if (os.path.exists(data_file) and os.path.isfile(data_file)):
                 json.dump(pfreqs, f)
 
             assert os.path.exists(ifpath) and os.path.isfile(ifpath), '{} does not exist or is not a file'.format(ifpath)
-        iCnt += 1
-    print('Analysis: {} iterations --> {:.2f} secs'.format(iCnt, timer0.duration))
+    print('Analysis: --> {:.2f} secs'.format(timer0.duration))
