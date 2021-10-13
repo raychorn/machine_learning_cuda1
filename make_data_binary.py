@@ -18,11 +18,11 @@ from sympy.utilities.iterables import multiset_permutations
 
 from itertools import zip_longest
 
-sys.path.insert(0, '/run/media/raychorn/BigDisk11/__projects/vyperlogix/private_vyperlogix_lib3')
+sys.path.insert(0, '/mnt/FourTB/__projects/vyperlogix/private_vyperlogix_lib3/')
 
 from vyperlogix.contexts import timer
 
-data_file = '/run/media/raychorn/BigDisk11/data/sx-vpclogss3-filtered-09-25-2021-expanded.csv'
+data_file = '/mnt/FourTB/data/sx-vpclogss3-filtered-09-25-2021-expanded.csv'
 
 
 normalize_numbers = lambda x: [int(i) for i in x if (all([ch.isdigit() for ch in str(i)]))]
@@ -92,11 +92,18 @@ def plot_the_data(freqs, image_fpath=None, title='***', xlabel='***', ylabel='**
     outliers = df[df.percentile < pcentile]
     history = []
     while (pcentile > 0.1) and (len(outliers) > min_num):
-        outliers = df[df.percentile < pcentile]
-        history.append(tuple([len(outliers), pcentile]))
-        pcentile -= 0.1
+        try:
+            pcentile -= 0.1
+            outliers = outliers[outliers.percentile < pcentile]
+            history.append(tuple([len(outliers), pcentile]))
+        except:
+            pass
         if (len(history) > 10):
             del history[0:len(history)-10]
+
+    if (len(outliers) < 1):
+        print('Nothing to plot and nothing was saved.')
+        return
 
     if (export_plot):
         scatter_plot_list([], freqs=d_freqs, title=title, xlabel=xlabel, ylabel=ylabel, image_fpath=image_fpath, xlim=xlim, ylim=ylim, save_path=save_path)
@@ -168,16 +175,31 @@ if (os.path.exists(data_file) and os.path.isfile(data_file)):
             print(protocols_freqs2)
             print('protocols freq analysis (df): {} --> {:.2f} secs'.format(len(protocols_freqs2), timer2.duration))
 
-            numeric_cols = [n for n in df.select_dtypes(include=np.number).columns.tolist() if (not n.startswith('__metadata__.')) and (n not in ['version', 'account-id']) and (not n.startswith('__dataset_index__')) and (not n.startswith('Unnamed'))]
+            sys_col_names = ['version', 'account-id', 'interface-id', '__dataset__', '_id', 'action', 'log-status'] # typically non-data col names
+
+            positional_col_names = ['srcaddr', 'dstaddr']
+            temporal_col_names = ['start', 'end']
+
+            numeric_cols = [n for n in df.select_dtypes(include=np.number).columns.tolist() if (not n.startswith('__metadata__.')) and (n not in sys_col_names) and (not n.startswith('__dataset_index__')) and (not n.startswith('Unnamed'))]
             print(numeric_cols)
+
+            non_numeric_cols = [n for n in list(set(df.columns.tolist()) - set(numeric_cols)) if (not n.startswith('__metadata__.')) and (n not in sys_col_names) and (not n.startswith('__dataset_index__')) and (not n.startswith('Unnamed'))]
+            print(non_numeric_cols)
+
+            d_numeric_cols = dict([tuple([list(item)[-1],list(item)[0]]) for item in enumerate(numeric_cols)])
+            d_numeric_by_colnum = dict([item for item in enumerate(numeric_cols)])
+
+            d_positional_cols = dict([tuple([list(item)[-1],list(item)[0]]) for item in enumerate(positional_col_names)])
+            d_positional_by_colnum = dict([item for item in enumerate(positional_col_names)])
+
+            d_temporal_cols = dict([tuple([list(item)[-1],list(item)[0]]) for item in enumerate(temporal_col_names)])
+            d_temporal_by_colnum = dict([item for item in enumerate(temporal_col_names)])
 
             print('BEGIN: (1) numeric cols permutations')
             with timer.Timer() as timer3:
-                d_numeric_cols = dict([tuple([list(item)[-1],list(item)[0]]) for item in enumerate(numeric_cols)])
-                d_numeric_by_colnum = dict([item for item in enumerate(numeric_cols)])
-                a = np.array(list(d_numeric_cols.values()))
                 permutations = []
                 if (0):
+                    a = np.array(list(d_numeric_cols.values()))
                     for p in multiset_permutations(a):
                         pp = [d_numeric_by_colnum.get(n) for n in p]
                         permutations.append(pp)
@@ -191,17 +213,33 @@ if (os.path.exists(data_file) and os.path.isfile(data_file)):
             print('END!!! (1) numeric cols permutations')
             print('(1) numeric cols permutations: --> {:.2f} secs'.format(timer3.duration))
 
+            def ip_address_analysis(ipaddr):
+                toks = ipaddr.split('.')
+                return '.'.join(toks[0:2])
+
             with timer.Timer() as timer4:
-                for p in permutations:
-                    df_solution = df.pivot_table(index=p, aggfunc='size')
-                    print(df_solution)
-                    xtitle = '+'.join(p)
-                    ifpath = os.path.join(os.path.dirname(__file__), charts_dirname, 'sx-vpclogss3-filtered-09-25-2021-expanded-protocols-freqs-{}.png'.format(xtitle.replace(' ', '_')))
-                    plot_the_data(df_solution, image_fpath=ifpath, title=xtitle, xlabel='***', ylabel='***', xlim=None, ylim=None, save_path=None, export_plot=False)
+                addendum = []
+                for pc in positional_col_names:
+                    new_col_name = '{}_octet_1+2'.format(pc)
+                    df[new_col_name] = df[pc].apply(ip_address_analysis)
+                    addendum.append(new_col_name)
+                for item in addendum:
+                    positional_col_names.append(item)
+                print('BEGIN: positional_col_names')
+                print(positional_col_names)
+                print('END!!! positional_col_names')
+                for pc in positional_col_names:
+                    for p in permutations:
+                        p.insert(0, pc)
+                        df_solution = df.pivot_table(index=p, aggfunc='size')
+                        print(df_solution)
+                        xtitle = '+'.join(p)
+                        ifpath = os.path.join(os.path.dirname(__file__), charts_dirname, 'sx-vpclogss3-filtered-09-25-2021-expanded-freqs_{}.png'.format(xtitle.replace(' ', '_')))
+                        plot_the_data(df_solution, image_fpath=ifpath, title=xtitle, xlabel='***', ylabel='***', xlim=None, ylim=None, save_path=None, export_plot=False)
             print('numeric cols freq analyses: --> {:.2f} secs'.format(timer4.duration))
 
             if (0):
-                ifpath = os.path.join(os.path.dirname(__file__), charts_dirname, 'sx-vpclogss3-filtered-09-25-2021-expanded-protocols-freqs-{}.png'.format(0))
+                ifpath = os.path.join(os.path.dirname(__file__), charts_dirname, 'sx-vpclogss3-filtered-09-25-2021-expanded-freqs_{}.png'.format(0))
                 scatter_plot_list([], freqs=protocols_freqs, title='protocols freqs analysis', xlabel='protocol', ylabel='frequency', image_fpath=ifpath, xlim=None, ylim=None, save_path=None)
 
                 jfpath = os.path.splitext(ifpath)[0] + '.json'
