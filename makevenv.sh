@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VENV=.venv
+VENV=venv
 REQS=./requirements.txt
 
 TARGET_PY="3.9"
@@ -56,15 +56,8 @@ then
             echo "10. Installing pip3"
             GETPIP=$DIR0/get-pip.py
 
-            if [[ ! -f $GETPIP ]]
-            then
-                echo "10.1 Fetching pip3 from bootstrap."
-                wget https://bootstrap.pypa.io/get-pip.py -O $GETPIP
-            fi
-
             if [[ -f $GETPIP ]]
             then
-                echo "10.2 Fetching pip3 from bootstrap."
                 $python39 $GETPIP
                 export PATH=$LOCAL_BIN:$PATH
                 pip3=$(which pip3)
@@ -93,37 +86,18 @@ then
     fi
 fi
 
-virtualenv=$(which virtualenv)
-#virtualenv=/usr/local/bin/virtualenv
+#virtualenv=$(which virtualenv)
+virtualenv=/usr/local/bin/virtualenv
 echo "15. virtualenv is $virtualenv"
 
 if [[ ! -f $virtualenv ]]
 then
-    echo "15.1 virtualenv is missing. pip3:$pip3"
     $pip3 install virtualenv > /dev/null 2>&1
     $pip3 install --upgrade virtualenv > /dev/null 2>&1
 fi
 
 find_python python
-
-pyston="/usr/bin/pyston3.8"
-
-if [[ -f $pyston ]]
-then
-    echo "16. Found $pyston"
-else
-    apt-get install wget -y
-    wget https://github.com/pyston/pyston/releases/download/v2.1/pyston_2.1_20.04.deb
-
-    pyston_deb="$DIR0/pyston_2.1_20.04.deb"
-    if [[ -f $pyston_deb ]]
-    then
-        apt install $pyston_deb -y
-        rm -f $pyston_deb
-    fi
-fi
-
-find_python pyston
+find_python python3.10
 
 #echo ${ARRAY[@]}
 v=$($python39 ./scripts/sort.py "${ARRAY[@]}")
