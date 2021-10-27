@@ -12,9 +12,12 @@ import shutil
 import socket
 import logging
 
+import datetime as dt
 from datetime import datetime
 
 from expandvars import expandvars
+
+from odo import odo
 
 import numpy as np
 import pandas as pd
@@ -195,7 +198,7 @@ projection = {'srcaddr': 1, 'dstaddr': 1, 'srcport': 1, 'dstport': 1, 'protocol'
 
 with timer.Timer() as timer1:
     num_events = db_collection(client, source_db_name, source_coll_name).count_documents({})
-msg = 'num_events: {} in {:.2f} secs'.format(num_events, timer1.duration)
+msg = 'Data read :: num_events: {} in {:.2f} secs'.format(num_events, timer1.duration)
 print(msg)
 logger.info(msg)
 
@@ -234,7 +237,7 @@ def step2(df):
     firstDate = df.start.min()
     lastDate  = df.end.max()
 
-    assert firstDate == lastDate, 'firstDate == lastDate, there must be an error in the data.'
+    assert firstDate != lastDate, 'firstDate == lastDate, there must be an error in the data.'
     
     date = firstDate
     date1 = firstDate
@@ -242,14 +245,13 @@ def step2(df):
     #empty dataframe
     df_d0 = pd.DataFrame()
     while date < lastDate:
-        date1+= datetime.timedelta(minutes=10)
-        if date1.minute == 0:
+        date1 += dt.timedelta(minutes=10)
+        if (date1.minute == 0):
             df_d = df[((df["start"].dt.date == date.date()) & (df["hour"] == date.hour) & ((df["minute"] >= date.minute) & (df["minute"] < 60)))]
         else:
             df_d = df[((df["start"].dt.date == date.date()) & (df["hour"] == date.hour) & ((df["minute"] >= date.minute) & (df["minute"] < date1.minute)))]
         
         df_d = df_d.groupby(["dstport", "date", "hour"],  as_index=False).sum()
-        print(df_d.shape)
         
         #BPP
         df_d["bpp"] = df_d["bytes"]/df_d["packets"] 
@@ -263,13 +265,13 @@ def step2(df):
         
         df_d0 = df_d0.append(df_d, sort=False)
         
-        print(date1)
-        print(date) 
+        print('{} - {}'.format(date, date1))
+
         bin+=1
         if bin > 6:
             bin = 1
-        date += datetime.timedelta(minutes=10)
-    date -= datetime.timedelta(days=1)
+        date += dt.timedelta(minutes=10)
+    date -= dt.timedelta(days=1)
     return df_d0
 
 limit = nlimit = min(1000, num_events)
@@ -286,8 +288,16 @@ else:
 
         step1(df)
         df_d0 = step2(df)
+        print(df_d0.shape)
+        print(df_d0)
 
-    msg = 'num_events: {} in {:.2f} secs'.format(df.size, timer2.duration)
+    msg = 'Step 1+2 :: num_events: {} in {:.2f} secs'.format(df.size, timer2.duration)
+    print(msg)
+    logger.info(msg)
+
+    with timer.Timer() as timer3:
+        odo(df_d0, db_collection(client, dest_db_name, dest_coll_name), create_index=True)
+    msg = 'Write Data :: num_events: {} in {:.2f} secs'.format(df_d0.size, timer3.duration)
     print(msg)
     logger.info(msg)
 
