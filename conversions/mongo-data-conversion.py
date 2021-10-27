@@ -16,6 +16,9 @@ from datetime import datetime
 
 from expandvars import expandvars
 
+import numpy as np
+import pandas as pd
+
 ############################################################################
 from logging.handlers import RotatingFileHandler
 
@@ -215,10 +218,78 @@ def modify_criteria(criteria=None, additional=None):
     items.append(additional)
     return criteria
 
-limit = nlimit = 1000
 
-for doc in docs_generator(db_collection(client, source_db_name, source_coll_name), criteria={}, projection=projection_end, skip=0, limit=limit, nlimit=nlimit):
-    print(doc)
+def step1(df):
+    df['start'] = pd.to_datetime(df['start'],unit='s')
+    df['end'] = pd.to_datetime(df['end'],unit='s')
+    df['hour']   = df.start.dt.hour.astype('uint8')
+    df['minute'] = df.start.dt.minute.astype('uint8')
+    
+    df['second'] = df.start.dt.second.astype('uint8')
+    df['duration'] = df['end'] - df['start']
+    
+    df["date"] = df.start.dt.date
+
+def step2(df):
+    firstDate = df.start.min()
+    lastDate  = df.end.max()
+
+    assert firstDate == lastDate, 'firstDate == lastDate, there must be an error in the data.'
+    
+    date = firstDate
+    date1 = firstDate
+    bin = 1
+    #empty dataframe
+    df_d0 = pd.DataFrame()
+    while date < lastDate:
+        date1+= datetime.timedelta(minutes=10)
+        if date1.minute == 0:
+            df_d = df[((df["start"].dt.date == date.date()) & (df["hour"] == date.hour) & ((df["minute"] >= date.minute) & (df["minute"] < 60)))]
+        else:
+            df_d = df[((df["start"].dt.date == date.date()) & (df["hour"] == date.hour) & ((df["minute"] >= date.minute) & (df["minute"] < date1.minute)))]
+        
+        df_d = df_d.groupby(["dstport", "date", "hour"],  as_index=False).sum()
+        print(df_d.shape)
+        
+        #BPP
+        df_d["bpp"] = df_d["bytes"]/df_d["packets"] 
+        df_d["bpp_norm"] =  np.log(df_d['bpp'])
+        df_d["bpp_zscore+log"] = (df_d["bpp_norm"] - df_d["bpp_norm"].mean()) / df_d["bpp_norm"].std()   
+        
+        #MAKING BINS 
+        df_d[["date", "hour"]] = df_d[["date", "hour"]].astype(str)
+        df_d["bin"] = df_d["date"] +" h-"+ df_d["hour"] + " b-" + str(bin)
+        
+        
+        df_d0 = df_d0.append(df_d, sort=False)
+        
+        print(date1)
+        print(date) 
+        bin+=1
+        if bin > 6:
+            bin = 1
+        date += datetime.timedelta(minutes=10)
+    date -= datetime.timedelta(days=1)
+    return df_d0
+
+limit = nlimit = min(1000, num_events)
+
+if (0):
+    for doc in docs_generator(db_collection(client, source_db_name, source_coll_name), criteria={}, projection=projection_end, skip=0, limit=limit, nlimit=nlimit):
+        print(doc)
+else:
+    projection = {'start': 1, 'end': -1, 'dstport': 1, 'bytes': 1, 'packets': 1}
+
+    with timer.Timer() as timer2:
+        df =  pd.DataFrame(list(docs_generator(db_collection(client, source_db_name, source_coll_name), criteria={}, projection=projection, skip=0, limit=limit, nlimit=nlimit)))
+        print(df.shape)
+
+        step1(df)
+        df_d0 = step2(df)
+
+    msg = 'num_events: {} in {:.2f} secs'.format(df.size, timer2.duration)
+    print(msg)
+    logger.info(msg)
 
 logger.info('Done.')
 
