@@ -15,9 +15,9 @@ import logging
 import datetime as dt
 from datetime import datetime
 
-from expandvars import expandvars
+from itertools import chain
 
-from odo import odo
+from expandvars import expandvars
 
 import numpy as np
 import pandas as pd
@@ -265,7 +265,7 @@ def step2(df):
         
         df_d0 = df_d0.append(df_d, sort=False)
         
-        print('{} - {}'.format(date, date1))
+        #print('{} - {}'.format(date, date1))
 
         bin+=1
         if bin > 6:
@@ -274,7 +274,34 @@ def step2(df):
     date -= dt.timedelta(days=1)
     return df_d0
 
-limit = nlimit = min(1000, num_events)
+def write_df_to_mongoDB( df, db_collection, chunk_size = 100):
+    db_collection.delete_many({})
+    my_list = df.to_dict('records')
+    l =  len(my_list)
+    ran = range(l)
+    steps = ran[chunk_size::chunk_size]
+
+    i = 0
+    t_chunks = 0
+    for j in steps:
+        chunk = my_list[i:j]
+        print('{}:{} -> {}'.format(i, j, len(chunk)))
+        db_collection.insert_many(chunk)
+        i = j
+        t_chunks += len(chunk)
+
+    print('{}:{} -> {}'.format(i, l, len(my_list[i:])))
+    if (i < l):
+        chunk = my_list[i:]
+        print('{}:{} -> {}'.format(i, len(my_list), len(chunk)))
+        db_collection.insert_many(chunk)
+        t_chunks += len(chunk)
+
+    assert t_chunks == l, 't_chunks != l, there must be an error in the process of committing the data to the db.'
+    print('Done, {} total, {} expected'.format(t_chunks, l))
+    return
+
+limit = nlimit = max(1000, num_events)
 
 if (0):
     for doc in docs_generator(db_collection(client, source_db_name, source_coll_name), criteria={}, projection=projection_end, skip=0, limit=limit, nlimit=nlimit):
@@ -296,7 +323,7 @@ else:
     logger.info(msg)
 
     with timer.Timer() as timer3:
-        odo(df_d0, db_collection(client, dest_db_name, dest_coll_name), create_index=True)
+        write_df_to_mongoDB( df_d0, db_collection(client, dest_db_name, dest_coll_name), chunk_size = 100)
     msg = 'Write Data :: num_events: {} in {:.2f} secs'.format(df_d0.size, timer3.duration)
     print(msg)
     logger.info(msg)
