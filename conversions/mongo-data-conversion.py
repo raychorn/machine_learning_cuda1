@@ -22,6 +22,8 @@ from expandvars import expandvars
 import numpy as np
 import pandas as pd
 
+from binner import processor as bin_processor
+
 ############################################################################
 from logging.handlers import RotatingFileHandler
 
@@ -221,17 +223,33 @@ def modify_criteria(criteria=None, additional=None):
     items.append(additional)
     return criteria
 
+__stats__ = {}
 
-def step1(df):
-    df['start'] = pd.to_datetime(df['start'],unit='s')
-    df['end'] = pd.to_datetime(df['end'],unit='s')
-    df['hour']   = df.start.dt.hour.astype('uint8')
-    df['minute'] = df.start.dt.minute.astype('uint8')
+__num_events = 0
+@bin_processor(bin_size=600, chunk_size=100, stats=__stats__, db=db_collection(client, dest_db_name, dest_coll_name), logger=logger)
+def step2_binner(data, bin_count, bin_size, stats={}, db=None, chunk_size=-1, logger=None):
+    if (logger):
+        logger.info('step2_binner :: bin size: {}'.format(len(data)))
+    df_d = pd.DataFrame(data)
+
+    df_d = df_d.groupby(["dstport", "date", "hour"],  as_index=False).sum()
     
-    df['second'] = df.start.dt.second.astype('uint8')
-    df['duration'] = df['end'] - df['start']
+    #BPP
+    df_d["bpp"] = df_d["bytes"]/df_d["packets"] 
+    df_d["bpp_norm"] =  np.log(df_d['bpp'])
+    df_d["bpp_zscore+log"] = (df_d["bpp_norm"] - df_d["bpp_norm"].mean()) / df_d["bpp_norm"].std()   
     
-    df["date"] = df.start.dt.date
+    df_d[["date", "hour"]] = df_d[["date", "hour"]].astype(str)
+    dd = df_d["date"]
+    hh = df_d["hour"]
+    bin_id = dd +" h-"+ hh + " b-" + str(bin_count)
+    df_d["bin"] = bin_id
+    
+    if (stats):
+        kk = '{}:{}'.format(dd, hh)
+        stats[kk] = stats.get(kk, 0) + 1
+
+    write_df_to_mongoDB( df_d, db, chunk_size=chunk_size, logger=logger)
 
 def step2(df):
     firstDate = df.start.min()
@@ -241,15 +259,19 @@ def step2(df):
     
     date = firstDate
     date1 = firstDate
-    bin = 1
+    _bin = 1
     #empty dataframe
-    df_d0 = pd.DataFrame()
+    no_delta = dt.timedelta(minutes=0)
     while date < lastDate:
         date1 += dt.timedelta(minutes=10)
         if (date1.minute == 0):
             df_d = df[((df["start"].dt.date == date.date()) & (df["hour"] == date.hour) & ((df["minute"] >= date.minute) & (df["minute"] < 60)))]
         else:
             df_d = df[((df["start"].dt.date == date.date()) & (df["hour"] == date.hour) & ((df["minute"] >= date.minute) & (df["minute"] < date1.minute)))]
+
+        msg = '{}'.format(len(df_d))
+        print(msg)
+        logger.info(msg)
         
         df_d = df_d.groupby(["dstport", "date", "hour"],  as_index=False).sum()
         
@@ -260,21 +282,25 @@ def step2(df):
         
         #MAKING BINS 
         df_d[["date", "hour"]] = df_d[["date", "hour"]].astype(str)
-        df_d["bin"] = df_d["date"] +" h-"+ df_d["hour"] + " b-" + str(bin)
+        df_d["bin"] = df_d["date"] +" h-"+ df_d["hour"] + " b-" + str(_bin)
         
+        try:
+            df_d0 = step2_binner(df_d.to_dict(), date + no_delta, date1 + no_delta)
+        except Exception as e:
+            logger.error("Error in step2_binner", exc_info=True)
         
-        df_d0 = df_d0.append(df_d, sort=False)
-        
-        #print('{} - {}'.format(date, date1))
+        msg = '{} :: {} - {}'.format(_bin, date, date1)
+        print(msg)
+        logger.info(msg)
 
-        bin+=1
-        if bin > 6:
-            bin = 1
+        _bin+=1
+        if _bin > 6:
+            _bin = 1
         date += dt.timedelta(minutes=10)
     date -= dt.timedelta(days=1)
     return df_d0
 
-def write_df_to_mongoDB( df, db_collection, chunk_size = 100):
+def write_df_to_mongoDB( df, db_collection, chunk_size=100, logger=None):
     db_collection.delete_many({})
     my_list = df.to_dict('records')
     l =  len(my_list)
@@ -285,49 +311,60 @@ def write_df_to_mongoDB( df, db_collection, chunk_size = 100):
     t_chunks = 0
     for j in steps:
         chunk = my_list[i:j]
-        print('{}:{} -> {}'.format(i, j, len(chunk)))
+        msg = '{}:{} -> {}'.format(i, j, len(chunk))
+        if (logger):
+            logger.info(msg)
+        print(msg)
         db_collection.insert_many(chunk)
         i = j
         t_chunks += len(chunk)
 
-    print('{}:{} -> {}'.format(i, l, len(my_list[i:])))
+    msg = '{}:{} -> {}'.format(i, l, len(my_list[i:]))
+    if (logger):
+        logger.info(msg)
+    print(msg)
     if (i < l):
         chunk = my_list[i:]
-        print('{}:{} -> {}'.format(i, len(my_list), len(chunk)))
+        msg = '{}:{} -> {}'.format(i, len(my_list), len(chunk))
+        if (logger):
+            logger.info(msg)
+        print(msg)
         db_collection.insert_many(chunk)
         t_chunks += len(chunk)
 
     assert t_chunks == l, 't_chunks != l, there must be an error in the process of committing the data to the db.'
-    print('Done, {} total, {} expected'.format(t_chunks, l))
+    msg = 'Done, {} total, {} expected'.format(t_chunks, l)
+    if (logger):
+        logger.info(msg)
+    print(msg)
     return
 
-limit = nlimit = max(1000, num_events)
+limit = nlimit = min(100000, num_events)
 
 if (0):
     for doc in docs_generator(db_collection(client, source_db_name, source_coll_name), criteria={}, projection=projection_end, skip=0, limit=limit, nlimit=nlimit):
         print(doc)
 else:
-    projection = {'start': 1, 'end': -1, 'dstport': 1, 'bytes': 1, 'packets': 1}
+    __sort = {'start': 1}
+    projection = {'start': 1, 'end': 1, 'dstport': 1, 'bytes': 1, 'packets': 1}
 
     with timer.Timer() as timer2:
-        df =  pd.DataFrame(list(docs_generator(db_collection(client, source_db_name, source_coll_name), criteria={}, projection=projection, skip=0, limit=limit, nlimit=nlimit)))
-        print(df.shape)
+        try:
+            for doc in docs_generator(db_collection(client, source_db_name, source_coll_name), sort=__sort, criteria={}, projection=projection, skip=0, limit=limit, nlimit=nlimit, logger=logger):
+                step2_binner(doc_cleaner(doc))
+        except Exception as e:
+            logger.error("Error in step2_binner", exc_info=True)
 
-        step1(df)
-        df_d0 = step2(df)
-        print(df_d0.shape)
-        print(df_d0)
-
-    msg = 'Step 1+2 :: num_events: {} in {:.2f} secs'.format(df.size, timer2.duration)
+    msg = 'Step 1+2 :: num_events: {} of {} in {:.2f} secs'.format(__num_events, num_events, timer2.duration)
     print(msg)
     logger.info(msg)
 
-    with timer.Timer() as timer3:
-        write_df_to_mongoDB( df_d0, db_collection(client, dest_db_name, dest_coll_name), chunk_size = 100)
-    msg = 'Write Data :: num_events: {} in {:.2f} secs'.format(df_d0.size, timer3.duration)
-    print(msg)
-    logger.info(msg)
-
+    if (__stats__):
+        logger.info('BEGIN: __stats__')
+        for k,v in __stats__.items():
+            logger.info('{}:{}'.format(k,v))
+        logger.info('END!!! __stats__')
+            
 logger.info('Done.')
 
 sys.exit()
