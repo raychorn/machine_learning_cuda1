@@ -230,6 +230,8 @@ __num_events = 0
 def step2_binner(data, bin_count, bin_size, stats={}, db=None, chunk_size=-1, logger=None):
     if (logger):
         logger.info('step2_binner :: bin size: {}'.format(len(data)))
+    start_date = data[0]['start']
+    end_date = data[-1]['end']
     df_d = pd.DataFrame(data)
 
     df_d = df_d.groupby(["dstport", "date", "hour"],  as_index=False).sum()
@@ -244,6 +246,8 @@ def step2_binner(data, bin_count, bin_size, stats={}, db=None, chunk_size=-1, lo
     hh = df_d["hour"]
     bin_id = dd +" h-"+ hh + " b-" + str(bin_count)
     df_d["bin"] = bin_id
+    df_d["start"] = start_date
+    df_d["end"] = end_date
     
     if (stats):
         kk = '{}:{}'.format(dd, hh)
@@ -339,7 +343,7 @@ def write_df_to_mongoDB( df, db_collection, chunk_size=100, logger=None):
     print(msg)
     return
 
-limit = nlimit = min(100000, num_events)
+limit = nlimit = max(100000, num_events)
 
 if (0):
     for doc in docs_generator(db_collection(client, source_db_name, source_coll_name), criteria={}, projection=projection_end, skip=0, limit=limit, nlimit=nlimit):
