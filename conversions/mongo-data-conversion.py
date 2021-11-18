@@ -258,7 +258,7 @@ def step2_binner(data, bin_count, bin_size, stats={}, db=None, chunk_size=-1, lo
         kk = '{}:{}'.format(dd[0], hh[0])
         b_stats = stats.get(kk, {})
         b_stats['bin_count'] = b_stats.get('bin_count', 0) + 1
-        b_stats['bin_size'] = b_stats.get('bin_size', 0) + df_d.size
+        b_stats['bin_size'] = b_stats.get('bin_size', 0) + int(df_d.size)
         stats[kk] = b_stats
 
     write_df_to_mongoDB( df_d, db, chunk_size=chunk_size, logger=logger)
@@ -359,6 +359,18 @@ with timer.Timer() as timer2:
     try:
         for doc in docs_generator(db_collection(client, source_db_name, source_coll_name), sort=__sort, criteria={}, projection=projection, skip=0, limit=limit, nlimit=nlimit, logger=logger):
             step2_binner(doc_cleaner(doc))
+
+            if (isinstance(__stats__, dict)):
+                stats_coll_name = dest_coll_name + '_stats'
+                stats_coll = db_collection(client, dest_db_name, stats_coll_name)
+                stats_coll.delete_many({})
+                
+                stats_coll.insert_one(__stats__)
+
+                logger.info('BEGIN: __stats__')
+                for k,v in __stats__.items():
+                    logger.info('{}:{}'.format(k,v))
+                logger.info('END!!! __stats__')
     except Exception as e:
         logger.error("Error in step2_binner", exc_info=True)
 
@@ -366,18 +378,6 @@ msg = 'Step 1+2 :: num_events: {} of {} in {:.2f} secs'.format(__num_events, num
 print(msg)
 logger.info(msg)
 
-if (isinstance(__stats__, dict)):
-    stats_coll_name = dest_coll_name + '_stats'
-    stats_coll = db_collection(client, dest_db_name, stats_coll_name)
-    stats_coll.delete_many({})
-    
-    stats_coll.insert_one(__stats__)
-
-    logger.info('BEGIN: __stats__')
-    for k,v in __stats__.items():
-        logger.info('{}:{}'.format(k,v))
-    logger.info('END!!! __stats__')
-            
 logger.info('Done.')
 
 sys.exit()
