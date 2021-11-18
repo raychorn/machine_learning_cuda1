@@ -256,7 +256,10 @@ def step2_binner(data, bin_count, bin_size, stats={}, db=None, chunk_size=-1, lo
     
     if (isinstance(stats, dict)):
         kk = '{}:{}'.format(dd[0], hh[0])
-        stats[kk] = stats.get(kk, 0) + 1
+        b_stats = stats.get(kk, {})
+        b_stats['bin_count'] = b_stats.get('bin_count', 0) + 1
+        b_stats['bin_size'] = b_stats.get('bin_size', 0) + df_d.size
+        stats[kk] = b_stats
 
     write_df_to_mongoDB( df_d, db, chunk_size=chunk_size, logger=logger)
 
