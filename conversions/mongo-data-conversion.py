@@ -361,22 +361,30 @@ with timer.Timer() as timer2:
             step2_binner(doc_cleaner(doc))
 
             if (isinstance(__stats__, dict)):
-                stats_coll_name = dest_coll_name + '_stats'
-                stats_coll = db_collection(client, dest_db_name, stats_coll_name)
-                stats_coll.delete_many({})
-                
-                stats_coll.insert_one(__stats__)
+                _fpath = os.path.dirname(__file__)
+                json_filename = '{}.json'.format(os.path.splitext(os.path.basename(_fpath))[0])
 
-                logger.info('BEGIN: __stats__')
-                for k,v in __stats__.items():
-                    logger.info('{}:{}'.format(k,v))
-                logger.info('END!!! __stats__')
+                with open(json_filename, "w") as json_data_file:
+                    json.dump(__stats__, json_data_file, indent=4, sort_keys=True)
+                    
     except Exception as e:
         logger.error("Error in step2_binner", exc_info=True)
 
 msg = 'Step 1+2 :: num_events: {} of {} in {:.2f} secs'.format(__num_events, num_events, timer2.duration)
 print(msg)
 logger.info(msg)
+
+if (isinstance(__stats__, dict)):
+    stats_coll_name = dest_coll_name + '_stats'
+    stats_coll = db_collection(client, dest_db_name, stats_coll_name)
+    stats_coll.delete_many({}) # this is intended.
+    
+    stats_coll.insert_one(__stats__)
+
+    logger.info('BEGIN: __stats__')
+    for k,v in __stats__.items():
+        logger.info('{}:{}'.format(k,v))
+    logger.info('END!!! __stats__')
 
 logger.info('Done.')
 
