@@ -255,7 +255,7 @@ def step2_binner(data, bin_count, bin_size, stats={}, db=None, chunk_size=-1, lo
     df_d["end"] = end_date
     
     if (isinstance(stats, dict)):
-        kk = '{}:{}'.format(dd, hh)
+        kk = '{}:{}'.format(dd[0], hh[0])
         stats[kk] = stats.get(kk, 0) + 1
 
     write_df_to_mongoDB( df_d, db, chunk_size=chunk_size, logger=logger)
