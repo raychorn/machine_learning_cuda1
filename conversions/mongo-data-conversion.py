@@ -192,7 +192,8 @@ except Exception:
 
 logger.info(str(client))
 
-db_collection = lambda cl,n,c:cl.get_database(n).get_collection(c)
+db = lambda cl,n:cl.get_database(n)
+db_collection = lambda cl,n,c:db(cl,n).get_collection(c)
 
 criteria = {'$and': [{'action': {'$ne': 'REJECT'}}, {'srcaddr': {'$ne': "-"}, 'dstaddr': {'$ne': "-"}}, {'srcport': {'$ne': "0"}, 'dstport': {'$ne': "0"}}]}
 
@@ -262,55 +263,9 @@ def step2_binner(data, bin_count, bin_size, stats={}, db=None, chunk_size=-1, lo
         stats[kk] = b_stats
 
     write_df_to_mongoDB( df_d, db, chunk_size=chunk_size, logger=logger)
-
-def step2(df):
-    firstDate = df.start.min()
-    lastDate  = df.end.max()
-
-    assert firstDate != lastDate, 'firstDate == lastDate, there must be an error in the data.'
-    
-    date = firstDate
-    date1 = firstDate
-    _bin = 1
-    #empty dataframe
-    no_delta = dt.timedelta(minutes=0)
-    while date < lastDate:
-        date1 += dt.timedelta(minutes=10)
-        if (date1.minute == 0):
-            df_d = df[((df["start"].dt.date == date.date()) & (df["hour"] == date.hour) & ((df["minute"] >= date.minute) & (df["minute"] < 60)))]
-        else:
-            df_d = df[((df["start"].dt.date == date.date()) & (df["hour"] == date.hour) & ((df["minute"] >= date.minute) & (df["minute"] < date1.minute)))]
-
-        msg = '{}'.format(len(df_d))
-        print(msg)
-        logger.info(msg)
-        
-        df_d = df_d.groupby(["dstport", "date", "hour"],  as_index=False).sum()
-        
-        #BPP
-        df_d["bpp"] = df_d["bytes"]/df_d["packets"] 
-        df_d["bpp_norm"] =  np.log(df_d['bpp'])
-        df_d["bpp_zscore+log"] = (df_d["bpp_norm"] - df_d["bpp_norm"].mean()) / df_d["bpp_norm"].std()   
-        
-        #MAKING BINS 
-        df_d[["date", "hour"]] = df_d[["date", "hour"]].astype(str)
-        df_d["bin"] = df_d["date"] +" h-"+ df_d["hour"] + " b-" + str(_bin)
-        
-        try:
-            df_d0 = step2_binner(df_d.to_dict(), date + no_delta, date1 + no_delta)
-        except Exception as e:
-            logger.error("Error in step2_binner", exc_info=True)
-        
-        msg = '{} :: {} - {}'.format(_bin, date, date1)
-        print(msg)
-        logger.info(msg)
-
-        _bin+=1
-        if _bin > 6:
-            _bin = 1
-        date += dt.timedelta(minutes=10)
-    date -= dt.timedelta(days=1)
-    return df_d0
+    msg = 'step2_binner :: binned: {}:{}'.format(dd[0], hh[0])
+    logger.info(msg)
+    print(msg)
 
 def write_df_to_mongoDB( df, db_collection, chunk_size=100, logger=None):
     my_list = df.to_dict('records')
@@ -357,12 +312,26 @@ projection = {'start': 1, 'end': 1, 'dstport': 1, 'bytes': 1, 'packets': 1}
 
 with timer.Timer() as timer2:
     try:
-        for doc in docs_generator(db_collection(client, source_db_name, source_coll_name), sort=__sort, criteria={}, projection=projection, skip=0, limit=limit, nlimit=nlimit, logger=logger):
+        _fpath = os.path.dirname(__file__)
+        checkpoint_filename = '{}{}{}.chkpoint'.format(_fpath, os.sep, '__processing__')
+        
+        doc_ids = []
+        for doc in docs_generator(db_collection(client, source_db_name, source_coll_name), sort=__sort, criteria={}, projection=projection, skip=0, limit=limit, nlimit=nlimit, maxTimeMS=12*60*60*1000, logger=logger):
+            _id = doc.get('_id', None)
+            assert _id, '_id is None'
+            doc_ids.append(_id)
+        assert len(doc_ids) == num_events, 'len(doc_ids) != num_events, there must be an error in the process of committing the data to the db.'
+        coll = db_collection(client, source_db_name, source_coll_name)
+        for i,_id in enumerate(doc_ids):
+            doc = coll.find_one({'_id': _id})
+            with open(checkpoint_filename, "w") as checkpoint_file:
+                __checkpoint__ = {'_id': _id, 'i': i, 'num_events': num_events}
+                json.dump(__checkpoint__, checkpoint_file, indent=4, sort_keys=True)
             step2_binner(doc_cleaner(doc))
 
             if (isinstance(__stats__, dict)):
                 _fpath = os.path.dirname(__file__)
-                json_filename = '{}.json'.format(os.path.splitext(os.path.basename(_fpath))[0])
+                json_filename = '{}{}{}.json'.format(_fpath, os.sep, '__stats__')
 
                 with open(json_filename, "w") as json_data_file:
                     json.dump(__stats__, json_data_file, indent=4, sort_keys=True)
