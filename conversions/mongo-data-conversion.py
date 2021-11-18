@@ -225,6 +225,9 @@ def modify_criteria(criteria=None, additional=None):
 
 __stats__ = {}
 
+dest_coll = db_collection(client, dest_db_name, dest_coll_name)
+dest_coll.delete_many({})
+
 __num_events = 0
 @bin_processor(bin_size=600, chunk_size=100, stats=__stats__, db=db_collection(client, dest_db_name, dest_coll_name), logger=logger)
 def step2_binner(data, bin_count, bin_size, stats={}, db=None, chunk_size=-1, logger=None):
@@ -234,6 +237,8 @@ def step2_binner(data, bin_count, bin_size, stats={}, db=None, chunk_size=-1, lo
     end_date = data[-1]['end']
     df_d = pd.DataFrame(data)
 
+    df_d["date"] = start_date.date()
+    df_d["hour"] = start_date.hour
     df_d = df_d.groupby(["dstport", "date", "hour"],  as_index=False).sum()
     
     #BPP
@@ -249,7 +254,7 @@ def step2_binner(data, bin_count, bin_size, stats={}, db=None, chunk_size=-1, lo
     df_d["start"] = start_date
     df_d["end"] = end_date
     
-    if (stats):
+    if (isinstance(stats, dict)):
         kk = '{}:{}'.format(dd, hh)
         stats[kk] = stats.get(kk, 0) + 1
 
@@ -305,11 +310,10 @@ def step2(df):
     return df_d0
 
 def write_df_to_mongoDB( df, db_collection, chunk_size=100, logger=None):
-    db_collection.delete_many({})
     my_list = df.to_dict('records')
     l =  len(my_list)
-    ran = range(l)
-    steps = ran[chunk_size::chunk_size]
+    _range = range(l)
+    steps = _range[chunk_size::chunk_size]
 
     i = 0
     t_chunks = 0
@@ -345,29 +349,31 @@ def write_df_to_mongoDB( df, db_collection, chunk_size=100, logger=None):
 
 limit = nlimit = max(100000, num_events)
 
-if (0):
-    for doc in docs_generator(db_collection(client, source_db_name, source_coll_name), criteria={}, projection=projection_end, skip=0, limit=limit, nlimit=nlimit):
-        print(doc)
-else:
-    __sort = {'start': 1}
-    projection = {'start': 1, 'end': 1, 'dstport': 1, 'bytes': 1, 'packets': 1}
+__sort = {'start': 1}
+projection = {'start': 1, 'end': 1, 'dstport': 1, 'bytes': 1, 'packets': 1}
 
-    with timer.Timer() as timer2:
-        try:
-            for doc in docs_generator(db_collection(client, source_db_name, source_coll_name), sort=__sort, criteria={}, projection=projection, skip=0, limit=limit, nlimit=nlimit, logger=logger):
-                step2_binner(doc_cleaner(doc))
-        except Exception as e:
-            logger.error("Error in step2_binner", exc_info=True)
+with timer.Timer() as timer2:
+    try:
+        for doc in docs_generator(db_collection(client, source_db_name, source_coll_name), sort=__sort, criteria={}, projection=projection, skip=0, limit=limit, nlimit=nlimit, logger=logger):
+            step2_binner(doc_cleaner(doc))
+    except Exception as e:
+        logger.error("Error in step2_binner", exc_info=True)
 
-    msg = 'Step 1+2 :: num_events: {} of {} in {:.2f} secs'.format(__num_events, num_events, timer2.duration)
-    print(msg)
-    logger.info(msg)
+msg = 'Step 1+2 :: num_events: {} of {} in {:.2f} secs'.format(__num_events, num_events, timer2.duration)
+print(msg)
+logger.info(msg)
 
-    if (__stats__):
-        logger.info('BEGIN: __stats__')
-        for k,v in __stats__.items():
-            logger.info('{}:{}'.format(k,v))
-        logger.info('END!!! __stats__')
+if (isinstance(__stats__, dict)):
+    stats_coll_name = dest_coll_name + '_stats'
+    stats_coll = db_collection(client, dest_db_name, stats_coll_name)
+    stats_coll.delete_many({})
+    
+    stats_coll.insert_one(__stats__)
+
+    logger.info('BEGIN: __stats__')
+    for k,v in __stats__.items():
+        logger.info('{}:{}'.format(k,v))
+    logger.info('END!!! __stats__')
             
 logger.info('Done.')
 
