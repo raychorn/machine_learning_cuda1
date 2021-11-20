@@ -1,2022 +1,5150 @@
 {
     "2021-06-09:23": {
         "bin_count": 2,
-        "bin_size": 1166
+        "bin_size": 1696
     },
     "2021-06-10:0": {
         "bin_count": 6,
-        "bin_size": 4983
+        "bin_size": 7248
     },
     "2021-06-10:1": {
         "bin_count": 6,
-        "bin_size": 4378
+        "bin_size": 6368
     },
     "2021-06-10:10": {
         "bin_count": 6,
-        "bin_size": 7040
+        "bin_size": 10240
     },
     "2021-06-10:11": {
         "bin_count": 6,
-        "bin_size": 3223
+        "bin_size": 4688
     },
     "2021-06-10:12": {
         "bin_count": 6,
-        "bin_size": 5874
+        "bin_size": 8544
     },
     "2021-06-10:13": {
         "bin_count": 6,
-        "bin_size": 11528
+        "bin_size": 16768
     },
     "2021-06-10:14": {
         "bin_count": 5,
-        "bin_size": 3190
+        "bin_size": 4640
     },
     "2021-06-10:15": {
         "bin_count": 6,
-        "bin_size": 4015
+        "bin_size": 5840
     },
     "2021-06-10:16": {
         "bin_count": 6,
-        "bin_size": 4554
+        "bin_size": 6624
     },
     "2021-06-10:17": {
         "bin_count": 6,
-        "bin_size": 6006
+        "bin_size": 8736
     },
     "2021-06-10:18": {
         "bin_count": 6,
-        "bin_size": 3949
+        "bin_size": 5744
     },
     "2021-06-10:19": {
         "bin_count": 6,
-        "bin_size": 4213
+        "bin_size": 6128
     },
     "2021-06-10:2": {
         "bin_count": 6,
-        "bin_size": 3872
+        "bin_size": 5632
     },
     "2021-06-10:20": {
         "bin_count": 6,
-        "bin_size": 4488
+        "bin_size": 6528
     },
     "2021-06-10:21": {
         "bin_count": 6,
-        "bin_size": 5753
+        "bin_size": 8368
     },
     "2021-06-10:22": {
         "bin_count": 6,
-        "bin_size": 3894
+        "bin_size": 5664
     },
     "2021-06-10:23": {
         "bin_count": 6,
-        "bin_size": 3773
+        "bin_size": 5488
     },
     "2021-06-10:3": {
         "bin_count": 6,
-        "bin_size": 3608
+        "bin_size": 5248
     },
     "2021-06-10:4": {
         "bin_count": 6,
-        "bin_size": 4158
+        "bin_size": 6048
     },
     "2021-06-10:5": {
         "bin_count": 6,
-        "bin_size": 3839
+        "bin_size": 5584
     },
     "2021-06-10:6": {
         "bin_count": 6,
-        "bin_size": 4444
+        "bin_size": 6464
     },
     "2021-06-10:7": {
         "bin_count": 6,
-        "bin_size": 7667
+        "bin_size": 11152
     },
     "2021-06-10:8": {
         "bin_count": 6,
-        "bin_size": 4356
+        "bin_size": 6336
     },
     "2021-06-10:9": {
         "bin_count": 6,
-        "bin_size": 13519
+        "bin_size": 19664
     },
     "2021-06-11:0": {
         "bin_count": 6,
-        "bin_size": 3817
+        "bin_size": 5552
     },
     "2021-06-11:1": {
         "bin_count": 6,
-        "bin_size": 4147
+        "bin_size": 6032
     },
     "2021-06-11:10": {
         "bin_count": 6,
-        "bin_size": 7887
+        "bin_size": 11472
     },
     "2021-06-11:11": {
         "bin_count": 6,
-        "bin_size": 4136
+        "bin_size": 6016
     },
     "2021-06-11:12": {
         "bin_count": 6,
-        "bin_size": 5335
+        "bin_size": 7760
     },
     "2021-06-11:13": {
         "bin_count": 6,
-        "bin_size": 3916
+        "bin_size": 5696
     },
     "2021-06-11:14": {
         "bin_count": 6,
-        "bin_size": 4763
+        "bin_size": 6928
     },
     "2021-06-11:15": {
         "bin_count": 6,
-        "bin_size": 5368
+        "bin_size": 7808
     },
     "2021-06-11:16": {
         "bin_count": 6,
-        "bin_size": 4246
+        "bin_size": 6176
     },
     "2021-06-11:17": {
         "bin_count": 6,
-        "bin_size": 3366
+        "bin_size": 4896
     },
     "2021-06-11:18": {
         "bin_count": 5,
-        "bin_size": 3322
+        "bin_size": 4832
     },
     "2021-06-11:19": {
         "bin_count": 6,
-        "bin_size": 3586
+        "bin_size": 5216
     },
     "2021-06-11:2": {
         "bin_count": 6,
-        "bin_size": 6446
+        "bin_size": 9376
     },
     "2021-06-11:20": {
         "bin_count": 6,
-        "bin_size": 5797
+        "bin_size": 8432
     },
     "2021-06-11:21": {
         "bin_count": 6,
-        "bin_size": 4521
+        "bin_size": 6576
     },
     "2021-06-11:22": {
         "bin_count": 6,
-        "bin_size": 4389
+        "bin_size": 6384
     },
     "2021-06-11:23": {
         "bin_count": 6,
-        "bin_size": 3938
+        "bin_size": 5728
     },
     "2021-06-11:3": {
         "bin_count": 6,
-        "bin_size": 4895
+        "bin_size": 7120
     },
     "2021-06-11:4": {
         "bin_count": 5,
-        "bin_size": 6479
+        "bin_size": 9424
     },
     "2021-06-11:5": {
         "bin_count": 6,
-        "bin_size": 6666
+        "bin_size": 9696
     },
     "2021-06-11:6": {
         "bin_count": 6,
-        "bin_size": 5346
+        "bin_size": 7776
     },
     "2021-06-11:7": {
         "bin_count": 6,
-        "bin_size": 9350
+        "bin_size": 13600
     },
     "2021-06-11:8": {
         "bin_count": 6,
-        "bin_size": 4906
+        "bin_size": 7136
     },
     "2021-06-11:9": {
         "bin_count": 6,
-        "bin_size": 4708
+        "bin_size": 6848
     },
     "2021-06-12:0": {
         "bin_count": 6,
-        "bin_size": 3773
+        "bin_size": 5488
     },
     "2021-06-12:1": {
         "bin_count": 6,
-        "bin_size": 4532
+        "bin_size": 6592
     },
     "2021-06-12:10": {
         "bin_count": 6,
-        "bin_size": 3432
+        "bin_size": 4992
     },
     "2021-06-12:11": {
         "bin_count": 6,
-        "bin_size": 4202
+        "bin_size": 6112
     },
     "2021-06-12:12": {
         "bin_count": 6,
-        "bin_size": 3894
+        "bin_size": 5664
     },
     "2021-06-12:13": {
         "bin_count": 6,
-        "bin_size": 3718
+        "bin_size": 5408
     },
     "2021-06-12:14": {
         "bin_count": 6,
-        "bin_size": 3784
+        "bin_size": 5504
     },
     "2021-06-12:15": {
         "bin_count": 6,
-        "bin_size": 4719
+        "bin_size": 6864
     },
     "2021-06-12:16": {
         "bin_count": 6,
-        "bin_size": 6226
+        "bin_size": 9056
     },
     "2021-06-12:17": {
         "bin_count": 6,
-        "bin_size": 5016
+        "bin_size": 7296
     },
     "2021-06-12:18": {
         "bin_count": 6,
-        "bin_size": 3784
+        "bin_size": 5504
     },
     "2021-06-12:19": {
         "bin_count": 6,
-        "bin_size": 4796
+        "bin_size": 6976
     },
     "2021-06-12:2": {
         "bin_count": 6,
-        "bin_size": 4290
+        "bin_size": 6240
     },
     "2021-06-12:20": {
         "bin_count": 6,
-        "bin_size": 4224
+        "bin_size": 6144
     },
     "2021-06-12:21": {
         "bin_count": 6,
-        "bin_size": 4763
+        "bin_size": 6928
     },
     "2021-06-12:22": {
         "bin_count": 6,
-        "bin_size": 3960
+        "bin_size": 5760
     },
     "2021-06-12:23": {
         "bin_count": 5,
-        "bin_size": 3069
+        "bin_size": 4464
     },
     "2021-06-12:3": {
         "bin_count": 6,
-        "bin_size": 4807
+        "bin_size": 6992
     },
     "2021-06-12:4": {
         "bin_count": 6,
-        "bin_size": 4345
+        "bin_size": 6320
     },
     "2021-06-12:5": {
         "bin_count": 6,
-        "bin_size": 3685
+        "bin_size": 5360
     },
     "2021-06-12:6": {
         "bin_count": 6,
-        "bin_size": 3707
+        "bin_size": 5392
     },
     "2021-06-12:7": {
         "bin_count": 6,
-        "bin_size": 4521
+        "bin_size": 6576
     },
     "2021-06-12:8": {
         "bin_count": 6,
-        "bin_size": 5819
+        "bin_size": 8464
     },
     "2021-06-12:9": {
         "bin_count": 5,
-        "bin_size": 5214
+        "bin_size": 7584
     },
     "2021-06-13:0": {
         "bin_count": 6,
-        "bin_size": 4224
+        "bin_size": 6144
     },
     "2021-06-13:1": {
         "bin_count": 6,
-        "bin_size": 4631
+        "bin_size": 6736
     },
     "2021-06-13:10": {
         "bin_count": 6,
-        "bin_size": 4906
+        "bin_size": 7136
     },
     "2021-06-13:11": {
         "bin_count": 6,
-        "bin_size": 5225
+        "bin_size": 7600
     },
     "2021-06-13:12": {
         "bin_count": 6,
-        "bin_size": 5192
+        "bin_size": 7552
     },
     "2021-06-13:13": {
         "bin_count": 6,
-        "bin_size": 4114
+        "bin_size": 5984
     },
     "2021-06-13:14": {
         "bin_count": 6,
-        "bin_size": 4609
+        "bin_size": 6704
     },
     "2021-06-13:15": {
         "bin_count": 6,
-        "bin_size": 5346
+        "bin_size": 7776
     },
     "2021-06-13:16": {
         "bin_count": 6,
-        "bin_size": 5764
+        "bin_size": 8384
     },
     "2021-06-13:17": {
         "bin_count": 5,
-        "bin_size": 6633
+        "bin_size": 9648
     },
     "2021-06-13:18": {
         "bin_count": 6,
-        "bin_size": 4653
+        "bin_size": 6768
     },
     "2021-06-13:19": {
         "bin_count": 6,
-        "bin_size": 9262
+        "bin_size": 13472
     },
     "2021-06-13:2": {
         "bin_count": 6,
-        "bin_size": 5203
+        "bin_size": 7568
     },
     "2021-06-13:20": {
         "bin_count": 6,
-        "bin_size": 7304
+        "bin_size": 10624
     },
     "2021-06-13:21": {
         "bin_count": 6,
-        "bin_size": 5478
+        "bin_size": 7968
     },
     "2021-06-13:22": {
         "bin_count": 6,
-        "bin_size": 4653
+        "bin_size": 6768
     },
     "2021-06-13:23": {
         "bin_count": 6,
-        "bin_size": 4224
+        "bin_size": 6144
     },
     "2021-06-13:3": {
         "bin_count": 6,
-        "bin_size": 5984
+        "bin_size": 8704
     },
     "2021-06-13:4": {
         "bin_count": 6,
-        "bin_size": 4070
+        "bin_size": 5920
     },
     "2021-06-13:5": {
         "bin_count": 6,
-        "bin_size": 5335
+        "bin_size": 7760
     },
     "2021-06-13:6": {
         "bin_count": 6,
-        "bin_size": 3971
+        "bin_size": 5776
     },
     "2021-06-13:7": {
         "bin_count": 6,
-        "bin_size": 4147
+        "bin_size": 6032
     },
     "2021-06-13:8": {
         "bin_count": 6,
-        "bin_size": 3674
+        "bin_size": 5344
     },
     "2021-06-13:9": {
         "bin_count": 6,
-        "bin_size": 4004
+        "bin_size": 5824
     },
     "2021-06-14:0": {
         "bin_count": 6,
-        "bin_size": 3388
+        "bin_size": 4928
     },
     "2021-06-14:1": {
         "bin_count": 6,
-        "bin_size": 5005
+        "bin_size": 7280
     },
     "2021-06-14:10": {
         "bin_count": 6,
-        "bin_size": 7678
+        "bin_size": 11168
     },
     "2021-06-14:11": {
         "bin_count": 6,
-        "bin_size": 4433
+        "bin_size": 6448
     },
     "2021-06-14:12": {
         "bin_count": 6,
-        "bin_size": 4576
+        "bin_size": 6656
     },
     "2021-06-14:13": {
         "bin_count": 6,
-        "bin_size": 7337
+        "bin_size": 10672
     },
     "2021-06-14:14": {
         "bin_count": 6,
-        "bin_size": 4851
+        "bin_size": 7056
     },
     "2021-06-14:15": {
         "bin_count": 6,
-        "bin_size": 5907
+        "bin_size": 8592
     },
     "2021-06-14:16": {
         "bin_count": 6,
-        "bin_size": 6358
+        "bin_size": 9248
     },
     "2021-06-14:17": {
         "bin_count": 6,
-        "bin_size": 4873
+        "bin_size": 7088
     },
     "2021-06-14:18": {
         "bin_count": 6,
-        "bin_size": 4455
+        "bin_size": 6480
     },
     "2021-06-14:19": {
         "bin_count": 6,
-        "bin_size": 3432
+        "bin_size": 4992
     },
     "2021-06-14:2": {
         "bin_count": 6,
-        "bin_size": 4246
+        "bin_size": 6176
     },
     "2021-06-14:20": {
         "bin_count": 6,
-        "bin_size": 3740
+        "bin_size": 5440
     },
     "2021-06-14:21": {
         "bin_count": 6,
-        "bin_size": 3509
+        "bin_size": 5104
     },
     "2021-06-14:22": {
         "bin_count": 6,
-        "bin_size": 4444
+        "bin_size": 6464
     },
     "2021-06-14:23": {
         "bin_count": 5,
-        "bin_size": 3718
+        "bin_size": 5408
     },
     "2021-06-14:3": {
         "bin_count": 6,
-        "bin_size": 3960
+        "bin_size": 5760
     },
     "2021-06-14:4": {
         "bin_count": 6,
-        "bin_size": 4059
+        "bin_size": 5904
     },
     "2021-06-14:5": {
         "bin_count": 6,
-        "bin_size": 4895
+        "bin_size": 7120
     },
     "2021-06-14:6": {
         "bin_count": 6,
-        "bin_size": 4576
+        "bin_size": 6656
     },
     "2021-06-14:7": {
         "bin_count": 5,
-        "bin_size": 3102
+        "bin_size": 4512
     },
     "2021-06-14:8": {
         "bin_count": 6,
-        "bin_size": 4697
+        "bin_size": 6832
     },
     "2021-06-14:9": {
         "bin_count": 6,
-        "bin_size": 3993
+        "bin_size": 5808
     },
     "2021-06-15:0": {
         "bin_count": 6,
-        "bin_size": 5973
+        "bin_size": 8688
     },
     "2021-06-15:1": {
         "bin_count": 6,
-        "bin_size": 4004
+        "bin_size": 5824
     },
     "2021-06-15:10": {
         "bin_count": 6,
-        "bin_size": 4466
+        "bin_size": 6496
     },
     "2021-06-15:11": {
         "bin_count": 6,
-        "bin_size": 5445
+        "bin_size": 7920
     },
     "2021-06-15:12": {
         "bin_count": 5,
-        "bin_size": 3641
+        "bin_size": 5296
     },
     "2021-06-15:13": {
         "bin_count": 6,
-        "bin_size": 9108
+        "bin_size": 13248
     },
     "2021-06-15:14": {
         "bin_count": 6,
-        "bin_size": 9504
+        "bin_size": 13824
     },
     "2021-06-15:15": {
         "bin_count": 6,
-        "bin_size": 9735
+        "bin_size": 14160
     },
     "2021-06-15:16": {
         "bin_count": 6,
-        "bin_size": 7260
+        "bin_size": 10560
     },
     "2021-06-15:17": {
         "bin_count": 6,
-        "bin_size": 5280
+        "bin_size": 7680
     },
     "2021-06-15:18": {
         "bin_count": 6,
-        "bin_size": 4565
+        "bin_size": 6640
     },
     "2021-06-15:19": {
         "bin_count": 6,
-        "bin_size": 4796
+        "bin_size": 6976
     },
     "2021-06-15:2": {
         "bin_count": 6,
-        "bin_size": 3476
+        "bin_size": 5056
     },
     "2021-06-15:20": {
         "bin_count": 6,
-        "bin_size": 4796
+        "bin_size": 6976
     },
     "2021-06-15:21": {
         "bin_count": 6,
-        "bin_size": 3938
+        "bin_size": 5728
     },
     "2021-06-15:22": {
         "bin_count": 6,
-        "bin_size": 4477
+        "bin_size": 6512
     },
     "2021-06-15:23": {
         "bin_count": 6,
-        "bin_size": 5247
+        "bin_size": 7632
     },
     "2021-06-15:3": {
         "bin_count": 6,
-        "bin_size": 4114
+        "bin_size": 5984
     },
     "2021-06-15:4": {
         "bin_count": 6,
-        "bin_size": 4290
+        "bin_size": 6240
     },
     "2021-06-15:5": {
         "bin_count": 6,
-        "bin_size": 4158
+        "bin_size": 6048
     },
     "2021-06-15:6": {
         "bin_count": 6,
-        "bin_size": 5060
+        "bin_size": 7360
     },
     "2021-06-15:7": {
         "bin_count": 6,
-        "bin_size": 5962
+        "bin_size": 8672
     },
     "2021-06-15:8": {
         "bin_count": 6,
-        "bin_size": 4752
+        "bin_size": 6912
     },
     "2021-06-15:9": {
         "bin_count": 6,
-        "bin_size": 4169
+        "bin_size": 6064
     },
     "2021-06-16:0": {
         "bin_count": 6,
-        "bin_size": 4587
+        "bin_size": 6672
     },
     "2021-06-16:1": {
         "bin_count": 6,
-        "bin_size": 5170
+        "bin_size": 7520
     },
     "2021-06-16:10": {
         "bin_count": 6,
-        "bin_size": 7810
+        "bin_size": 11360
     },
     "2021-06-16:11": {
         "bin_count": 6,
-        "bin_size": 9295
+        "bin_size": 13520
     },
     "2021-06-16:12": {
         "bin_count": 6,
-        "bin_size": 5038
+        "bin_size": 7328
     },
     "2021-06-16:13": {
         "bin_count": 6,
-        "bin_size": 5016
+        "bin_size": 7296
     },
     "2021-06-16:14": {
         "bin_count": 6,
-        "bin_size": 5060
+        "bin_size": 7360
     },
     "2021-06-16:15": {
         "bin_count": 6,
-        "bin_size": 4994
+        "bin_size": 7264
     },
     "2021-06-16:16": {
         "bin_count": 6,
-        "bin_size": 5390
+        "bin_size": 7840
     },
     "2021-06-16:17": {
         "bin_count": 6,
-        "bin_size": 5896
+        "bin_size": 8576
     },
     "2021-06-16:18": {
         "bin_count": 5,
-        "bin_size": 6226
+        "bin_size": 9056
     },
     "2021-06-16:19": {
         "bin_count": 6,
-        "bin_size": 6468
+        "bin_size": 9408
     },
     "2021-06-16:2": {
         "bin_count": 6,
-        "bin_size": 4587
+        "bin_size": 6672
     },
     "2021-06-16:20": {
         "bin_count": 6,
-        "bin_size": 8074
+        "bin_size": 11744
     },
     "2021-06-16:21": {
         "bin_count": 6,
-        "bin_size": 4697
+        "bin_size": 6832
     },
     "2021-06-16:22": {
         "bin_count": 6,
-        "bin_size": 4829
+        "bin_size": 7024
     },
     "2021-06-16:23": {
         "bin_count": 6,
-        "bin_size": 6083
+        "bin_size": 8848
     },
     "2021-06-16:3": {
         "bin_count": 5,
-        "bin_size": 3421
+        "bin_size": 4976
     },
     "2021-06-16:4": {
         "bin_count": 6,
-        "bin_size": 4862
+        "bin_size": 7072
     },
     "2021-06-16:5": {
         "bin_count": 6,
-        "bin_size": 4389
+        "bin_size": 6384
     },
     "2021-06-16:6": {
         "bin_count": 6,
-        "bin_size": 6787
+        "bin_size": 9872
     },
     "2021-06-16:7": {
         "bin_count": 6,
-        "bin_size": 5775
+        "bin_size": 8400
     },
     "2021-06-16:8": {
         "bin_count": 6,
-        "bin_size": 3850
+        "bin_size": 5600
     },
     "2021-06-16:9": {
         "bin_count": 6,
-        "bin_size": 4939
+        "bin_size": 7184
     },
     "2021-06-17:0": {
         "bin_count": 6,
-        "bin_size": 8569
+        "bin_size": 12464
     },
     "2021-06-17:1": {
         "bin_count": 6,
-        "bin_size": 6567
+        "bin_size": 9552
     },
     "2021-06-17:10": {
         "bin_count": 6,
-        "bin_size": 8910
+        "bin_size": 12960
     },
     "2021-06-17:11": {
         "bin_count": 6,
-        "bin_size": 4840
+        "bin_size": 7040
     },
     "2021-06-17:12": {
         "bin_count": 6,
-        "bin_size": 4939
+        "bin_size": 7184
     },
     "2021-06-17:13": {
         "bin_count": 6,
-        "bin_size": 8041
+        "bin_size": 11696
     },
     "2021-06-17:14": {
         "bin_count": 6,
-        "bin_size": 4367
+        "bin_size": 6352
     },
     "2021-06-17:15": {
         "bin_count": 6,
-        "bin_size": 5434
+        "bin_size": 7904
     },
     "2021-06-17:16": {
         "bin_count": 6,
-        "bin_size": 5621
+        "bin_size": 8176
     },
     "2021-06-17:17": {
         "bin_count": 6,
-        "bin_size": 5324
+        "bin_size": 7744
     },
     "2021-06-17:18": {
         "bin_count": 6,
-        "bin_size": 5588
+        "bin_size": 8128
     },
     "2021-06-17:19": {
         "bin_count": 6,
-        "bin_size": 4367
+        "bin_size": 6352
     },
     "2021-06-17:2": {
         "bin_count": 6,
-        "bin_size": 5324
+        "bin_size": 7744
     },
     "2021-06-17:20": {
         "bin_count": 6,
-        "bin_size": 5423
+        "bin_size": 7888
     },
     "2021-06-17:21": {
         "bin_count": 6,
-        "bin_size": 3982
+        "bin_size": 5792
     },
     "2021-06-17:22": {
         "bin_count": 6,
-        "bin_size": 5544
+        "bin_size": 8064
     },
     "2021-06-17:23": {
         "bin_count": 6,
-        "bin_size": 6061
+        "bin_size": 8816
     },
     "2021-06-17:3": {
         "bin_count": 6,
-        "bin_size": 4752
+        "bin_size": 6912
     },
     "2021-06-17:4": {
         "bin_count": 6,
-        "bin_size": 10571
+        "bin_size": 15376
     },
     "2021-06-17:5": {
         "bin_count": 6,
-        "bin_size": 5170
+        "bin_size": 7520
     },
     "2021-06-17:6": {
         "bin_count": 6,
-        "bin_size": 4774
+        "bin_size": 6944
     },
     "2021-06-17:7": {
         "bin_count": 6,
-        "bin_size": 5203
+        "bin_size": 7568
     },
     "2021-06-17:8": {
         "bin_count": 5,
-        "bin_size": 5929
+        "bin_size": 8624
     },
     "2021-06-17:9": {
         "bin_count": 6,
-        "bin_size": 5258
+        "bin_size": 7648
     },
     "2021-06-18:0": {
         "bin_count": 5,
-        "bin_size": 4290
+        "bin_size": 6240
     },
     "2021-06-18:1": {
         "bin_count": 6,
-        "bin_size": 5401
+        "bin_size": 7856
     },
     "2021-06-18:10": {
         "bin_count": 6,
-        "bin_size": 5588
+        "bin_size": 8128
     },
     "2021-06-18:11": {
         "bin_count": 6,
-        "bin_size": 4884
+        "bin_size": 7104
     },
     "2021-06-18:12": {
         "bin_count": 6,
-        "bin_size": 9328
+        "bin_size": 13568
     },
     "2021-06-18:13": {
         "bin_count": 6,
-        "bin_size": 10153
+        "bin_size": 14768
     },
     "2021-06-18:14": {
         "bin_count": 6,
-        "bin_size": 7293
+        "bin_size": 10608
     },
     "2021-06-18:15": {
         "bin_count": 6,
-        "bin_size": 8272
+        "bin_size": 12032
     },
     "2021-06-18:16": {
         "bin_count": 6,
-        "bin_size": 4598
+        "bin_size": 6688
     },
     "2021-06-18:17": {
         "bin_count": 5,
-        "bin_size": 7667
+        "bin_size": 11152
     },
     "2021-06-18:18": {
         "bin_count": 6,
-        "bin_size": 5203
+        "bin_size": 7568
     },
     "2021-06-18:19": {
         "bin_count": 6,
-        "bin_size": 5192
+        "bin_size": 7552
     },
     "2021-06-18:2": {
         "bin_count": 6,
-        "bin_size": 5566
+        "bin_size": 8096
     },
     "2021-06-18:20": {
         "bin_count": 6,
-        "bin_size": 5247
+        "bin_size": 7632
     },
     "2021-06-18:21": {
         "bin_count": 6,
-        "bin_size": 6556
+        "bin_size": 9536
     },
     "2021-06-18:22": {
         "bin_count": 6,
-        "bin_size": 8789
+        "bin_size": 12784
     },
     "2021-06-18:23": {
         "bin_count": 6,
-        "bin_size": 4642
+        "bin_size": 6752
     },
     "2021-06-18:3": {
         "bin_count": 6,
-        "bin_size": 7062
+        "bin_size": 10272
     },
     "2021-06-18:4": {
         "bin_count": 6,
-        "bin_size": 5049
+        "bin_size": 7344
     },
     "2021-06-18:5": {
         "bin_count": 6,
-        "bin_size": 10076
+        "bin_size": 14656
     },
     "2021-06-18:6": {
         "bin_count": 6,
-        "bin_size": 8811
+        "bin_size": 12816
     },
     "2021-06-18:7": {
         "bin_count": 6,
-        "bin_size": 5412
+        "bin_size": 7872
     },
     "2021-06-18:8": {
         "bin_count": 6,
-        "bin_size": 5104
+        "bin_size": 7424
     },
     "2021-06-18:9": {
         "bin_count": 6,
-        "bin_size": 5280
+        "bin_size": 7680
     },
     "2021-06-19:0": {
         "bin_count": 6,
-        "bin_size": 5159
+        "bin_size": 7504
     },
     "2021-06-19:1": {
         "bin_count": 6,
-        "bin_size": 7645
+        "bin_size": 11120
     },
     "2021-06-19:10": {
         "bin_count": 6,
-        "bin_size": 5808
+        "bin_size": 8448
     },
     "2021-06-19:11": {
         "bin_count": 6,
-        "bin_size": 7062
+        "bin_size": 10272
     },
     "2021-06-19:12": {
         "bin_count": 6,
-        "bin_size": 5082
+        "bin_size": 7392
     },
     "2021-06-19:13": {
         "bin_count": 5,
-        "bin_size": 5269
+        "bin_size": 7664
     },
     "2021-06-19:14": {
         "bin_count": 6,
-        "bin_size": 5313
+        "bin_size": 7728
     },
     "2021-06-19:15": {
         "bin_count": 6,
-        "bin_size": 8162
+        "bin_size": 11872
     },
     "2021-06-19:16": {
         "bin_count": 6,
-        "bin_size": 5885
+        "bin_size": 8560
     },
     "2021-06-19:17": {
         "bin_count": 6,
-        "bin_size": 7139
+        "bin_size": 10384
     },
     "2021-06-19:18": {
         "bin_count": 6,
-        "bin_size": 5335
+        "bin_size": 7760
     },
     "2021-06-19:19": {
         "bin_count": 6,
-        "bin_size": 5951
+        "bin_size": 8656
     },
     "2021-06-19:2": {
         "bin_count": 6,
-        "bin_size": 6402
+        "bin_size": 9312
     },
     "2021-06-19:20": {
         "bin_count": 6,
-        "bin_size": 5698
+        "bin_size": 8288
     },
     "2021-06-19:21": {
         "bin_count": 6,
-        "bin_size": 4290
+        "bin_size": 6240
     },
     "2021-06-19:22": {
         "bin_count": 6,
-        "bin_size": 5016
+        "bin_size": 7296
     },
     "2021-06-19:23": {
         "bin_count": 6,
-        "bin_size": 5478
+        "bin_size": 7968
     },
     "2021-06-19:3": {
         "bin_count": 6,
-        "bin_size": 8459
+        "bin_size": 12304
     },
     "2021-06-19:4": {
         "bin_count": 6,
-        "bin_size": 4983
+        "bin_size": 7248
     },
     "2021-06-19:5": {
         "bin_count": 6,
-        "bin_size": 8184
+        "bin_size": 11904
     },
     "2021-06-19:6": {
         "bin_count": 6,
-        "bin_size": 7579
+        "bin_size": 11024
     },
     "2021-06-19:7": {
         "bin_count": 6,
-        "bin_size": 6831
+        "bin_size": 9936
     },
     "2021-06-19:8": {
         "bin_count": 6,
-        "bin_size": 6952
+        "bin_size": 10112
     },
     "2021-06-19:9": {
         "bin_count": 6,
-        "bin_size": 7018
+        "bin_size": 10208
     },
     "2021-06-20:0": {
         "bin_count": 6,
-        "bin_size": 5709
+        "bin_size": 8304
     },
     "2021-06-20:1": {
         "bin_count": 6,
-        "bin_size": 5093
+        "bin_size": 7408
     },
     "2021-06-20:10": {
         "bin_count": 6,
-        "bin_size": 5896
+        "bin_size": 8576
     },
     "2021-06-20:11": {
         "bin_count": 6,
-        "bin_size": 6897
+        "bin_size": 10032
     },
     "2021-06-20:12": {
         "bin_count": 6,
-        "bin_size": 9031
+        "bin_size": 13136
     },
     "2021-06-20:13": {
         "bin_count": 6,
-        "bin_size": 5214
+        "bin_size": 7584
     },
     "2021-06-20:14": {
         "bin_count": 6,
-        "bin_size": 5379
+        "bin_size": 7824
     },
     "2021-06-20:15": {
         "bin_count": 6,
-        "bin_size": 4708
+        "bin_size": 6848
     },
     "2021-06-20:16": {
         "bin_count": 6,
-        "bin_size": 4939
+        "bin_size": 7184
     },
     "2021-06-20:17": {
         "bin_count": 6,
-        "bin_size": 7711
+        "bin_size": 11216
     },
     "2021-06-20:18": {
         "bin_count": 6,
-        "bin_size": 8932
+        "bin_size": 12992
     },
     "2021-06-20:19": {
         "bin_count": 6,
-        "bin_size": 11407
+        "bin_size": 16592
     },
     "2021-06-20:2": {
         "bin_count": 6,
-        "bin_size": 5533
+        "bin_size": 8048
     },
     "2021-06-20:20": {
         "bin_count": 6,
-        "bin_size": 8019
+        "bin_size": 11664
     },
     "2021-06-20:21": {
         "bin_count": 6,
-        "bin_size": 7689
+        "bin_size": 11184
     },
     "2021-06-20:22": {
         "bin_count": 6,
-        "bin_size": 5775
+        "bin_size": 8400
     },
     "2021-06-20:23": {
         "bin_count": 5,
-        "bin_size": 4147
+        "bin_size": 6032
     },
     "2021-06-20:3": {
         "bin_count": 6,
-        "bin_size": 4763
+        "bin_size": 6928
     },
     "2021-06-20:4": {
         "bin_count": 5,
-        "bin_size": 5335
+        "bin_size": 7760
     },
     "2021-06-20:5": {
         "bin_count": 6,
-        "bin_size": 5874
+        "bin_size": 8544
     },
     "2021-06-20:6": {
         "bin_count": 6,
-        "bin_size": 4906
+        "bin_size": 7136
     },
     "2021-06-20:7": {
         "bin_count": 6,
-        "bin_size": 6072
+        "bin_size": 8832
     },
     "2021-06-20:8": {
         "bin_count": 6,
-        "bin_size": 6358
+        "bin_size": 9248
     },
     "2021-06-20:9": {
         "bin_count": 6,
-        "bin_size": 6545
+        "bin_size": 9520
     },
     "2021-06-21:0": {
         "bin_count": 6,
-        "bin_size": 5379
+        "bin_size": 7824
     },
     "2021-06-21:1": {
         "bin_count": 6,
-        "bin_size": 5555
+        "bin_size": 8080
     },
     "2021-06-21:10": {
         "bin_count": 6,
-        "bin_size": 9207
+        "bin_size": 13392
     },
     "2021-06-21:11": {
         "bin_count": 6,
-        "bin_size": 5786
+        "bin_size": 8416
     },
     "2021-06-21:12": {
         "bin_count": 6,
-        "bin_size": 4928
+        "bin_size": 7168
     },
     "2021-06-21:13": {
         "bin_count": 6,
-        "bin_size": 8294
+        "bin_size": 12064
     },
     "2021-06-21:14": {
         "bin_count": 6,
-        "bin_size": 10252
+        "bin_size": 14912
     },
     "2021-06-21:15": {
         "bin_count": 5,
-        "bin_size": 5280
+        "bin_size": 7680
     },
     "2021-06-21:16": {
         "bin_count": 6,
-        "bin_size": 6083
+        "bin_size": 8848
     },
     "2021-06-21:17": {
         "bin_count": 6,
-        "bin_size": 6083
+        "bin_size": 8848
     },
     "2021-06-21:18": {
         "bin_count": 6,
-        "bin_size": 6050
+        "bin_size": 8800
     },
     "2021-06-21:19": {
         "bin_count": 6,
-        "bin_size": 5489
+        "bin_size": 7984
     },
     "2021-06-21:2": {
         "bin_count": 6,
-        "bin_size": 5412
+        "bin_size": 7872
     },
     "2021-06-21:20": {
         "bin_count": 6,
-        "bin_size": 4928
+        "bin_size": 7168
     },
     "2021-06-21:21": {
         "bin_count": 6,
-        "bin_size": 5445
+        "bin_size": 7920
     },
     "2021-06-21:22": {
         "bin_count": 6,
-        "bin_size": 5632
+        "bin_size": 8192
     },
     "2021-06-21:23": {
         "bin_count": 6,
-        "bin_size": 5379
+        "bin_size": 7824
     },
     "2021-06-21:3": {
         "bin_count": 6,
-        "bin_size": 8503
+        "bin_size": 12368
     },
     "2021-06-21:4": {
         "bin_count": 6,
-        "bin_size": 5082
+        "bin_size": 7392
     },
     "2021-06-21:5": {
         "bin_count": 6,
-        "bin_size": 6006
+        "bin_size": 8736
     },
     "2021-06-21:6": {
         "bin_count": 6,
-        "bin_size": 6490
+        "bin_size": 9440
     },
     "2021-06-21:7": {
         "bin_count": 6,
-        "bin_size": 4345
+        "bin_size": 6320
     },
     "2021-06-21:8": {
         "bin_count": 6,
-        "bin_size": 5005
+        "bin_size": 7280
     },
     "2021-06-21:9": {
         "bin_count": 6,
-        "bin_size": 4972
+        "bin_size": 7232
     },
     "2021-06-22:0": {
         "bin_count": 6,
-        "bin_size": 7942
+        "bin_size": 11552
     },
     "2021-06-22:1": {
         "bin_count": 6,
-        "bin_size": 8272
+        "bin_size": 12032
     },
     "2021-06-22:10": {
         "bin_count": 5,
-        "bin_size": 4774
+        "bin_size": 6944
     },
     "2021-06-22:11": {
         "bin_count": 6,
-        "bin_size": 7678
+        "bin_size": 11168
     },
     "2021-06-22:12": {
         "bin_count": 6,
-        "bin_size": 10791
+        "bin_size": 15696
     },
     "2021-06-22:13": {
         "bin_count": 6,
-        "bin_size": 10582
+        "bin_size": 15392
     },
     "2021-06-22:14": {
         "bin_count": 6,
-        "bin_size": 7854
+        "bin_size": 11424
     },
     "2021-06-22:15": {
         "bin_count": 6,
-        "bin_size": 5907
+        "bin_size": 8592
     },
     "2021-06-22:16": {
         "bin_count": 6,
-        "bin_size": 8833
+        "bin_size": 12848
     },
     "2021-06-22:17": {
         "bin_count": 6,
-        "bin_size": 6325
+        "bin_size": 9200
     },
     "2021-06-22:18": {
         "bin_count": 6,
-        "bin_size": 8987
+        "bin_size": 13072
     },
     "2021-06-22:19": {
         "bin_count": 6,
-        "bin_size": 7018
+        "bin_size": 10208
     },
     "2021-06-22:2": {
         "bin_count": 6,
-        "bin_size": 6259
+        "bin_size": 9104
     },
     "2021-06-22:20": {
         "bin_count": 6,
-        "bin_size": 10131
+        "bin_size": 14736
     },
     "2021-06-22:21": {
         "bin_count": 6,
-        "bin_size": 6864
+        "bin_size": 9984
     },
     "2021-06-22:22": {
         "bin_count": 6,
-        "bin_size": 5522
+        "bin_size": 8032
     },
     "2021-06-22:23": {
         "bin_count": 6,
-        "bin_size": 5698
+        "bin_size": 8288
     },
     "2021-06-22:3": {
         "bin_count": 6,
-        "bin_size": 9988
+        "bin_size": 14528
     },
     "2021-06-22:4": {
         "bin_count": 6,
-        "bin_size": 9405
+        "bin_size": 13680
     },
     "2021-06-22:5": {
         "bin_count": 6,
-        "bin_size": 7689
+        "bin_size": 11184
     },
     "2021-06-22:6": {
         "bin_count": 6,
-        "bin_size": 10483
+        "bin_size": 15248
     },
     "2021-06-22:7": {
         "bin_count": 6,
-        "bin_size": 8437
+        "bin_size": 12272
     },
     "2021-06-22:8": {
         "bin_count": 6,
-        "bin_size": 5929
+        "bin_size": 8624
     },
     "2021-06-22:9": {
         "bin_count": 6,
-        "bin_size": 5786
+        "bin_size": 8416
     },
     "2021-06-23:0": {
         "bin_count": 6,
-        "bin_size": 6105
+        "bin_size": 8880
     },
     "2021-06-23:1": {
         "bin_count": 6,
-        "bin_size": 13145
+        "bin_size": 19120
     },
     "2021-06-23:10": {
         "bin_count": 6,
-        "bin_size": 8074
+        "bin_size": 11744
     },
     "2021-06-23:11": {
         "bin_count": 6,
-        "bin_size": 6094
+        "bin_size": 8864
     },
     "2021-06-23:12": {
         "bin_count": 6,
-        "bin_size": 5797
+        "bin_size": 8432
     },
     "2021-06-23:13": {
         "bin_count": 6,
-        "bin_size": 9570
+        "bin_size": 13920
     },
     "2021-06-23:14": {
         "bin_count": 6,
-        "bin_size": 9713
+        "bin_size": 14128
     },
     "2021-06-23:15": {
         "bin_count": 6,
-        "bin_size": 9526
+        "bin_size": 13856
     },
     "2021-06-23:16": {
         "bin_count": 6,
-        "bin_size": 7865
+        "bin_size": 11440
     },
     "2021-06-23:17": {
         "bin_count": 6,
-        "bin_size": 7062
+        "bin_size": 10272
     },
     "2021-06-23:18": {
         "bin_count": 6,
-        "bin_size": 5775
+        "bin_size": 8400
     },
     "2021-06-23:19": {
         "bin_count": 6,
-        "bin_size": 7557
+        "bin_size": 10992
     },
     "2021-06-23:2": {
         "bin_count": 6,
-        "bin_size": 8382
+        "bin_size": 12192
     },
     "2021-06-23:20": {
         "bin_count": 6,
-        "bin_size": 9394
+        "bin_size": 13664
     },
     "2021-06-23:21": {
         "bin_count": 6,
-        "bin_size": 5104
+        "bin_size": 7424
     },
     "2021-06-23:22": {
         "bin_count": 6,
-        "bin_size": 6490
+        "bin_size": 9440
     },
     "2021-06-23:23": {
         "bin_count": 6,
-        "bin_size": 6193
+        "bin_size": 9008
     },
     "2021-06-23:3": {
         "bin_count": 6,
-        "bin_size": 5863
+        "bin_size": 8528
     },
     "2021-06-23:4": {
         "bin_count": 6,
-        "bin_size": 7788
+        "bin_size": 11328
     },
     "2021-06-23:5": {
         "bin_count": 5,
-        "bin_size": 5478
+        "bin_size": 7968
     },
     "2021-06-23:6": {
         "bin_count": 6,
-        "bin_size": 8866
+        "bin_size": 12896
     },
     "2021-06-23:7": {
         "bin_count": 6,
-        "bin_size": 6600
+        "bin_size": 9600
     },
     "2021-06-23:8": {
         "bin_count": 6,
-        "bin_size": 6743
+        "bin_size": 9808
     },
     "2021-06-23:9": {
         "bin_count": 6,
-        "bin_size": 5742
+        "bin_size": 8352
     },
     "2021-06-24:0": {
         "bin_count": 6,
-        "bin_size": 6083
+        "bin_size": 8848
     },
     "2021-06-24:1": {
         "bin_count": 6,
-        "bin_size": 9097
+        "bin_size": 13232
     },
     "2021-06-24:10": {
         "bin_count": 6,
-        "bin_size": 9262
+        "bin_size": 13472
     },
     "2021-06-24:11": {
         "bin_count": 6,
-        "bin_size": 13486
+        "bin_size": 19616
     },
     "2021-06-24:12": {
         "bin_count": 6,
-        "bin_size": 7271
+        "bin_size": 10576
     },
     "2021-06-24:13": {
         "bin_count": 6,
-        "bin_size": 5797
+        "bin_size": 8432
     },
     "2021-06-24:14": {
         "bin_count": 6,
-        "bin_size": 6501
+        "bin_size": 9456
     },
     "2021-06-24:15": {
         "bin_count": 6,
-        "bin_size": 14366
+        "bin_size": 20896
     },
     "2021-06-24:16": {
         "bin_count": 6,
-        "bin_size": 7788
+        "bin_size": 11328
     },
     "2021-06-24:17": {
         "bin_count": 6,
-        "bin_size": 5555
+        "bin_size": 8080
     },
     "2021-06-24:18": {
         "bin_count": 6,
-        "bin_size": 5159
+        "bin_size": 7504
     },
     "2021-06-24:19": {
         "bin_count": 5,
-        "bin_size": 4070
+        "bin_size": 5920
     },
     "2021-06-24:2": {
         "bin_count": 5,
-        "bin_size": 5412
+        "bin_size": 7872
     },
     "2021-06-24:20": {
         "bin_count": 6,
-        "bin_size": 6644
+        "bin_size": 9664
     },
     "2021-06-24:21": {
         "bin_count": 6,
-        "bin_size": 6567
+        "bin_size": 9552
     },
     "2021-06-24:22": {
         "bin_count": 6,
-        "bin_size": 6116
+        "bin_size": 8896
     },
     "2021-06-24:23": {
         "bin_count": 6,
-        "bin_size": 8800
+        "bin_size": 12800
     },
     "2021-06-24:3": {
         "bin_count": 6,
-        "bin_size": 5500
+        "bin_size": 8000
     },
     "2021-06-24:4": {
         "bin_count": 6,
-        "bin_size": 7106
+        "bin_size": 10336
     },
     "2021-06-24:5": {
         "bin_count": 6,
-        "bin_size": 5577
+        "bin_size": 8112
     },
     "2021-06-24:6": {
         "bin_count": 6,
-        "bin_size": 5423
+        "bin_size": 7888
     },
     "2021-06-24:7": {
         "bin_count": 6,
-        "bin_size": 5434
+        "bin_size": 7904
     },
     "2021-06-24:8": {
         "bin_count": 6,
-        "bin_size": 5775
+        "bin_size": 8400
     },
     "2021-06-24:9": {
         "bin_count": 6,
-        "bin_size": 4686
+        "bin_size": 6816
     },
     "2021-06-25:0": {
         "bin_count": 6,
-        "bin_size": 6622
+        "bin_size": 9632
     },
     "2021-06-25:1": {
         "bin_count": 6,
-        "bin_size": 8371
+        "bin_size": 12176
     },
     "2021-06-25:10": {
         "bin_count": 6,
-        "bin_size": 4906
+        "bin_size": 7136
     },
     "2021-06-25:11": {
         "bin_count": 5,
-        "bin_size": 4708
+        "bin_size": 6848
     },
     "2021-06-25:12": {
         "bin_count": 6,
-        "bin_size": 5170
+        "bin_size": 7520
     },
     "2021-06-25:13": {
         "bin_count": 6,
-        "bin_size": 5049
+        "bin_size": 7344
     },
     "2021-06-25:14": {
         "bin_count": 6,
-        "bin_size": 13332
+        "bin_size": 19392
     },
     "2021-06-25:15": {
         "bin_count": 6,
-        "bin_size": 12111
+        "bin_size": 17616
     },
     "2021-06-25:16": {
         "bin_count": 6,
-        "bin_size": 6567
+        "bin_size": 9552
     },
     "2021-06-25:17": {
         "bin_count": 6,
-        "bin_size": 7821
+        "bin_size": 11376
     },
     "2021-06-25:18": {
         "bin_count": 6,
-        "bin_size": 8910
+        "bin_size": 12960
     },
     "2021-06-25:19": {
         "bin_count": 6,
-        "bin_size": 5863
+        "bin_size": 8528
     },
     "2021-06-25:2": {
         "bin_count": 6,
-        "bin_size": 6644
+        "bin_size": 9664
     },
     "2021-06-25:20": {
         "bin_count": 6,
-        "bin_size": 6457
+        "bin_size": 9392
     },
     "2021-06-25:21": {
         "bin_count": 6,
-        "bin_size": 6380
+        "bin_size": 9280
     },
     "2021-06-25:22": {
         "bin_count": 6,
-        "bin_size": 11825
+        "bin_size": 17200
     },
     "2021-06-25:23": {
         "bin_count": 6,
-        "bin_size": 9130
+        "bin_size": 13280
     },
     "2021-06-25:3": {
         "bin_count": 6,
-        "bin_size": 5060
+        "bin_size": 7360
     },
     "2021-06-25:4": {
         "bin_count": 6,
-        "bin_size": 8910
+        "bin_size": 12960
     },
     "2021-06-25:5": {
         "bin_count": 6,
-        "bin_size": 9317
+        "bin_size": 13552
     },
     "2021-06-25:6": {
         "bin_count": 6,
-        "bin_size": 7513
+        "bin_size": 10928
     },
     "2021-06-25:7": {
         "bin_count": 6,
-        "bin_size": 6215
+        "bin_size": 9040
     },
     "2021-06-25:8": {
         "bin_count": 6,
-        "bin_size": 7700
+        "bin_size": 11200
     },
     "2021-06-25:9": {
         "bin_count": 6,
-        "bin_size": 7128
+        "bin_size": 10368
     },
     "2021-06-26:0": {
         "bin_count": 6,
-        "bin_size": 7821
+        "bin_size": 11376
     },
     "2021-06-26:1": {
         "bin_count": 6,
-        "bin_size": 5830
+        "bin_size": 8480
     },
     "2021-06-26:10": {
         "bin_count": 6,
-        "bin_size": 6391
+        "bin_size": 9296
     },
     "2021-06-26:11": {
         "bin_count": 6,
-        "bin_size": 7656
+        "bin_size": 11136
     },
     "2021-06-26:12": {
         "bin_count": 6,
-        "bin_size": 6303
+        "bin_size": 9168
     },
     "2021-06-26:13": {
         "bin_count": 6,
-        "bin_size": 6578
+        "bin_size": 9568
     },
     "2021-06-26:14": {
         "bin_count": 6,
-        "bin_size": 5005
+        "bin_size": 7280
     },
     "2021-06-26:15": {
         "bin_count": 6,
-        "bin_size": 7040
+        "bin_size": 10240
     },
     "2021-06-26:16": {
         "bin_count": 6,
-        "bin_size": 7953
+        "bin_size": 11568
     },
     "2021-06-26:17": {
         "bin_count": 6,
-        "bin_size": 10230
+        "bin_size": 14880
     },
     "2021-06-26:18": {
         "bin_count": 6,
-        "bin_size": 7931
+        "bin_size": 11536
     },
     "2021-06-26:19": {
         "bin_count": 5,
-        "bin_size": 4675
+        "bin_size": 6800
     },
     "2021-06-26:2": {
         "bin_count": 6,
-        "bin_size": 7007
+        "bin_size": 10192
     },
     "2021-06-26:20": {
         "bin_count": 6,
-        "bin_size": 7854
+        "bin_size": 11424
     },
     "2021-06-26:21": {
         "bin_count": 6,
-        "bin_size": 6611
+        "bin_size": 9616
     },
     "2021-06-26:22": {
         "bin_count": 6,
-        "bin_size": 5357
+        "bin_size": 7792
     },
     "2021-06-26:23": {
         "bin_count": 6,
-        "bin_size": 6677
+        "bin_size": 9712
     },
     "2021-06-26:3": {
         "bin_count": 5,
-        "bin_size": 4785
+        "bin_size": 6960
     },
     "2021-06-26:4": {
         "bin_count": 6,
-        "bin_size": 5170
+        "bin_size": 7520
     },
     "2021-06-26:5": {
         "bin_count": 6,
-        "bin_size": 8415
+        "bin_size": 12240
     },
     "2021-06-26:6": {
         "bin_count": 6,
-        "bin_size": 10450
+        "bin_size": 15200
     },
     "2021-06-26:7": {
         "bin_count": 6,
-        "bin_size": 8932
+        "bin_size": 12992
     },
     "2021-06-26:8": {
         "bin_count": 6,
-        "bin_size": 6116
+        "bin_size": 8896
     },
     "2021-06-26:9": {
         "bin_count": 6,
-        "bin_size": 5247
+        "bin_size": 7632
     },
     "2021-06-27:0": {
         "bin_count": 6,
-        "bin_size": 9977
+        "bin_size": 14512
     },
     "2021-06-27:1": {
         "bin_count": 6,
-        "bin_size": 5863
+        "bin_size": 8528
     },
     "2021-06-27:10": {
         "bin_count": 6,
-        "bin_size": 7139
+        "bin_size": 10384
     },
     "2021-06-27:11": {
         "bin_count": 6,
-        "bin_size": 10670
+        "bin_size": 15520
     },
     "2021-06-27:12": {
         "bin_count": 6,
-        "bin_size": 8470
+        "bin_size": 12320
     },
     "2021-06-27:13": {
         "bin_count": 5,
-        "bin_size": 5280
+        "bin_size": 7680
     },
     "2021-06-27:14": {
         "bin_count": 6,
-        "bin_size": 12958
+        "bin_size": 18848
     },
     "2021-06-27:15": {
         "bin_count": 6,
-        "bin_size": 6292
+        "bin_size": 9152
     },
     "2021-06-27:16": {
         "bin_count": 6,
-        "bin_size": 5588
+        "bin_size": 8128
     },
     "2021-06-27:17": {
         "bin_count": 6,
-        "bin_size": 13365
+        "bin_size": 19440
     },
     "2021-06-27:18": {
         "bin_count": 6,
-        "bin_size": 10483
+        "bin_size": 15248
     },
     "2021-06-27:19": {
         "bin_count": 6,
-        "bin_size": 6941
+        "bin_size": 10096
     },
     "2021-06-27:2": {
         "bin_count": 6,
-        "bin_size": 7029
+        "bin_size": 10224
     },
     "2021-06-27:20": {
         "bin_count": 6,
-        "bin_size": 9911
+        "bin_size": 14416
     },
     "2021-06-27:21": {
         "bin_count": 6,
-        "bin_size": 7172
+        "bin_size": 10432
     },
     "2021-06-27:22": {
         "bin_count": 6,
-        "bin_size": 5885
+        "bin_size": 8560
     },
     "2021-06-27:23": {
         "bin_count": 6,
-        "bin_size": 5984
+        "bin_size": 8704
     },
     "2021-06-27:3": {
         "bin_count": 6,
-        "bin_size": 10472
+        "bin_size": 15232
     },
     "2021-06-27:4": {
         "bin_count": 6,
-        "bin_size": 9647
+        "bin_size": 14032
     },
     "2021-06-27:5": {
         "bin_count": 6,
-        "bin_size": 6347
+        "bin_size": 9232
     },
     "2021-06-27:6": {
         "bin_count": 6,
-        "bin_size": 9174
+        "bin_size": 13344
     },
     "2021-06-27:7": {
         "bin_count": 6,
-        "bin_size": 6215
+        "bin_size": 9040
     },
     "2021-06-27:8": {
         "bin_count": 6,
-        "bin_size": 6633
+        "bin_size": 9648
     },
     "2021-06-27:9": {
         "bin_count": 6,
-        "bin_size": 8349
+        "bin_size": 12144
     },
     "2021-06-28:0": {
         "bin_count": 6,
-        "bin_size": 6952
+        "bin_size": 10112
     },
     "2021-06-28:1": {
         "bin_count": 6,
-        "bin_size": 5885
+        "bin_size": 8560
     },
     "2021-06-28:10": {
         "bin_count": 6,
-        "bin_size": 11220
+        "bin_size": 16320
     },
     "2021-06-28:11": {
         "bin_count": 6,
-        "bin_size": 7612
+        "bin_size": 11072
     },
     "2021-06-28:12": {
         "bin_count": 6,
-        "bin_size": 11583
+        "bin_size": 16848
     },
     "2021-06-28:13": {
         "bin_count": 6,
-        "bin_size": 6809
+        "bin_size": 9904
     },
     "2021-06-28:14": {
         "bin_count": 6,
-        "bin_size": 18216
+        "bin_size": 26496
     },
     "2021-06-28:15": {
         "bin_count": 6,
-        "bin_size": 10120
+        "bin_size": 14720
     },
     "2021-06-28:16": {
         "bin_count": 6,
-        "bin_size": 10351
+        "bin_size": 15056
     },
     "2021-06-28:17": {
         "bin_count": 6,
-        "bin_size": 8492
+        "bin_size": 12352
     },
     "2021-06-28:18": {
         "bin_count": 6,
-        "bin_size": 11495
+        "bin_size": 16720
     },
     "2021-06-28:19": {
         "bin_count": 6,
-        "bin_size": 7381
+        "bin_size": 10736
     },
     "2021-06-28:2": {
         "bin_count": 6,
-        "bin_size": 5291
+        "bin_size": 7696
     },
     "2021-06-28:20": {
         "bin_count": 6,
-        "bin_size": 10681
+        "bin_size": 15536
     },
     "2021-06-28:21": {
         "bin_count": 6,
-        "bin_size": 10219
+        "bin_size": 14864
     },
     "2021-06-28:22": {
         "bin_count": 6,
-        "bin_size": 9240
+        "bin_size": 13440
     },
     "2021-06-28:23": {
         "bin_count": 6,
-        "bin_size": 7997
+        "bin_size": 11632
     },
     "2021-06-28:3": {
         "bin_count": 6,
-        "bin_size": 5346
+        "bin_size": 7776
     },
     "2021-06-28:4": {
         "bin_count": 6,
-        "bin_size": 7491
+        "bin_size": 10896
     },
     "2021-06-28:5": {
         "bin_count": 6,
-        "bin_size": 6028
+        "bin_size": 8768
     },
     "2021-06-28:6": {
         "bin_count": 5,
-        "bin_size": 6424
+        "bin_size": 9344
     },
     "2021-06-28:7": {
         "bin_count": 6,
-        "bin_size": 5379
+        "bin_size": 7824
     },
     "2021-06-28:8": {
         "bin_count": 6,
-        "bin_size": 4928
+        "bin_size": 7168
     },
     "2021-06-28:9": {
         "bin_count": 6,
-        "bin_size": 10912
+        "bin_size": 15872
     },
     "2021-06-29:0": {
         "bin_count": 6,
-        "bin_size": 6479
+        "bin_size": 9424
     },
     "2021-06-29:1": {
         "bin_count": 6,
-        "bin_size": 9064
+        "bin_size": 13184
     },
     "2021-06-29:10": {
         "bin_count": 6,
-        "bin_size": 6534
+        "bin_size": 9504
     },
     "2021-06-29:11": {
         "bin_count": 6,
-        "bin_size": 8250
+        "bin_size": 12000
     },
     "2021-06-29:12": {
         "bin_count": 6,
-        "bin_size": 7777
+        "bin_size": 11312
     },
     "2021-06-29:13": {
         "bin_count": 6,
-        "bin_size": 8096
+        "bin_size": 11776
     },
     "2021-06-29:14": {
         "bin_count": 6,
-        "bin_size": 9570
+        "bin_size": 13920
     },
     "2021-06-29:15": {
         "bin_count": 6,
-        "bin_size": 8822
+        "bin_size": 12832
     },
     "2021-06-29:16": {
         "bin_count": 6,
-        "bin_size": 14410
+        "bin_size": 20960
     },
     "2021-06-29:17": {
         "bin_count": 6,
-        "bin_size": 9636
+        "bin_size": 14016
     },
     "2021-06-29:18": {
         "bin_count": 6,
-        "bin_size": 9845
+        "bin_size": 14320
     },
     "2021-06-29:19": {
         "bin_count": 6,
-        "bin_size": 15587
+        "bin_size": 22672
     },
     "2021-06-29:2": {
         "bin_count": 6,
-        "bin_size": 7535
+        "bin_size": 10960
     },
     "2021-06-29:20": {
         "bin_count": 6,
-        "bin_size": 11385
+        "bin_size": 16560
     },
     "2021-06-29:21": {
         "bin_count": 6,
-        "bin_size": 12683
+        "bin_size": 18448
     },
     "2021-06-29:22": {
         "bin_count": 6,
-        "bin_size": 18986
+        "bin_size": 27616
     },
     "2021-06-29:23": {
         "bin_count": 6,
-        "bin_size": 18249
+        "bin_size": 26544
     },
     "2021-06-29:3": {
         "bin_count": 6,
-        "bin_size": 18920
+        "bin_size": 27520
     },
     "2021-06-29:4": {
         "bin_count": 6,
-        "bin_size": 5621
+        "bin_size": 8176
     },
     "2021-06-29:5": {
         "bin_count": 6,
-        "bin_size": 13475
+        "bin_size": 19600
     },
     "2021-06-29:6": {
         "bin_count": 5,
-        "bin_size": 7491
+        "bin_size": 10896
     },
     "2021-06-29:7": {
         "bin_count": 6,
-        "bin_size": 7755
+        "bin_size": 11280
     },
     "2021-06-29:8": {
         "bin_count": 6,
-        "bin_size": 7513
+        "bin_size": 10928
     },
     "2021-06-29:9": {
         "bin_count": 6,
-        "bin_size": 7854
+        "bin_size": 11424
     },
     "2021-06-30:0": {
         "bin_count": 6,
-        "bin_size": 24794
+        "bin_size": 36064
     },
     "2021-06-30:1": {
         "bin_count": 6,
-        "bin_size": 16995
+        "bin_size": 24720
     },
     "2021-06-30:10": {
         "bin_count": 6,
-        "bin_size": 17897
+        "bin_size": 26032
     },
     "2021-06-30:11": {
         "bin_count": 6,
-        "bin_size": 16687
+        "bin_size": 24272
     },
     "2021-06-30:12": {
         "bin_count": 6,
-        "bin_size": 20482
+        "bin_size": 29792
     },
     "2021-06-30:13": {
         "bin_count": 6,
-        "bin_size": 17479
+        "bin_size": 25424
     },
     "2021-06-30:14": {
         "bin_count": 6,
-        "bin_size": 17776
+        "bin_size": 25856
     },
     "2021-06-30:15": {
         "bin_count": 6,
-        "bin_size": 18029
+        "bin_size": 26224
     },
     "2021-06-30:16": {
         "bin_count": 6,
-        "bin_size": 24200
+        "bin_size": 35200
     },
     "2021-06-30:17": {
         "bin_count": 6,
-        "bin_size": 97086
+        "bin_size": 141216
     },
     "2021-06-30:18": {
         "bin_count": 6,
-        "bin_size": 140888
+        "bin_size": 204928
     },
     "2021-06-30:19": {
         "bin_count": 6,
-        "bin_size": 272877
+        "bin_size": 396912
     },
     "2021-06-30:2": {
         "bin_count": 6,
-        "bin_size": 18964
+        "bin_size": 27584
     },
     "2021-06-30:20": {
         "bin_count": 6,
-        "bin_size": 215556
+        "bin_size": 313536
     },
     "2021-06-30:21": {
         "bin_count": 5,
-        "bin_size": 215171
+        "bin_size": 312976
     },
     "2021-06-30:22": {
         "bin_count": 6,
-        "bin_size": 196966
+        "bin_size": 286496
     },
     "2021-06-30:23": {
-        "bin_count": 4,
-        "bin_size": 123948
+        "bin_count": 6,
+        "bin_size": 303216
     },
     "2021-06-30:3": {
         "bin_count": 6,
-        "bin_size": 20526
+        "bin_size": 29856
     },
     "2021-06-30:4": {
         "bin_count": 6,
-        "bin_size": 18106
+        "bin_size": 26336
     },
     "2021-06-30:5": {
         "bin_count": 6,
-        "bin_size": 17259
+        "bin_size": 25104
     },
     "2021-06-30:6": {
         "bin_count": 6,
-        "bin_size": 18227
+        "bin_size": 26512
     },
     "2021-06-30:7": {
         "bin_count": 6,
-        "bin_size": 17204
+        "bin_size": 25024
     },
     "2021-06-30:8": {
         "bin_count": 6,
-        "bin_size": 20185
+        "bin_size": 29360
     },
     "2021-06-30:9": {
         "bin_count": 6,
-        "bin_size": 19536
+        "bin_size": 28416
+    },
+    "2021-07-01:0": {
+        "bin_count": 6,
+        "bin_size": 397904
+    },
+    "2021-07-01:1": {
+        "bin_count": 6,
+        "bin_size": 407216
+    },
+    "2021-07-01:10": {
+        "bin_count": 6,
+        "bin_size": 398080
+    },
+    "2021-07-01:11": {
+        "bin_count": 6,
+        "bin_size": 388400
+    },
+    "2021-07-01:12": {
+        "bin_count": 6,
+        "bin_size": 96208
+    },
+    "2021-07-01:13": {
+        "bin_count": 6,
+        "bin_size": 34048
+    },
+    "2021-07-01:14": {
+        "bin_count": 6,
+        "bin_size": 72528
+    },
+    "2021-07-01:15": {
+        "bin_count": 6,
+        "bin_size": 43264
+    },
+    "2021-07-01:16": {
+        "bin_count": 6,
+        "bin_size": 41664
+    },
+    "2021-07-01:17": {
+        "bin_count": 6,
+        "bin_size": 43008
+    },
+    "2021-07-01:18": {
+        "bin_count": 6,
+        "bin_size": 46032
+    },
+    "2021-07-01:19": {
+        "bin_count": 6,
+        "bin_size": 44464
+    },
+    "2021-07-01:2": {
+        "bin_count": 6,
+        "bin_size": 446912
+    },
+    "2021-07-01:20": {
+        "bin_count": 6,
+        "bin_size": 43952
+    },
+    "2021-07-01:21": {
+        "bin_count": 6,
+        "bin_size": 39616
+    },
+    "2021-07-01:22": {
+        "bin_count": 6,
+        "bin_size": 39344
+    },
+    "2021-07-01:23": {
+        "bin_count": 6,
+        "bin_size": 43200
+    },
+    "2021-07-01:3": {
+        "bin_count": 6,
+        "bin_size": 419008
+    },
+    "2021-07-01:4": {
+        "bin_count": 6,
+        "bin_size": 43872
+    },
+    "2021-07-01:5": {
+        "bin_count": 6,
+        "bin_size": 351376
+    },
+    "2021-07-01:6": {
+        "bin_count": 6,
+        "bin_size": 281536
+    },
+    "2021-07-01:7": {
+        "bin_count": 6,
+        "bin_size": 180656
+    },
+    "2021-07-01:8": {
+        "bin_count": 6,
+        "bin_size": 431200
+    },
+    "2021-07-01:9": {
+        "bin_count": 6,
+        "bin_size": 255680
+    },
+    "2021-07-02:0": {
+        "bin_count": 6,
+        "bin_size": 42096
+    },
+    "2021-07-02:1": {
+        "bin_count": 6,
+        "bin_size": 36864
+    },
+    "2021-07-02:10": {
+        "bin_count": 6,
+        "bin_size": 37152
+    },
+    "2021-07-02:11": {
+        "bin_count": 6,
+        "bin_size": 32864
+    },
+    "2021-07-02:12": {
+        "bin_count": 6,
+        "bin_size": 39744
+    },
+    "2021-07-02:13": {
+        "bin_count": 6,
+        "bin_size": 31616
+    },
+    "2021-07-02:14": {
+        "bin_count": 6,
+        "bin_size": 32800
+    },
+    "2021-07-02:15": {
+        "bin_count": 6,
+        "bin_size": 32880
+    },
+    "2021-07-02:16": {
+        "bin_count": 5,
+        "bin_size": 31840
+    },
+    "2021-07-02:17": {
+        "bin_count": 6,
+        "bin_size": 75936
+    },
+    "2021-07-02:18": {
+        "bin_count": 6,
+        "bin_size": 56128
+    },
+    "2021-07-02:19": {
+        "bin_count": 6,
+        "bin_size": 50960
+    },
+    "2021-07-02:2": {
+        "bin_count": 6,
+        "bin_size": 39664
+    },
+    "2021-07-02:20": {
+        "bin_count": 6,
+        "bin_size": 42688
+    },
+    "2021-07-02:21": {
+        "bin_count": 6,
+        "bin_size": 34288
+    },
+    "2021-07-02:22": {
+        "bin_count": 6,
+        "bin_size": 31712
+    },
+    "2021-07-02:23": {
+        "bin_count": 6,
+        "bin_size": 40416
+    },
+    "2021-07-02:3": {
+        "bin_count": 6,
+        "bin_size": 36608
+    },
+    "2021-07-02:4": {
+        "bin_count": 6,
+        "bin_size": 35008
+    },
+    "2021-07-02:5": {
+        "bin_count": 6,
+        "bin_size": 37312
+    },
+    "2021-07-02:6": {
+        "bin_count": 6,
+        "bin_size": 37408
+    },
+    "2021-07-02:7": {
+        "bin_count": 6,
+        "bin_size": 33408
+    },
+    "2021-07-02:8": {
+        "bin_count": 6,
+        "bin_size": 34608
+    },
+    "2021-07-02:9": {
+        "bin_count": 6,
+        "bin_size": 33888
+    },
+    "2021-07-03:0": {
+        "bin_count": 6,
+        "bin_size": 38976
+    },
+    "2021-07-03:1": {
+        "bin_count": 6,
+        "bin_size": 44768
+    },
+    "2021-07-03:10": {
+        "bin_count": 6,
+        "bin_size": 123040
+    },
+    "2021-07-03:11": {
+        "bin_count": 6,
+        "bin_size": 252624
+    },
+    "2021-07-03:12": {
+        "bin_count": 6,
+        "bin_size": 434960
+    },
+    "2021-07-03:13": {
+        "bin_count": 6,
+        "bin_size": 475808
+    },
+    "2021-07-03:14": {
+        "bin_count": 6,
+        "bin_size": 441328
+    },
+    "2021-07-03:15": {
+        "bin_count": 6,
+        "bin_size": 434800
+    },
+    "2021-07-03:16": {
+        "bin_count": 6,
+        "bin_size": 450688
+    },
+    "2021-07-03:17": {
+        "bin_count": 6,
+        "bin_size": 446640
+    },
+    "2021-07-03:18": {
+        "bin_count": 6,
+        "bin_size": 232624
+    },
+    "2021-07-03:19": {
+        "bin_count": 6,
+        "bin_size": 50224
+    },
+    "2021-07-03:2": {
+        "bin_count": 6,
+        "bin_size": 41680
+    },
+    "2021-07-03:20": {
+        "bin_count": 6,
+        "bin_size": 59104
+    },
+    "2021-07-03:21": {
+        "bin_count": 6,
+        "bin_size": 99680
+    },
+    "2021-07-03:22": {
+        "bin_count": 6,
+        "bin_size": 71616
+    },
+    "2021-07-03:23": {
+        "bin_count": 6,
+        "bin_size": 62928
+    },
+    "2021-07-03:3": {
+        "bin_count": 6,
+        "bin_size": 39376
+    },
+    "2021-07-03:4": {
+        "bin_count": 6,
+        "bin_size": 47728
+    },
+    "2021-07-03:5": {
+        "bin_count": 6,
+        "bin_size": 45408
+    },
+    "2021-07-03:6": {
+        "bin_count": 6,
+        "bin_size": 43872
+    },
+    "2021-07-03:7": {
+        "bin_count": 6,
+        "bin_size": 43232
+    },
+    "2021-07-03:8": {
+        "bin_count": 6,
+        "bin_size": 37168
+    },
+    "2021-07-03:9": {
+        "bin_count": 6,
+        "bin_size": 40672
+    },
+    "2021-07-04:0": {
+        "bin_count": 6,
+        "bin_size": 85216
+    },
+    "2021-07-04:1": {
+        "bin_count": 6,
+        "bin_size": 88048
+    },
+    "2021-07-04:10": {
+        "bin_count": 6,
+        "bin_size": 65744
+    },
+    "2021-07-04:11": {
+        "bin_count": 6,
+        "bin_size": 75136
+    },
+    "2021-07-04:12": {
+        "bin_count": 6,
+        "bin_size": 77104
+    },
+    "2021-07-04:13": {
+        "bin_count": 6,
+        "bin_size": 66464
+    },
+    "2021-07-04:14": {
+        "bin_count": 6,
+        "bin_size": 66944
+    },
+    "2021-07-04:15": {
+        "bin_count": 6,
+        "bin_size": 61888
+    },
+    "2021-07-04:16": {
+        "bin_count": 6,
+        "bin_size": 46064
+    },
+    "2021-07-04:17": {
+        "bin_count": 6,
+        "bin_size": 46784
+    },
+    "2021-07-04:18": {
+        "bin_count": 6,
+        "bin_size": 51424
+    },
+    "2021-07-04:19": {
+        "bin_count": 6,
+        "bin_size": 58784
+    },
+    "2021-07-04:2": {
+        "bin_count": 6,
+        "bin_size": 89168
+    },
+    "2021-07-04:20": {
+        "bin_count": 6,
+        "bin_size": 60128
+    },
+    "2021-07-04:21": {
+        "bin_count": 6,
+        "bin_size": 55344
+    },
+    "2021-07-04:22": {
+        "bin_count": 6,
+        "bin_size": 46272
+    },
+    "2021-07-04:23": {
+        "bin_count": 6,
+        "bin_size": 42384
+    },
+    "2021-07-04:3": {
+        "bin_count": 6,
+        "bin_size": 86128
+    },
+    "2021-07-04:4": {
+        "bin_count": 6,
+        "bin_size": 75680
+    },
+    "2021-07-04:5": {
+        "bin_count": 6,
+        "bin_size": 84704
+    },
+    "2021-07-04:6": {
+        "bin_count": 6,
+        "bin_size": 73632
+    },
+    "2021-07-04:7": {
+        "bin_count": 6,
+        "bin_size": 72464
+    },
+    "2021-07-04:8": {
+        "bin_count": 6,
+        "bin_size": 72384
+    },
+    "2021-07-04:9": {
+        "bin_count": 6,
+        "bin_size": 75776
+    },
+    "2021-07-05:0": {
+        "bin_count": 5,
+        "bin_size": 47360
+    },
+    "2021-07-05:1": {
+        "bin_count": 6,
+        "bin_size": 50320
+    },
+    "2021-07-05:10": {
+        "bin_count": 6,
+        "bin_size": 47216
+    },
+    "2021-07-05:11": {
+        "bin_count": 6,
+        "bin_size": 50240
+    },
+    "2021-07-05:12": {
+        "bin_count": 6,
+        "bin_size": 47536
+    },
+    "2021-07-05:13": {
+        "bin_count": 6,
+        "bin_size": 48016
+    },
+    "2021-07-05:14": {
+        "bin_count": 6,
+        "bin_size": 40800
+    },
+    "2021-07-05:15": {
+        "bin_count": 6,
+        "bin_size": 51312
+    },
+    "2021-07-05:16": {
+        "bin_count": 6,
+        "bin_size": 54608
+    },
+    "2021-07-05:17": {
+        "bin_count": 6,
+        "bin_size": 41168
+    },
+    "2021-07-05:18": {
+        "bin_count": 6,
+        "bin_size": 48144
+    },
+    "2021-07-05:19": {
+        "bin_count": 6,
+        "bin_size": 38464
+    },
+    "2021-07-05:2": {
+        "bin_count": 6,
+        "bin_size": 56672
+    },
+    "2021-07-05:20": {
+        "bin_count": 6,
+        "bin_size": 47168
+    },
+    "2021-07-05:21": {
+        "bin_count": 6,
+        "bin_size": 44656
+    },
+    "2021-07-05:22": {
+        "bin_count": 6,
+        "bin_size": 220416
+    },
+    "2021-07-05:23": {
+        "bin_count": 6,
+        "bin_size": 234656
+    },
+    "2021-07-05:3": {
+        "bin_count": 6,
+        "bin_size": 54816
+    },
+    "2021-07-05:4": {
+        "bin_count": 6,
+        "bin_size": 47808
+    },
+    "2021-07-05:5": {
+        "bin_count": 6,
+        "bin_size": 47216
+    },
+    "2021-07-05:6": {
+        "bin_count": 6,
+        "bin_size": 51248
+    },
+    "2021-07-05:7": {
+        "bin_count": 6,
+        "bin_size": 46848
+    },
+    "2021-07-05:8": {
+        "bin_count": 6,
+        "bin_size": 48464
+    },
+    "2021-07-05:9": {
+        "bin_count": 6,
+        "bin_size": 42944
+    },
+    "2021-07-06:0": {
+        "bin_count": 6,
+        "bin_size": 42832
+    },
+    "2021-07-06:1": {
+        "bin_count": 6,
+        "bin_size": 129120
+    },
+    "2021-07-06:10": {
+        "bin_count": 6,
+        "bin_size": 227072
+    },
+    "2021-07-06:11": {
+        "bin_count": 6,
+        "bin_size": 159488
+    },
+    "2021-07-06:12": {
+        "bin_count": 5,
+        "bin_size": 66512
+    },
+    "2021-07-06:13": {
+        "bin_count": 6,
+        "bin_size": 268352
+    },
+    "2021-07-06:14": {
+        "bin_count": 6,
+        "bin_size": 313360
+    },
+    "2021-07-06:15": {
+        "bin_count": 6,
+        "bin_size": 347760
+    },
+    "2021-07-06:16": {
+        "bin_count": 6,
+        "bin_size": 509552
+    },
+    "2021-07-06:17": {
+        "bin_count": 6,
+        "bin_size": 300208
+    },
+    "2021-07-06:18": {
+        "bin_count": 6,
+        "bin_size": 260544
+    },
+    "2021-07-06:19": {
+        "bin_count": 6,
+        "bin_size": 213632
+    },
+    "2021-07-06:2": {
+        "bin_count": 6,
+        "bin_size": 274592
+    },
+    "2021-07-06:20": {
+        "bin_count": 6,
+        "bin_size": 215248
+    },
+    "2021-07-06:21": {
+        "bin_count": 6,
+        "bin_size": 134352
+    },
+    "2021-07-06:22": {
+        "bin_count": 6,
+        "bin_size": 155552
+    },
+    "2021-07-06:23": {
+        "bin_count": 6,
+        "bin_size": 322656
+    },
+    "2021-07-06:3": {
+        "bin_count": 6,
+        "bin_size": 381344
+    },
+    "2021-07-06:4": {
+        "bin_count": 6,
+        "bin_size": 345856
+    },
+    "2021-07-06:5": {
+        "bin_count": 6,
+        "bin_size": 220048
+    },
+    "2021-07-06:6": {
+        "bin_count": 6,
+        "bin_size": 202032
+    },
+    "2021-07-06:7": {
+        "bin_count": 6,
+        "bin_size": 286160
+    },
+    "2021-07-06:8": {
+        "bin_count": 6,
+        "bin_size": 454208
+    },
+    "2021-07-06:9": {
+        "bin_count": 6,
+        "bin_size": 356960
+    },
+    "2021-07-07:0": {
+        "bin_count": 6,
+        "bin_size": 238752
+    },
+    "2021-07-07:1": {
+        "bin_count": 6,
+        "bin_size": 112448
+    },
+    "2021-07-07:10": {
+        "bin_count": 6,
+        "bin_size": 225824
+    },
+    "2021-07-07:11": {
+        "bin_count": 6,
+        "bin_size": 231680
+    },
+    "2021-07-07:12": {
+        "bin_count": 6,
+        "bin_size": 285648
+    },
+    "2021-07-07:13": {
+        "bin_count": 6,
+        "bin_size": 373328
+    },
+    "2021-07-07:14": {
+        "bin_count": 6,
+        "bin_size": 356224
+    },
+    "2021-07-07:15": {
+        "bin_count": 6,
+        "bin_size": 235056
+    },
+    "2021-07-07:16": {
+        "bin_count": 6,
+        "bin_size": 164496
+    },
+    "2021-07-07:17": {
+        "bin_count": 6,
+        "bin_size": 217616
+    },
+    "2021-07-07:18": {
+        "bin_count": 6,
+        "bin_size": 170832
+    },
+    "2021-07-07:19": {
+        "bin_count": 6,
+        "bin_size": 162672
+    },
+    "2021-07-07:2": {
+        "bin_count": 6,
+        "bin_size": 26912
+    },
+    "2021-07-07:20": {
+        "bin_count": 6,
+        "bin_size": 161600
+    },
+    "2021-07-07:21": {
+        "bin_count": 6,
+        "bin_size": 166208
+    },
+    "2021-07-07:22": {
+        "bin_count": 6,
+        "bin_size": 163120
+    },
+    "2021-07-07:23": {
+        "bin_count": 6,
+        "bin_size": 179120
+    },
+    "2021-07-07:3": {
+        "bin_count": 6,
+        "bin_size": 207472
+    },
+    "2021-07-07:4": {
+        "bin_count": 6,
+        "bin_size": 354112
+    },
+    "2021-07-07:5": {
+        "bin_count": 6,
+        "bin_size": 235760
+    },
+    "2021-07-07:6": {
+        "bin_count": 6,
+        "bin_size": 137056
+    },
+    "2021-07-07:7": {
+        "bin_count": 6,
+        "bin_size": 209952
+    },
+    "2021-07-07:8": {
+        "bin_count": 6,
+        "bin_size": 199904
+    },
+    "2021-07-07:9": {
+        "bin_count": 6,
+        "bin_size": 216592
+    },
+    "2021-07-08:0": {
+        "bin_count": 6,
+        "bin_size": 168928
+    },
+    "2021-07-08:1": {
+        "bin_count": 6,
+        "bin_size": 126688
+    },
+    "2021-07-08:10": {
+        "bin_count": 6,
+        "bin_size": 106864
+    },
+    "2021-07-08:11": {
+        "bin_count": 6,
+        "bin_size": 124640
+    },
+    "2021-07-08:12": {
+        "bin_count": 6,
+        "bin_size": 118960
+    },
+    "2021-07-08:13": {
+        "bin_count": 6,
+        "bin_size": 126272
+    },
+    "2021-07-08:14": {
+        "bin_count": 6,
+        "bin_size": 51952
+    },
+    "2021-07-08:15": {
+        "bin_count": 6,
+        "bin_size": 10560
+    },
+    "2021-07-08:16": {
+        "bin_count": 6,
+        "bin_size": 9456
+    },
+    "2021-07-08:17": {
+        "bin_count": 6,
+        "bin_size": 10016
+    },
+    "2021-07-08:18": {
+        "bin_count": 6,
+        "bin_size": 8288
+    },
+    "2021-07-08:19": {
+        "bin_count": 6,
+        "bin_size": 9296
+    },
+    "2021-07-08:2": {
+        "bin_count": 6,
+        "bin_size": 139824
+    },
+    "2021-07-08:20": {
+        "bin_count": 6,
+        "bin_size": 9680
+    },
+    "2021-07-08:21": {
+        "bin_count": 6,
+        "bin_size": 8768
+    },
+    "2021-07-08:22": {
+        "bin_count": 6,
+        "bin_size": 14096
+    },
+    "2021-07-08:23": {
+        "bin_count": 6,
+        "bin_size": 8912
+    },
+    "2021-07-08:3": {
+        "bin_count": 6,
+        "bin_size": 157696
+    },
+    "2021-07-08:4": {
+        "bin_count": 6,
+        "bin_size": 167920
+    },
+    "2021-07-08:5": {
+        "bin_count": 5,
+        "bin_size": 141008
+    },
+    "2021-07-08:6": {
+        "bin_count": 6,
+        "bin_size": 154208
+    },
+    "2021-07-08:7": {
+        "bin_count": 6,
+        "bin_size": 169264
+    },
+    "2021-07-08:8": {
+        "bin_count": 6,
+        "bin_size": 156000
+    },
+    "2021-07-08:9": {
+        "bin_count": 6,
+        "bin_size": 142304
+    },
+    "2021-07-09:0": {
+        "bin_count": 6,
+        "bin_size": 9104
+    },
+    "2021-07-09:1": {
+        "bin_count": 6,
+        "bin_size": 15344
+    },
+    "2021-07-09:10": {
+        "bin_count": 6,
+        "bin_size": 8000
+    },
+    "2021-07-09:11": {
+        "bin_count": 6,
+        "bin_size": 9168
+    },
+    "2021-07-09:12": {
+        "bin_count": 6,
+        "bin_size": 8784
+    },
+    "2021-07-09:13": {
+        "bin_count": 5,
+        "bin_size": 7168
+    },
+    "2021-07-09:14": {
+        "bin_count": 6,
+        "bin_size": 9712
+    },
+    "2021-07-09:15": {
+        "bin_count": 6,
+        "bin_size": 17472
+    },
+    "2021-07-09:16": {
+        "bin_count": 6,
+        "bin_size": 10736
+    },
+    "2021-07-09:17": {
+        "bin_count": 6,
+        "bin_size": 8080
+    },
+    "2021-07-09:18": {
+        "bin_count": 6,
+        "bin_size": 8464
+    },
+    "2021-07-09:19": {
+        "bin_count": 6,
+        "bin_size": 8192
+    },
+    "2021-07-09:2": {
+        "bin_count": 6,
+        "bin_size": 9920
+    },
+    "2021-07-09:20": {
+        "bin_count": 6,
+        "bin_size": 13776
+    },
+    "2021-07-09:21": {
+        "bin_count": 6,
+        "bin_size": 13488
+    },
+    "2021-07-09:22": {
+        "bin_count": 6,
+        "bin_size": 8192
+    },
+    "2021-07-09:23": {
+        "bin_count": 6,
+        "bin_size": 8864
+    },
+    "2021-07-09:3": {
+        "bin_count": 6,
+        "bin_size": 9776
+    },
+    "2021-07-09:4": {
+        "bin_count": 6,
+        "bin_size": 11040
+    },
+    "2021-07-09:5": {
+        "bin_count": 6,
+        "bin_size": 9248
+    },
+    "2021-07-09:6": {
+        "bin_count": 6,
+        "bin_size": 9776
+    },
+    "2021-07-09:7": {
+        "bin_count": 6,
+        "bin_size": 12240
+    },
+    "2021-07-09:8": {
+        "bin_count": 6,
+        "bin_size": 12320
+    },
+    "2021-07-09:9": {
+        "bin_count": 6,
+        "bin_size": 14784
+    },
+    "2021-07-10:0": {
+        "bin_count": 6,
+        "bin_size": 8320
+    },
+    "2021-07-10:1": {
+        "bin_count": 6,
+        "bin_size": 8160
+    },
+    "2021-07-10:10": {
+        "bin_count": 6,
+        "bin_size": 8048
+    },
+    "2021-07-10:11": {
+        "bin_count": 6,
+        "bin_size": 9600
+    },
+    "2021-07-10:12": {
+        "bin_count": 6,
+        "bin_size": 9360
+    },
+    "2021-07-10:13": {
+        "bin_count": 6,
+        "bin_size": 9232
+    },
+    "2021-07-10:14": {
+        "bin_count": 6,
+        "bin_size": 12080
+    },
+    "2021-07-10:15": {
+        "bin_count": 6,
+        "bin_size": 9984
+    },
+    "2021-07-10:16": {
+        "bin_count": 6,
+        "bin_size": 8720
+    },
+    "2021-07-10:17": {
+        "bin_count": 6,
+        "bin_size": 9872
+    },
+    "2021-07-10:18": {
+        "bin_count": 6,
+        "bin_size": 8624
+    },
+    "2021-07-10:19": {
+        "bin_count": 6,
+        "bin_size": 11792
+    },
+    "2021-07-10:2": {
+        "bin_count": 6,
+        "bin_size": 9648
+    },
+    "2021-07-10:20": {
+        "bin_count": 6,
+        "bin_size": 10064
+    },
+    "2021-07-10:21": {
+        "bin_count": 6,
+        "bin_size": 9056
+    },
+    "2021-07-10:22": {
+        "bin_count": 6,
+        "bin_size": 8128
+    },
+    "2021-07-10:23": {
+        "bin_count": 6,
+        "bin_size": 10528
+    },
+    "2021-07-10:3": {
+        "bin_count": 6,
+        "bin_size": 12928
+    },
+    "2021-07-10:4": {
+        "bin_count": 6,
+        "bin_size": 11616
+    },
+    "2021-07-10:5": {
+        "bin_count": 6,
+        "bin_size": 11360
+    },
+    "2021-07-10:6": {
+        "bin_count": 6,
+        "bin_size": 14800
+    },
+    "2021-07-10:7": {
+        "bin_count": 6,
+        "bin_size": 11664
+    },
+    "2021-07-10:8": {
+        "bin_count": 6,
+        "bin_size": 10864
+    },
+    "2021-07-10:9": {
+        "bin_count": 6,
+        "bin_size": 9664
+    },
+    "2021-07-11:0": {
+        "bin_count": 5,
+        "bin_size": 11200
+    },
+    "2021-07-11:1": {
+        "bin_count": 6,
+        "bin_size": 7936
+    },
+    "2021-07-11:10": {
+        "bin_count": 6,
+        "bin_size": 8736
+    },
+    "2021-07-11:11": {
+        "bin_count": 6,
+        "bin_size": 9920
+    },
+    "2021-07-11:12": {
+        "bin_count": 6,
+        "bin_size": 9024
+    },
+    "2021-07-11:13": {
+        "bin_count": 6,
+        "bin_size": 13632
+    },
+    "2021-07-11:14": {
+        "bin_count": 6,
+        "bin_size": 12816
+    },
+    "2021-07-11:15": {
+        "bin_count": 6,
+        "bin_size": 10304
+    },
+    "2021-07-11:16": {
+        "bin_count": 6,
+        "bin_size": 8528
+    },
+    "2021-07-11:17": {
+        "bin_count": 6,
+        "bin_size": 15376
+    },
+    "2021-07-11:18": {
+        "bin_count": 6,
+        "bin_size": 9488
+    },
+    "2021-07-11:19": {
+        "bin_count": 6,
+        "bin_size": 8016
+    },
+    "2021-07-11:2": {
+        "bin_count": 6,
+        "bin_size": 8080
+    },
+    "2021-07-11:20": {
+        "bin_count": 6,
+        "bin_size": 8880
+    },
+    "2021-07-11:21": {
+        "bin_count": 6,
+        "bin_size": 7744
+    },
+    "2021-07-11:22": {
+        "bin_count": 6,
+        "bin_size": 10512
+    },
+    "2021-07-11:23": {
+        "bin_count": 6,
+        "bin_size": 9248
+    },
+    "2021-07-11:3": {
+        "bin_count": 6,
+        "bin_size": 8448
+    },
+    "2021-07-11:4": {
+        "bin_count": 6,
+        "bin_size": 7824
+    },
+    "2021-07-11:5": {
+        "bin_count": 6,
+        "bin_size": 7760
+    },
+    "2021-07-11:6": {
+        "bin_count": 6,
+        "bin_size": 8368
+    },
+    "2021-07-11:7": {
+        "bin_count": 6,
+        "bin_size": 9008
+    },
+    "2021-07-11:8": {
+        "bin_count": 6,
+        "bin_size": 8960
+    },
+    "2021-07-11:9": {
+        "bin_count": 6,
+        "bin_size": 10928
+    },
+    "2021-07-12:0": {
+        "bin_count": 6,
+        "bin_size": 7728
+    },
+    "2021-07-12:1": {
+        "bin_count": 6,
+        "bin_size": 9600
+    },
+    "2021-07-12:10": {
+        "bin_count": 6,
+        "bin_size": 10672
+    },
+    "2021-07-12:11": {
+        "bin_count": 5,
+        "bin_size": 9184
+    },
+    "2021-07-12:12": {
+        "bin_count": 6,
+        "bin_size": 12272
+    },
+    "2021-07-12:13": {
+        "bin_count": 6,
+        "bin_size": 15392
+    },
+    "2021-07-12:14": {
+        "bin_count": 6,
+        "bin_size": 17296
+    },
+    "2021-07-12:15": {
+        "bin_count": 6,
+        "bin_size": 16672
+    },
+    "2021-07-12:16": {
+        "bin_count": 6,
+        "bin_size": 12896
+    },
+    "2021-07-12:17": {
+        "bin_count": 6,
+        "bin_size": 12992
+    },
+    "2021-07-12:18": {
+        "bin_count": 6,
+        "bin_size": 20816
+    },
+    "2021-07-12:19": {
+        "bin_count": 6,
+        "bin_size": 12576
+    },
+    "2021-07-12:2": {
+        "bin_count": 6,
+        "bin_size": 8800
+    },
+    "2021-07-12:20": {
+        "bin_count": 6,
+        "bin_size": 14784
+    },
+    "2021-07-12:21": {
+        "bin_count": 6,
+        "bin_size": 12992
+    },
+    "2021-07-12:22": {
+        "bin_count": 6,
+        "bin_size": 12240
+    },
+    "2021-07-12:23": {
+        "bin_count": 6,
+        "bin_size": 18784
+    },
+    "2021-07-12:3": {
+        "bin_count": 6,
+        "bin_size": 8912
+    },
+    "2021-07-12:4": {
+        "bin_count": 6,
+        "bin_size": 7984
+    },
+    "2021-07-12:5": {
+        "bin_count": 6,
+        "bin_size": 13264
+    },
+    "2021-07-12:6": {
+        "bin_count": 6,
+        "bin_size": 58000
+    },
+    "2021-07-12:7": {
+        "bin_count": 6,
+        "bin_size": 10480
+    },
+    "2021-07-12:8": {
+        "bin_count": 6,
+        "bin_size": 12432
+    },
+    "2021-07-12:9": {
+        "bin_count": 6,
+        "bin_size": 12064
+    },
+    "2021-07-13:0": {
+        "bin_count": 6,
+        "bin_size": 13616
+    },
+    "2021-07-13:1": {
+        "bin_count": 6,
+        "bin_size": 15264
+    },
+    "2021-07-13:10": {
+        "bin_count": 6,
+        "bin_size": 13792
+    },
+    "2021-07-13:11": {
+        "bin_count": 6,
+        "bin_size": 13648
+    },
+    "2021-07-13:12": {
+        "bin_count": 6,
+        "bin_size": 8992
+    },
+    "2021-07-13:13": {
+        "bin_count": 6,
+        "bin_size": 8848
+    },
+    "2021-07-13:14": {
+        "bin_count": 6,
+        "bin_size": 9744
+    },
+    "2021-07-13:15": {
+        "bin_count": 6,
+        "bin_size": 9136
+    },
+    "2021-07-13:16": {
+        "bin_count": 6,
+        "bin_size": 14768
+    },
+    "2021-07-13:17": {
+        "bin_count": 6,
+        "bin_size": 8032
+    },
+    "2021-07-13:18": {
+        "bin_count": 6,
+        "bin_size": 10480
+    },
+    "2021-07-13:19": {
+        "bin_count": 6,
+        "bin_size": 8736
+    },
+    "2021-07-13:2": {
+        "bin_count": 6,
+        "bin_size": 14960
+    },
+    "2021-07-13:20": {
+        "bin_count": 6,
+        "bin_size": 8896
+    },
+    "2021-07-13:21": {
+        "bin_count": 6,
+        "bin_size": 9984
+    },
+    "2021-07-13:22": {
+        "bin_count": 5,
+        "bin_size": 11360
+    },
+    "2021-07-13:23": {
+        "bin_count": 6,
+        "bin_size": 18592
+    },
+    "2021-07-13:3": {
+        "bin_count": 6,
+        "bin_size": 16848
+    },
+    "2021-07-13:4": {
+        "bin_count": 6,
+        "bin_size": 14336
+    },
+    "2021-07-13:5": {
+        "bin_count": 6,
+        "bin_size": 19280
+    },
+    "2021-07-13:6": {
+        "bin_count": 6,
+        "bin_size": 19488
+    },
+    "2021-07-13:7": {
+        "bin_count": 6,
+        "bin_size": 18336
+    },
+    "2021-07-13:8": {
+        "bin_count": 6,
+        "bin_size": 16496
+    },
+    "2021-07-13:9": {
+        "bin_count": 6,
+        "bin_size": 19120
+    },
+    "2021-07-14:0": {
+        "bin_count": 6,
+        "bin_size": 13888
+    },
+    "2021-07-14:1": {
+        "bin_count": 6,
+        "bin_size": 11024
+    },
+    "2021-07-14:10": {
+        "bin_count": 6,
+        "bin_size": 12496
+    },
+    "2021-07-14:11": {
+        "bin_count": 6,
+        "bin_size": 19920
+    },
+    "2021-07-14:12": {
+        "bin_count": 6,
+        "bin_size": 8752
+    },
+    "2021-07-14:13": {
+        "bin_count": 6,
+        "bin_size": 8192
+    },
+    "2021-07-14:14": {
+        "bin_count": 6,
+        "bin_size": 9696
+    },
+    "2021-07-14:15": {
+        "bin_count": 6,
+        "bin_size": 10192
+    },
+    "2021-07-14:16": {
+        "bin_count": 6,
+        "bin_size": 9184
+    },
+    "2021-07-14:17": {
+        "bin_count": 6,
+        "bin_size": 10960
+    },
+    "2021-07-14:18": {
+        "bin_count": 6,
+        "bin_size": 9344
+    },
+    "2021-07-14:19": {
+        "bin_count": 6,
+        "bin_size": 8560
+    },
+    "2021-07-14:2": {
+        "bin_count": 6,
+        "bin_size": 10240
+    },
+    "2021-07-14:20": {
+        "bin_count": 6,
+        "bin_size": 12080
+    },
+    "2021-07-14:21": {
+        "bin_count": 6,
+        "bin_size": 11424
+    },
+    "2021-07-14:22": {
+        "bin_count": 6,
+        "bin_size": 8848
+    },
+    "2021-07-14:23": {
+        "bin_count": 6,
+        "bin_size": 9296
+    },
+    "2021-07-14:3": {
+        "bin_count": 6,
+        "bin_size": 10736
+    },
+    "2021-07-14:4": {
+        "bin_count": 6,
+        "bin_size": 10256
+    },
+    "2021-07-14:5": {
+        "bin_count": 6,
+        "bin_size": 9440
+    },
+    "2021-07-14:6": {
+        "bin_count": 6,
+        "bin_size": 9856
+    },
+    "2021-07-14:7": {
+        "bin_count": 6,
+        "bin_size": 9856
+    },
+    "2021-07-14:8": {
+        "bin_count": 6,
+        "bin_size": 9344
+    },
+    "2021-07-14:9": {
+        "bin_count": 6,
+        "bin_size": 12480
+    },
+    "2021-07-15:0": {
+        "bin_count": 6,
+        "bin_size": 11168
+    },
+    "2021-07-15:1": {
+        "bin_count": 6,
+        "bin_size": 11408
+    },
+    "2021-07-15:10": {
+        "bin_count": 6,
+        "bin_size": 14080
+    },
+    "2021-07-15:11": {
+        "bin_count": 6,
+        "bin_size": 14000
+    },
+    "2021-07-15:12": {
+        "bin_count": 6,
+        "bin_size": 13920
+    },
+    "2021-07-15:13": {
+        "bin_count": 6,
+        "bin_size": 18080
+    },
+    "2021-07-15:14": {
+        "bin_count": 6,
+        "bin_size": 14752
+    },
+    "2021-07-15:15": {
+        "bin_count": 6,
+        "bin_size": 19840
+    },
+    "2021-07-15:16": {
+        "bin_count": 6,
+        "bin_size": 12896
+    },
+    "2021-07-15:17": {
+        "bin_count": 6,
+        "bin_size": 16112
+    },
+    "2021-07-15:18": {
+        "bin_count": 6,
+        "bin_size": 15072
+    },
+    "2021-07-15:19": {
+        "bin_count": 6,
+        "bin_size": 14656
+    },
+    "2021-07-15:2": {
+        "bin_count": 5,
+        "bin_size": 9936
+    },
+    "2021-07-15:20": {
+        "bin_count": 6,
+        "bin_size": 18992
+    },
+    "2021-07-15:21": {
+        "bin_count": 6,
+        "bin_size": 18656
+    },
+    "2021-07-15:22": {
+        "bin_count": 6,
+        "bin_size": 13376
+    },
+    "2021-07-15:23": {
+        "bin_count": 6,
+        "bin_size": 13072
+    },
+    "2021-07-15:3": {
+        "bin_count": 6,
+        "bin_size": 14496
+    },
+    "2021-07-15:4": {
+        "bin_count": 6,
+        "bin_size": 13040
+    },
+    "2021-07-15:5": {
+        "bin_count": 6,
+        "bin_size": 12592
+    },
+    "2021-07-15:6": {
+        "bin_count": 6,
+        "bin_size": 13024
+    },
+    "2021-07-15:7": {
+        "bin_count": 6,
+        "bin_size": 12640
+    },
+    "2021-07-15:8": {
+        "bin_count": 6,
+        "bin_size": 12368
+    },
+    "2021-07-15:9": {
+        "bin_count": 6,
+        "bin_size": 13312
+    },
+    "2021-07-16:0": {
+        "bin_count": 6,
+        "bin_size": 18704
+    },
+    "2021-07-16:1": {
+        "bin_count": 6,
+        "bin_size": 15344
+    },
+    "2021-07-16:10": {
+        "bin_count": 5,
+        "bin_size": 13904
+    },
+    "2021-07-16:11": {
+        "bin_count": 6,
+        "bin_size": 12592
+    },
+    "2021-07-16:12": {
+        "bin_count": 6,
+        "bin_size": 14720
+    },
+    "2021-07-16:13": {
+        "bin_count": 6,
+        "bin_size": 8224
+    },
+    "2021-07-16:14": {
+        "bin_count": 6,
+        "bin_size": 9312
+    },
+    "2021-07-16:15": {
+        "bin_count": 6,
+        "bin_size": 8960
+    },
+    "2021-07-16:16": {
+        "bin_count": 6,
+        "bin_size": 8576
+    },
+    "2021-07-16:17": {
+        "bin_count": 6,
+        "bin_size": 14960
+    },
+    "2021-07-16:18": {
+        "bin_count": 6,
+        "bin_size": 10976
+    },
+    "2021-07-16:19": {
+        "bin_count": 6,
+        "bin_size": 10672
+    },
+    "2021-07-16:2": {
+        "bin_count": 6,
+        "bin_size": 16480
+    },
+    "2021-07-16:20": {
+        "bin_count": 6,
+        "bin_size": 9648
+    },
+    "2021-07-16:21": {
+        "bin_count": 6,
+        "bin_size": 10400
+    },
+    "2021-07-16:22": {
+        "bin_count": 6,
+        "bin_size": 18768
+    },
+    "2021-07-16:23": {
+        "bin_count": 6,
+        "bin_size": 10704
+    },
+    "2021-07-16:3": {
+        "bin_count": 6,
+        "bin_size": 18384
+    },
+    "2021-07-16:4": {
+        "bin_count": 6,
+        "bin_size": 19920
+    },
+    "2021-07-16:5": {
+        "bin_count": 6,
+        "bin_size": 11456
+    },
+    "2021-07-16:6": {
+        "bin_count": 6,
+        "bin_size": 9456
+    },
+    "2021-07-16:7": {
+        "bin_count": 6,
+        "bin_size": 13856
+    },
+    "2021-07-16:8": {
+        "bin_count": 6,
+        "bin_size": 9360
+    },
+    "2021-07-16:9": {
+        "bin_count": 6,
+        "bin_size": 16160
+    },
+    "2021-07-17:0": {
+        "bin_count": 6,
+        "bin_size": 8880
+    },
+    "2021-07-17:1": {
+        "bin_count": 6,
+        "bin_size": 13808
+    },
+    "2021-07-17:10": {
+        "bin_count": 6,
+        "bin_size": 8864
+    },
+    "2021-07-17:11": {
+        "bin_count": 6,
+        "bin_size": 11984
+    },
+    "2021-07-17:12": {
+        "bin_count": 6,
+        "bin_size": 7520
+    },
+    "2021-07-17:13": {
+        "bin_count": 6,
+        "bin_size": 12048
+    },
+    "2021-07-17:14": {
+        "bin_count": 6,
+        "bin_size": 9728
+    },
+    "2021-07-17:15": {
+        "bin_count": 6,
+        "bin_size": 9344
+    },
+    "2021-07-17:16": {
+        "bin_count": 6,
+        "bin_size": 11344
+    },
+    "2021-07-17:17": {
+        "bin_count": 5,
+        "bin_size": 8240
+    },
+    "2021-07-17:18": {
+        "bin_count": 6,
+        "bin_size": 8720
+    },
+    "2021-07-17:19": {
+        "bin_count": 6,
+        "bin_size": 8496
+    },
+    "2021-07-17:2": {
+        "bin_count": 6,
+        "bin_size": 14016
+    },
+    "2021-07-17:20": {
+        "bin_count": 6,
+        "bin_size": 9488
+    },
+    "2021-07-17:21": {
+        "bin_count": 6,
+        "bin_size": 25136
+    },
+    "2021-07-17:22": {
+        "bin_count": 6,
+        "bin_size": 10272
+    },
+    "2021-07-17:23": {
+        "bin_count": 6,
+        "bin_size": 9600
+    },
+    "2021-07-17:3": {
+        "bin_count": 6,
+        "bin_size": 9936
+    },
+    "2021-07-17:4": {
+        "bin_count": 6,
+        "bin_size": 8192
+    },
+    "2021-07-17:5": {
+        "bin_count": 6,
+        "bin_size": 10192
+    },
+    "2021-07-17:6": {
+        "bin_count": 6,
+        "bin_size": 8048
+    },
+    "2021-07-17:7": {
+        "bin_count": 6,
+        "bin_size": 11264
+    },
+    "2021-07-17:8": {
+        "bin_count": 6,
+        "bin_size": 9456
+    },
+    "2021-07-17:9": {
+        "bin_count": 6,
+        "bin_size": 8528
+    },
+    "2021-07-18:0": {
+        "bin_count": 6,
+        "bin_size": 11136
+    },
+    "2021-07-18:1": {
+        "bin_count": 6,
+        "bin_size": 16992
+    },
+    "2021-07-18:10": {
+        "bin_count": 6,
+        "bin_size": 11376
+    },
+    "2021-07-18:11": {
+        "bin_count": 6,
+        "bin_size": 7184
+    },
+    "2021-07-18:12": {
+        "bin_count": 6,
+        "bin_size": 9040
+    },
+    "2021-07-18:13": {
+        "bin_count": 6,
+        "bin_size": 7856
+    },
+    "2021-07-18:14": {
+        "bin_count": 6,
+        "bin_size": 8528
+    },
+    "2021-07-18:15": {
+        "bin_count": 6,
+        "bin_size": 7680
+    },
+    "2021-07-18:16": {
+        "bin_count": 6,
+        "bin_size": 8224
+    },
+    "2021-07-18:17": {
+        "bin_count": 6,
+        "bin_size": 8352
+    },
+    "2021-07-18:18": {
+        "bin_count": 6,
+        "bin_size": 10848
+    },
+    "2021-07-18:19": {
+        "bin_count": 6,
+        "bin_size": 11088
+    },
+    "2021-07-18:2": {
+        "bin_count": 6,
+        "bin_size": 8288
+    },
+    "2021-07-18:20": {
+        "bin_count": 6,
+        "bin_size": 14864
+    },
+    "2021-07-18:21": {
+        "bin_count": 5,
+        "bin_size": 10528
+    },
+    "2021-07-18:22": {
+        "bin_count": 6,
+        "bin_size": 11504
+    },
+    "2021-07-18:23": {
+        "bin_count": 6,
+        "bin_size": 12176
+    },
+    "2021-07-18:3": {
+        "bin_count": 6,
+        "bin_size": 8528
+    },
+    "2021-07-18:4": {
+        "bin_count": 6,
+        "bin_size": 8496
+    },
+    "2021-07-18:5": {
+        "bin_count": 6,
+        "bin_size": 7808
+    },
+    "2021-07-18:6": {
+        "bin_count": 6,
+        "bin_size": 14144
+    },
+    "2021-07-18:7": {
+        "bin_count": 6,
+        "bin_size": 12016
+    },
+    "2021-07-18:8": {
+        "bin_count": 6,
+        "bin_size": 11216
+    },
+    "2021-07-18:9": {
+        "bin_count": 6,
+        "bin_size": 7536
+    },
+    "2021-07-19:0": {
+        "bin_count": 6,
+        "bin_size": 11296
+    },
+    "2021-07-19:1": {
+        "bin_count": 6,
+        "bin_size": 12064
+    },
+    "2021-07-19:10": {
+        "bin_count": 6,
+        "bin_size": 14128
+    },
+    "2021-07-19:11": {
+        "bin_count": 6,
+        "bin_size": 9440
+    },
+    "2021-07-19:12": {
+        "bin_count": 6,
+        "bin_size": 9056
+    },
+    "2021-07-19:13": {
+        "bin_count": 6,
+        "bin_size": 15024
+    },
+    "2021-07-19:14": {
+        "bin_count": 6,
+        "bin_size": 9136
+    },
+    "2021-07-19:15": {
+        "bin_count": 6,
+        "bin_size": 7216
+    },
+    "2021-07-19:16": {
+        "bin_count": 6,
+        "bin_size": 7536
+    },
+    "2021-07-19:17": {
+        "bin_count": 6,
+        "bin_size": 10560
+    },
+    "2021-07-19:18": {
+        "bin_count": 6,
+        "bin_size": 9136
+    },
+    "2021-07-19:19": {
+        "bin_count": 6,
+        "bin_size": 12336
+    },
+    "2021-07-19:2": {
+        "bin_count": 6,
+        "bin_size": 10928
+    },
+    "2021-07-19:20": {
+        "bin_count": 6,
+        "bin_size": 13584
+    },
+    "2021-07-19:21": {
+        "bin_count": 5,
+        "bin_size": 7488
+    },
+    "2021-07-19:22": {
+        "bin_count": 6,
+        "bin_size": 7760
+    },
+    "2021-07-19:23": {
+        "bin_count": 6,
+        "bin_size": 9392
+    },
+    "2021-07-19:3": {
+        "bin_count": 6,
+        "bin_size": 12368
+    },
+    "2021-07-19:4": {
+        "bin_count": 6,
+        "bin_size": 11808
+    },
+    "2021-07-19:5": {
+        "bin_count": 6,
+        "bin_size": 16704
+    },
+    "2021-07-19:6": {
+        "bin_count": 6,
+        "bin_size": 16224
+    },
+    "2021-07-19:7": {
+        "bin_count": 6,
+        "bin_size": 11360
+    },
+    "2021-07-19:8": {
+        "bin_count": 6,
+        "bin_size": 11648
+    },
+    "2021-07-19:9": {
+        "bin_count": 6,
+        "bin_size": 14368
+    },
+    "2021-07-20:0": {
+        "bin_count": 6,
+        "bin_size": 8528
+    },
+    "2021-07-20:1": {
+        "bin_count": 6,
+        "bin_size": 8384
+    },
+    "2021-07-20:10": {
+        "bin_count": 6,
+        "bin_size": 7680
+    },
+    "2021-07-20:11": {
+        "bin_count": 6,
+        "bin_size": 11344
+    },
+    "2021-07-20:12": {
+        "bin_count": 6,
+        "bin_size": 11056
+    },
+    "2021-07-20:13": {
+        "bin_count": 6,
+        "bin_size": 10400
+    },
+    "2021-07-20:14": {
+        "bin_count": 6,
+        "bin_size": 6592
+    },
+    "2021-07-20:15": {
+        "bin_count": 6,
+        "bin_size": 6592
+    },
+    "2021-07-20:16": {
+        "bin_count": 6,
+        "bin_size": 9488
+    },
+    "2021-07-20:17": {
+        "bin_count": 6,
+        "bin_size": 11872
+    },
+    "2021-07-20:18": {
+        "bin_count": 6,
+        "bin_size": 11872
+    },
+    "2021-07-20:19": {
+        "bin_count": 6,
+        "bin_size": 10512
+    },
+    "2021-07-20:2": {
+        "bin_count": 6,
+        "bin_size": 8128
+    },
+    "2021-07-20:20": {
+        "bin_count": 6,
+        "bin_size": 8768
+    },
+    "2021-07-20:21": {
+        "bin_count": 6,
+        "bin_size": 20688
+    },
+    "2021-07-20:22": {
+        "bin_count": 6,
+        "bin_size": 29216
+    },
+    "2021-07-20:23": {
+        "bin_count": 6,
+        "bin_size": 32864
+    },
+    "2021-07-20:3": {
+        "bin_count": 6,
+        "bin_size": 7728
+    },
+    "2021-07-20:4": {
+        "bin_count": 6,
+        "bin_size": 13792
+    },
+    "2021-07-20:5": {
+        "bin_count": 6,
+        "bin_size": 10448
+    },
+    "2021-07-20:6": {
+        "bin_count": 6,
+        "bin_size": 8320
+    },
+    "2021-07-20:7": {
+        "bin_count": 6,
+        "bin_size": 7552
+    },
+    "2021-07-20:8": {
+        "bin_count": 6,
+        "bin_size": 7376
+    },
+    "2021-07-20:9": {
+        "bin_count": 6,
+        "bin_size": 9264
+    },
+    "2021-07-21:0": {
+        "bin_count": 6,
+        "bin_size": 27136
+    },
+    "2021-07-21:1": {
+        "bin_count": 5,
+        "bin_size": 10992
+    },
+    "2021-07-21:10": {
+        "bin_count": 6,
+        "bin_size": 9344
+    },
+    "2021-07-21:11": {
+        "bin_count": 6,
+        "bin_size": 8832
+    },
+    "2021-07-21:12": {
+        "bin_count": 6,
+        "bin_size": 9504
+    },
+    "2021-07-21:13": {
+        "bin_count": 6,
+        "bin_size": 8816
+    },
+    "2021-07-21:14": {
+        "bin_count": 6,
+        "bin_size": 9344
+    },
+    "2021-07-21:15": {
+        "bin_count": 6,
+        "bin_size": 14896
+    },
+    "2021-07-21:16": {
+        "bin_count": 6,
+        "bin_size": 10160
+    },
+    "2021-07-21:17": {
+        "bin_count": 6,
+        "bin_size": 7920
+    },
+    "2021-07-21:18": {
+        "bin_count": 6,
+        "bin_size": 8000
+    },
+    "2021-07-21:19": {
+        "bin_count": 6,
+        "bin_size": 8608
+    },
+    "2021-07-21:2": {
+        "bin_count": 6,
+        "bin_size": 12672
+    },
+    "2021-07-21:20": {
+        "bin_count": 6,
+        "bin_size": 9168
+    },
+    "2021-07-21:21": {
+        "bin_count": 6,
+        "bin_size": 16576
+    },
+    "2021-07-21:22": {
+        "bin_count": 6,
+        "bin_size": 12688
+    },
+    "2021-07-21:23": {
+        "bin_count": 6,
+        "bin_size": 7872
+    },
+    "2021-07-21:3": {
+        "bin_count": 6,
+        "bin_size": 8624
+    },
+    "2021-07-21:4": {
+        "bin_count": 6,
+        "bin_size": 9296
+    },
+    "2021-07-21:5": {
+        "bin_count": 6,
+        "bin_size": 9776
+    },
+    "2021-07-21:6": {
+        "bin_count": 6,
+        "bin_size": 7072
+    },
+    "2021-07-21:7": {
+        "bin_count": 6,
+        "bin_size": 8560
+    },
+    "2021-07-21:8": {
+        "bin_count": 6,
+        "bin_size": 7104
+    },
+    "2021-07-21:9": {
+        "bin_count": 6,
+        "bin_size": 13552
+    },
+    "2021-07-22:0": {
+        "bin_count": 6,
+        "bin_size": 9744
+    },
+    "2021-07-22:1": {
+        "bin_count": 6,
+        "bin_size": 8640
+    },
+    "2021-07-22:10": {
+        "bin_count": 6,
+        "bin_size": 12176
+    },
+    "2021-07-22:11": {
+        "bin_count": 6,
+        "bin_size": 11072
+    },
+    "2021-07-22:12": {
+        "bin_count": 6,
+        "bin_size": 9936
+    },
+    "2021-07-22:13": {
+        "bin_count": 6,
+        "bin_size": 9856
+    },
+    "2021-07-22:14": {
+        "bin_count": 6,
+        "bin_size": 10736
+    },
+    "2021-07-22:15": {
+        "bin_count": 6,
+        "bin_size": 15616
+    },
+    "2021-07-22:16": {
+        "bin_count": 6,
+        "bin_size": 11168
+    },
+    "2021-07-22:17": {
+        "bin_count": 6,
+        "bin_size": 22304
+    },
+    "2021-07-22:18": {
+        "bin_count": 6,
+        "bin_size": 8208
+    },
+    "2021-07-22:19": {
+        "bin_count": 6,
+        "bin_size": 12048
+    },
+    "2021-07-22:2": {
+        "bin_count": 5,
+        "bin_size": 6720
+    },
+    "2021-07-22:20": {
+        "bin_count": 6,
+        "bin_size": 8528
+    },
+    "2021-07-22:21": {
+        "bin_count": 6,
+        "bin_size": 12864
+    },
+    "2021-07-22:22": {
+        "bin_count": 6,
+        "bin_size": 7584
+    },
+    "2021-07-22:23": {
+        "bin_count": 6,
+        "bin_size": 7472
+    },
+    "2021-07-22:3": {
+        "bin_count": 6,
+        "bin_size": 9024
+    },
+    "2021-07-22:4": {
+        "bin_count": 6,
+        "bin_size": 9632
+    },
+    "2021-07-22:5": {
+        "bin_count": 6,
+        "bin_size": 13296
+    },
+    "2021-07-22:6": {
+        "bin_count": 6,
+        "bin_size": 9584
+    },
+    "2021-07-22:7": {
+        "bin_count": 6,
+        "bin_size": 8448
+    },
+    "2021-07-22:8": {
+        "bin_count": 6,
+        "bin_size": 9456
+    },
+    "2021-07-22:9": {
+        "bin_count": 6,
+        "bin_size": 9536
+    },
+    "2021-07-23:0": {
+        "bin_count": 6,
+        "bin_size": 10480
+    },
+    "2021-07-23:1": {
+        "bin_count": 6,
+        "bin_size": 15104
+    },
+    "2021-07-23:10": {
+        "bin_count": 6,
+        "bin_size": 6672
+    },
+    "2021-07-23:11": {
+        "bin_count": 6,
+        "bin_size": 11872
+    },
+    "2021-07-23:12": {
+        "bin_count": 6,
+        "bin_size": 11408
+    },
+    "2021-07-23:13": {
+        "bin_count": 6,
+        "bin_size": 7040
+    },
+    "2021-07-23:14": {
+        "bin_count": 6,
+        "bin_size": 10048
+    },
+    "2021-07-23:15": {
+        "bin_count": 6,
+        "bin_size": 7184
+    },
+    "2021-07-23:16": {
+        "bin_count": 6,
+        "bin_size": 7872
+    },
+    "2021-07-23:17": {
+        "bin_count": 6,
+        "bin_size": 7792
+    },
+    "2021-07-23:18": {
+        "bin_count": 6,
+        "bin_size": 8688
+    },
+    "2021-07-23:19": {
+        "bin_count": 6,
+        "bin_size": 7792
+    },
+    "2021-07-23:2": {
+        "bin_count": 6,
+        "bin_size": 9904
+    },
+    "2021-07-23:20": {
+        "bin_count": 6,
+        "bin_size": 7664
+    },
+    "2021-07-23:21": {
+        "bin_count": 6,
+        "bin_size": 8976
+    },
+    "2021-07-23:22": {
+        "bin_count": 6,
+        "bin_size": 9312
+    },
+    "2021-07-23:23": {
+        "bin_count": 6,
+        "bin_size": 12976
+    },
+    "2021-07-23:3": {
+        "bin_count": 6,
+        "bin_size": 8272
+    },
+    "2021-07-23:4": {
+        "bin_count": 6,
+        "bin_size": 12592
+    },
+    "2021-07-23:5": {
+        "bin_count": 5,
+        "bin_size": 10048
+    },
+    "2021-07-23:6": {
+        "bin_count": 6,
+        "bin_size": 10512
+    },
+    "2021-07-23:7": {
+        "bin_count": 6,
+        "bin_size": 14016
+    },
+    "2021-07-23:8": {
+        "bin_count": 6,
+        "bin_size": 13392
+    },
+    "2021-07-23:9": {
+        "bin_count": 6,
+        "bin_size": 11488
+    },
+    "2021-07-24:0": {
+        "bin_count": 6,
+        "bin_size": 12320
+    },
+    "2021-07-24:1": {
+        "bin_count": 6,
+        "bin_size": 8560
+    },
+    "2021-07-24:10": {
+        "bin_count": 6,
+        "bin_size": 9168
+    },
+    "2021-07-24:11": {
+        "bin_count": 6,
+        "bin_size": 6880
+    },
+    "2021-07-24:12": {
+        "bin_count": 6,
+        "bin_size": 6912
+    },
+    "2021-07-24:13": {
+        "bin_count": 6,
+        "bin_size": 8336
+    },
+    "2021-07-24:14": {
+        "bin_count": 6,
+        "bin_size": 9808
+    },
+    "2021-07-24:15": {
+        "bin_count": 6,
+        "bin_size": 9168
+    },
+    "2021-07-24:16": {
+        "bin_count": 6,
+        "bin_size": 12272
+    },
+    "2021-07-24:17": {
+        "bin_count": 6,
+        "bin_size": 7312
+    },
+    "2021-07-24:18": {
+        "bin_count": 6,
+        "bin_size": 15824
+    },
+    "2021-07-24:19": {
+        "bin_count": 6,
+        "bin_size": 6880
+    },
+    "2021-07-24:2": {
+        "bin_count": 6,
+        "bin_size": 7600
+    },
+    "2021-07-24:20": {
+        "bin_count": 6,
+        "bin_size": 14304
+    },
+    "2021-07-24:21": {
+        "bin_count": 6,
+        "bin_size": 15696
+    },
+    "2021-07-24:22": {
+        "bin_count": 6,
+        "bin_size": 7248
+    },
+    "2021-07-24:23": {
+        "bin_count": 6,
+        "bin_size": 8512
+    },
+    "2021-07-24:3": {
+        "bin_count": 6,
+        "bin_size": 7872
+    },
+    "2021-07-24:4": {
+        "bin_count": 6,
+        "bin_size": 7056
+    },
+    "2021-07-24:5": {
+        "bin_count": 6,
+        "bin_size": 8192
+    },
+    "2021-07-24:6": {
+        "bin_count": 5,
+        "bin_size": 5328
+    },
+    "2021-07-24:7": {
+        "bin_count": 6,
+        "bin_size": 8784
+    },
+    "2021-07-24:8": {
+        "bin_count": 6,
+        "bin_size": 10688
+    },
+    "2021-07-24:9": {
+        "bin_count": 6,
+        "bin_size": 18336
+    },
+    "2021-07-25:0": {
+        "bin_count": 6,
+        "bin_size": 7232
+    },
+    "2021-07-25:1": {
+        "bin_count": 6,
+        "bin_size": 9216
+    },
+    "2021-07-25:10": {
+        "bin_count": 6,
+        "bin_size": 7072
+    },
+    "2021-07-25:11": {
+        "bin_count": 6,
+        "bin_size": 8752
+    },
+    "2021-07-25:12": {
+        "bin_count": 6,
+        "bin_size": 8768
+    },
+    "2021-07-25:13": {
+        "bin_count": 6,
+        "bin_size": 10576
+    },
+    "2021-07-25:14": {
+        "bin_count": 6,
+        "bin_size": 8416
+    },
+    "2021-07-25:15": {
+        "bin_count": 6,
+        "bin_size": 16624
+    },
+    "2021-07-25:16": {
+        "bin_count": 6,
+        "bin_size": 7600
+    },
+    "2021-07-25:17": {
+        "bin_count": 6,
+        "bin_size": 10592
+    },
+    "2021-07-25:18": {
+        "bin_count": 6,
+        "bin_size": 10096
+    },
+    "2021-07-25:19": {
+        "bin_count": 6,
+        "bin_size": 8064
+    },
+    "2021-07-25:2": {
+        "bin_count": 5,
+        "bin_size": 5184
+    },
+    "2021-07-25:20": {
+        "bin_count": 6,
+        "bin_size": 9456
+    },
+    "2021-07-25:21": {
+        "bin_count": 6,
+        "bin_size": 11168
+    },
+    "2021-07-25:22": {
+        "bin_count": 6,
+        "bin_size": 7712
+    },
+    "2021-07-25:23": {
+        "bin_count": 5,
+        "bin_size": 7408
+    },
+    "2021-07-25:3": {
+        "bin_count": 6,
+        "bin_size": 12400
+    },
+    "2021-07-25:4": {
+        "bin_count": 6,
+        "bin_size": 8560
+    },
+    "2021-07-25:5": {
+        "bin_count": 6,
+        "bin_size": 12000
+    },
+    "2021-07-25:6": {
+        "bin_count": 6,
+        "bin_size": 8800
+    },
+    "2021-07-25:7": {
+        "bin_count": 6,
+        "bin_size": 11872
+    },
+    "2021-07-25:8": {
+        "bin_count": 6,
+        "bin_size": 7424
+    },
+    "2021-07-25:9": {
+        "bin_count": 6,
+        "bin_size": 7200
+    },
+    "2021-07-26:0": {
+        "bin_count": 6,
+        "bin_size": 7120
+    },
+    "2021-07-26:1": {
+        "bin_count": 6,
+        "bin_size": 14160
+    },
+    "2021-07-26:10": {
+        "bin_count": 6,
+        "bin_size": 14880
+    },
+    "2021-07-26:11": {
+        "bin_count": 6,
+        "bin_size": 11408
+    },
+    "2021-07-26:12": {
+        "bin_count": 6,
+        "bin_size": 14080
+    },
+    "2021-07-26:13": {
+        "bin_count": 6,
+        "bin_size": 20304
+    },
+    "2021-07-26:14": {
+        "bin_count": 6,
+        "bin_size": 8768
+    },
+    "2021-07-26:15": {
+        "bin_count": 6,
+        "bin_size": 10288
+    },
+    "2021-07-26:16": {
+        "bin_count": 6,
+        "bin_size": 8000
+    },
+    "2021-07-26:17": {
+        "bin_count": 6,
+        "bin_size": 7472
+    },
+    "2021-07-26:18": {
+        "bin_count": 6,
+        "bin_size": 6880
+    },
+    "2021-07-26:19": {
+        "bin_count": 6,
+        "bin_size": 10240
+    },
+    "2021-07-26:2": {
+        "bin_count": 6,
+        "bin_size": 8944
+    },
+    "2021-07-26:20": {
+        "bin_count": 6,
+        "bin_size": 10768
+    },
+    "2021-07-26:21": {
+        "bin_count": 6,
+        "bin_size": 8384
+    },
+    "2021-07-26:22": {
+        "bin_count": 6,
+        "bin_size": 7712
+    },
+    "2021-07-26:23": {
+        "bin_count": 6,
+        "bin_size": 15424
+    },
+    "2021-07-26:3": {
+        "bin_count": 6,
+        "bin_size": 11952
+    },
+    "2021-07-26:4": {
+        "bin_count": 6,
+        "bin_size": 11696
+    },
+    "2021-07-26:5": {
+        "bin_count": 6,
+        "bin_size": 10112
+    },
+    "2021-07-26:6": {
+        "bin_count": 6,
+        "bin_size": 8528
+    },
+    "2021-07-26:7": {
+        "bin_count": 6,
+        "bin_size": 14128
+    },
+    "2021-07-26:8": {
+        "bin_count": 6,
+        "bin_size": 8592
+    },
+    "2021-07-26:9": {
+        "bin_count": 6,
+        "bin_size": 7568
+    },
+    "2021-07-27:0": {
+        "bin_count": 5,
+        "bin_size": 10384
+    },
+    "2021-07-27:1": {
+        "bin_count": 6,
+        "bin_size": 8528
+    },
+    "2021-07-27:10": {
+        "bin_count": 6,
+        "bin_size": 8864
+    },
+    "2021-07-27:11": {
+        "bin_count": 6,
+        "bin_size": 8544
+    },
+    "2021-07-27:12": {
+        "bin_count": 6,
+        "bin_size": 8240
+    },
+    "2021-07-27:13": {
+        "bin_count": 6,
+        "bin_size": 8512
+    },
+    "2021-07-27:14": {
+        "bin_count": 6,
+        "bin_size": 15376
+    },
+    "2021-07-27:15": {
+        "bin_count": 6,
+        "bin_size": 13712
+    },
+    "2021-07-27:16": {
+        "bin_count": 6,
+        "bin_size": 13536
+    },
+    "2021-07-27:17": {
+        "bin_count": 6,
+        "bin_size": 9376
+    },
+    "2021-07-27:18": {
+        "bin_count": 6,
+        "bin_size": 11904
+    },
+    "2021-07-27:19": {
+        "bin_count": 6,
+        "bin_size": 19200
+    },
+    "2021-07-27:2": {
+        "bin_count": 6,
+        "bin_size": 8816
+    },
+    "2021-07-27:20": {
+        "bin_count": 6,
+        "bin_size": 11168
+    },
+    "2021-07-27:21": {
+        "bin_count": 6,
+        "bin_size": 11872
+    },
+    "2021-07-27:22": {
+        "bin_count": 6,
+        "bin_size": 8368
+    },
+    "2021-07-27:23": {
+        "bin_count": 6,
+        "bin_size": 11520
+    },
+    "2021-07-27:3": {
+        "bin_count": 6,
+        "bin_size": 9328
+    },
+    "2021-07-27:4": {
+        "bin_count": 6,
+        "bin_size": 13920
+    },
+    "2021-07-27:5": {
+        "bin_count": 6,
+        "bin_size": 8944
+    },
+    "2021-07-27:6": {
+        "bin_count": 6,
+        "bin_size": 12528
+    },
+    "2021-07-27:7": {
+        "bin_count": 6,
+        "bin_size": 12048
+    },
+    "2021-07-27:8": {
+        "bin_count": 6,
+        "bin_size": 13600
+    },
+    "2021-07-27:9": {
+        "bin_count": 6,
+        "bin_size": 11712
+    },
+    "2021-07-28:0": {
+        "bin_count": 6,
+        "bin_size": 11200
+    },
+    "2021-07-28:1": {
+        "bin_count": 5,
+        "bin_size": 5872
+    },
+    "2021-07-28:10": {
+        "bin_count": 6,
+        "bin_size": 7936
+    },
+    "2021-07-28:11": {
+        "bin_count": 6,
+        "bin_size": 18208
+    },
+    "2021-07-28:12": {
+        "bin_count": 6,
+        "bin_size": 11712
+    },
+    "2021-07-28:13": {
+        "bin_count": 6,
+        "bin_size": 9072
+    },
+    "2021-07-28:14": {
+        "bin_count": 6,
+        "bin_size": 9008
+    },
+    "2021-07-28:15": {
+        "bin_count": 6,
+        "bin_size": 9040
+    },
+    "2021-07-28:16": {
+        "bin_count": 6,
+        "bin_size": 9424
+    },
+    "2021-07-28:17": {
+        "bin_count": 6,
+        "bin_size": 9504
+    },
+    "2021-07-28:18": {
+        "bin_count": 6,
+        "bin_size": 7440
+    },
+    "2021-07-28:19": {
+        "bin_count": 6,
+        "bin_size": 12816
+    },
+    "2021-07-28:2": {
+        "bin_count": 6,
+        "bin_size": 13712
+    },
+    "2021-07-28:20": {
+        "bin_count": 6,
+        "bin_size": 8112
+    },
+    "2021-07-28:21": {
+        "bin_count": 6,
+        "bin_size": 8816
+    },
+    "2021-07-28:22": {
+        "bin_count": 6,
+        "bin_size": 7424
+    },
+    "2021-07-28:23": {
+        "bin_count": 6,
+        "bin_size": 8624
+    },
+    "2021-07-28:3": {
+        "bin_count": 6,
+        "bin_size": 14080
+    },
+    "2021-07-28:4": {
+        "bin_count": 6,
+        "bin_size": 9904
+    },
+    "2021-07-28:5": {
+        "bin_count": 6,
+        "bin_size": 6624
+    },
+    "2021-07-28:6": {
+        "bin_count": 6,
+        "bin_size": 8176
+    },
+    "2021-07-28:7": {
+        "bin_count": 6,
+        "bin_size": 9920
+    },
+    "2021-07-28:8": {
+        "bin_count": 6,
+        "bin_size": 8560
+    },
+    "2021-07-28:9": {
+        "bin_count": 6,
+        "bin_size": 8016
+    },
+    "2021-07-29:0": {
+        "bin_count": 6,
+        "bin_size": 8592
+    },
+    "2021-07-29:1": {
+        "bin_count": 6,
+        "bin_size": 12544
+    },
+    "2021-07-29:10": {
+        "bin_count": 6,
+        "bin_size": 8752
+    },
+    "2021-07-29:11": {
+        "bin_count": 6,
+        "bin_size": 8464
+    },
+    "2021-07-29:12": {
+        "bin_count": 6,
+        "bin_size": 14832
+    },
+    "2021-07-29:13": {
+        "bin_count": 6,
+        "bin_size": 12928
+    },
+    "2021-07-29:14": {
+        "bin_count": 6,
+        "bin_size": 13600
+    },
+    "2021-07-29:15": {
+        "bin_count": 6,
+        "bin_size": 13248
+    },
+    "2021-07-29:16": {
+        "bin_count": 6,
+        "bin_size": 9408
+    },
+    "2021-07-29:17": {
+        "bin_count": 6,
+        "bin_size": 11456
+    },
+    "2021-07-29:18": {
+        "bin_count": 6,
+        "bin_size": 22560
+    },
+    "2021-07-29:19": {
+        "bin_count": 6,
+        "bin_size": 9744
+    },
+    "2021-07-29:2": {
+        "bin_count": 6,
+        "bin_size": 7760
+    },
+    "2021-07-29:20": {
+        "bin_count": 6,
+        "bin_size": 11776
+    },
+    "2021-07-29:21": {
+        "bin_count": 6,
+        "bin_size": 7568
+    },
+    "2021-07-29:22": {
+        "bin_count": 6,
+        "bin_size": 10272
+    },
+    "2021-07-29:23": {
+        "bin_count": 6,
+        "bin_size": 9072
+    },
+    "2021-07-29:3": {
+        "bin_count": 5,
+        "bin_size": 9216
+    },
+    "2021-07-29:4": {
+        "bin_count": 6,
+        "bin_size": 11056
+    },
+    "2021-07-29:5": {
+        "bin_count": 6,
+        "bin_size": 12208
+    },
+    "2021-07-29:6": {
+        "bin_count": 6,
+        "bin_size": 9184
+    },
+    "2021-07-29:7": {
+        "bin_count": 6,
+        "bin_size": 10336
+    },
+    "2021-07-29:8": {
+        "bin_count": 6,
+        "bin_size": 12576
+    },
+    "2021-07-29:9": {
+        "bin_count": 6,
+        "bin_size": 9888
+    },
+    "2021-07-30:0": {
+        "bin_count": 6,
+        "bin_size": 9472
+    },
+    "2021-07-30:1": {
+        "bin_count": 6,
+        "bin_size": 10464
+    },
+    "2021-07-30:10": {
+        "bin_count": 6,
+        "bin_size": 10112
+    },
+    "2021-07-30:11": {
+        "bin_count": 6,
+        "bin_size": 8192
+    },
+    "2021-07-30:12": {
+        "bin_count": 6,
+        "bin_size": 15088
+    },
+    "2021-07-30:13": {
+        "bin_count": 6,
+        "bin_size": 14800
+    },
+    "2021-07-30:14": {
+        "bin_count": 6,
+        "bin_size": 10528
+    },
+    "2021-07-30:15": {
+        "bin_count": 6,
+        "bin_size": 11744
+    },
+    "2021-07-30:16": {
+        "bin_count": 6,
+        "bin_size": 21120
+    },
+    "2021-07-30:17": {
+        "bin_count": 6,
+        "bin_size": 9248
+    },
+    "2021-07-30:18": {
+        "bin_count": 6,
+        "bin_size": 8272
+    },
+    "2021-07-30:19": {
+        "bin_count": 6,
+        "bin_size": 13024
+    },
+    "2021-07-30:2": {
+        "bin_count": 6,
+        "bin_size": 9200
+    },
+    "2021-07-30:20": {
+        "bin_count": 6,
+        "bin_size": 18384
+    },
+    "2021-07-30:21": {
+        "bin_count": 6,
+        "bin_size": 9936
+    },
+    "2021-07-30:22": {
+        "bin_count": 6,
+        "bin_size": 10368
+    },
+    "2021-07-30:23": {
+        "bin_count": 6,
+        "bin_size": 10784
+    },
+    "2021-07-30:3": {
+        "bin_count": 6,
+        "bin_size": 14704
+    },
+    "2021-07-30:4": {
+        "bin_count": 6,
+        "bin_size": 16544
+    },
+    "2021-07-30:5": {
+        "bin_count": 6,
+        "bin_size": 7776
+    },
+    "2021-07-30:6": {
+        "bin_count": 5,
+        "bin_size": 6144
+    },
+    "2021-07-30:7": {
+        "bin_count": 6,
+        "bin_size": 8352
+    },
+    "2021-07-30:8": {
+        "bin_count": 6,
+        "bin_size": 8672
+    },
+    "2021-07-30:9": {
+        "bin_count": 6,
+        "bin_size": 7456
+    },
+    "2021-07-31:0": {
+        "bin_count": 6,
+        "bin_size": 8592
+    },
+    "2021-07-31:1": {
+        "bin_count": 6,
+        "bin_size": 8832
+    },
+    "2021-07-31:10": {
+        "bin_count": 5,
+        "bin_size": 10000
+    },
+    "2021-07-31:11": {
+        "bin_count": 6,
+        "bin_size": 13888
+    },
+    "2021-07-31:12": {
+        "bin_count": 6,
+        "bin_size": 7344
+    },
+    "2021-07-31:13": {
+        "bin_count": 6,
+        "bin_size": 11552
+    },
+    "2021-07-31:14": {
+        "bin_count": 6,
+        "bin_size": 15472
+    },
+    "2021-07-31:15": {
+        "bin_count": 6,
+        "bin_size": 9424
+    },
+    "2021-07-31:16": {
+        "bin_count": 6,
+        "bin_size": 10496
+    },
+    "2021-07-31:17": {
+        "bin_count": 6,
+        "bin_size": 9072
+    },
+    "2021-07-31:18": {
+        "bin_count": 6,
+        "bin_size": 9776
+    },
+    "2021-07-31:19": {
+        "bin_count": 6,
+        "bin_size": 19600
+    },
+    "2021-07-31:2": {
+        "bin_count": 6,
+        "bin_size": 8704
+    },
+    "2021-07-31:20": {
+        "bin_count": 6,
+        "bin_size": 11232
+    },
+    "2021-07-31:21": {
+        "bin_count": 6,
+        "bin_size": 9280
+    },
+    "2021-07-31:22": {
+        "bin_count": 6,
+        "bin_size": 15584
+    },
+    "2021-07-31:23": {
+        "bin_count": 6,
+        "bin_size": 22128
+    },
+    "2021-07-31:3": {
+        "bin_count": 6,
+        "bin_size": 8192
+    },
+    "2021-07-31:4": {
+        "bin_count": 6,
+        "bin_size": 9392
+    },
+    "2021-07-31:5": {
+        "bin_count": 6,
+        "bin_size": 11584
+    },
+    "2021-07-31:6": {
+        "bin_count": 6,
+        "bin_size": 12384
+    },
+    "2021-07-31:7": {
+        "bin_count": 6,
+        "bin_size": 9712
+    },
+    "2021-07-31:8": {
+        "bin_count": 6,
+        "bin_size": 10752
+    },
+    "2021-07-31:9": {
+        "bin_count": 6,
+        "bin_size": 15952
+    },
+    "2021-08-01:0": {
+        "bin_count": 6,
+        "bin_size": 9424
+    },
+    "2021-08-01:1": {
+        "bin_count": 6,
+        "bin_size": 16208
+    },
+    "2021-08-01:10": {
+        "bin_count": 6,
+        "bin_size": 9248
+    },
+    "2021-08-01:11": {
+        "bin_count": 6,
+        "bin_size": 10224
+    },
+    "2021-08-01:12": {
+        "bin_count": 6,
+        "bin_size": 18432
+    },
+    "2021-08-01:13": {
+        "bin_count": 6,
+        "bin_size": 14432
+    },
+    "2021-08-01:14": {
+        "bin_count": 6,
+        "bin_size": 10208
+    },
+    "2021-08-01:15": {
+        "bin_count": 6,
+        "bin_size": 12640
+    },
+    "2021-08-01:16": {
+        "bin_count": 6,
+        "bin_size": 13424
+    },
+    "2021-08-01:17": {
+        "bin_count": 6,
+        "bin_size": 18128
+    },
+    "2021-08-01:18": {
+        "bin_count": 6,
+        "bin_size": 11488
+    },
+    "2021-08-01:19": {
+        "bin_count": 6,
+        "bin_size": 19024
+    },
+    "2021-08-01:2": {
+        "bin_count": 6,
+        "bin_size": 14960
+    },
+    "2021-08-01:20": {
+        "bin_count": 6,
+        "bin_size": 13680
+    },
+    "2021-08-01:21": {
+        "bin_count": 6,
+        "bin_size": 11840
+    },
+    "2021-08-01:22": {
+        "bin_count": 6,
+        "bin_size": 12784
+    },
+    "2021-08-01:23": {
+        "bin_count": 6,
+        "bin_size": 11952
+    },
+    "2021-08-01:3": {
+        "bin_count": 6,
+        "bin_size": 15488
+    },
+    "2021-08-01:4": {
+        "bin_count": 6,
+        "bin_size": 13760
+    },
+    "2021-08-01:5": {
+        "bin_count": 6,
+        "bin_size": 13536
+    },
+    "2021-08-01:6": {
+        "bin_count": 6,
+        "bin_size": 13888
+    },
+    "2021-08-01:7": {
+        "bin_count": 6,
+        "bin_size": 10688
+    },
+    "2021-08-01:8": {
+        "bin_count": 6,
+        "bin_size": 10272
+    },
+    "2021-08-01:9": {
+        "bin_count": 5,
+        "bin_size": 9104
+    },
+    "2021-08-02:0": {
+        "bin_count": 6,
+        "bin_size": 9216
+    },
+    "2021-08-02:1": {
+        "bin_count": 6,
+        "bin_size": 15264
+    },
+    "2021-08-02:10": {
+        "bin_count": 5,
+        "bin_size": 9056
+    },
+    "2021-08-02:11": {
+        "bin_count": 6,
+        "bin_size": 12704
+    },
+    "2021-08-02:12": {
+        "bin_count": 6,
+        "bin_size": 13552
+    },
+    "2021-08-02:13": {
+        "bin_count": 2,
+        "bin_size": 2960
+    },
+    "2021-08-02:2": {
+        "bin_count": 6,
+        "bin_size": 9152
+    },
+    "2021-08-02:3": {
+        "bin_count": 6,
+        "bin_size": 10528
+    },
+    "2021-08-02:4": {
+        "bin_count": 6,
+        "bin_size": 15136
+    },
+    "2021-08-02:5": {
+        "bin_count": 6,
+        "bin_size": 9552
+    },
+    "2021-08-02:6": {
+        "bin_count": 6,
+        "bin_size": 10976
+    },
+    "2021-08-02:7": {
+        "bin_count": 6,
+        "bin_size": 8224
+    },
+    "2021-08-02:8": {
+        "bin_count": 6,
+        "bin_size": 10016
+    },
+    "2021-08-02:9": {
+        "bin_count": 6,
+        "bin_size": 10336
     }
 }

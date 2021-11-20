@@ -155,27 +155,14 @@ __env__['MONGO_INITDB_USERNAME'] = os.environ.get("MONGO_INITDB_ROOT_USERNAME")
 __env__['MONGO_INITDB_PASSWORD'] = os.environ.get("MONGO_INITDB_ROOT_PASSWORD")
 __env__['MONGO_AUTH_MECHANISM'] ='SCRAM-SHA-1'
 
-source_db_name = os.environ.get('MONGO_SOURCE_DATA_DB')
-source_coll_name = os.environ.get('MONGO_SOURCE_DATA_COL')
-
 dest_db_name = os.environ.get('MONGO_DEST_DATA_DB')
 dest_coll_name = os.environ.get('MONGO_DEST_DATA_COL')
+
+stats_coll_name = dest_coll_name + '_stats'
 
 try:
     client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
 except:
-    sys.exit()
-
-try:
-    assert is_really_something_with_stuff(source_db_name, str), 'Cannot continue without the db_name.'
-except Exception:
-    logger.error("Fatal error with .env, check MONGO_SOURCE_DATA_DB.", exc_info=True)
-    sys.exit()
-
-try:
-    assert is_really_something_with_stuff(source_coll_name, str), 'Cannot continue without the coll_name.'
-except Exception:
-    logger.error("Fatal error with .env, check MONGO_SOURCE_DATA_COL.", exc_info=True)
     sys.exit()
 
 try:
@@ -199,12 +186,6 @@ criteria = {'$and': [{'action': {'$ne': 'REJECT'}}, {'srcaddr': {'$ne': "-"}, 'd
 
 projection = {'srcaddr': 1, 'dstaddr': 1, 'srcport': 1, 'dstport': 1, 'protocol': 1, 'packets': 1, 'bytes': 1, 'start': 1, 'end': 1, 'log-status': 1, '__metadata__.srcaddr.owner': 1, '__metadata__.dstaddr.owner': 1, '__dataset__': 1, '__dataset_index__': 1}
 
-with timer.Timer() as timer1:
-    num_events = db_collection(client, source_db_name, source_coll_name).count_documents({})
-msg = 'Data read :: num_events: {} in {:.2f} secs'.format(num_events, timer1.duration)
-print(msg)
-logger.info(msg)
-
 projection_end = {'start': 1, 'end': -1}
 
 def invert_dict(d, dest_dict=None):
@@ -226,49 +207,11 @@ def modify_criteria(criteria=None, additional=None):
 
 __stats__ = {}
 
-dest_coll = db_collection(client, dest_db_name, dest_coll_name)
-dest_coll.delete_many({})
+stats_coll = db_collection(client, dest_db_name, stats_coll_name)
+stats_coll.delete_many({})
 
-__num_events = 0
-@bin_processor(bin_size=600, chunk_size=100, stats=__stats__, db=db_collection(client, dest_db_name, dest_coll_name), logger=logger)
-def step2_binner(data, bin_count, bin_size, stats={}, db=None, chunk_size=-1, logger=None):
-    if (logger):
-        logger.info('step2_binner :: bin size: {}'.format(len(data)))
-    start_date = data[0]['start']
-    end_date = data[-1]['end']
-    df_d = pd.DataFrame(data)
-
-    df_d["date"] = start_date.date()
-    df_d["hour"] = start_date.hour
-    df_d = df_d.groupby(["dstport", "date", "hour"],  as_index=False).sum()
-    
-    #BPP
-    df_d["bpp"] = df_d["bytes"]/df_d["packets"] 
-    df_d["bpp_norm"] =  np.log(df_d['bpp'])
-    df_d["bpp_zscore+log"] = (df_d["bpp_norm"] - df_d["bpp_norm"].mean()) / df_d["bpp_norm"].std()   
-    
-    df_d[["date", "hour"]] = df_d[["date", "hour"]].astype(str)
-    dd = df_d["date"]
-    hh = df_d["hour"]
-    bin_id = dd +" h-"+ hh + " b-" + str(bin_count)
-    df_d["bin"] = bin_id
-    df_d["start"] = start_date
-    df_d["end"] = end_date
-    
-    if (isinstance(stats, dict)):
-        kk = '{}:{}'.format(dd[0], hh[0])
-        b_stats = stats.get(kk, {})
-        b_stats['bin_count'] = b_stats.get('bin_count', 0) + 1
-        b_stats['bin_size'] = b_stats.get('bin_size', 0) + int(df_d.size)
-        stats[kk] = b_stats
-
-    write_df_to_mongoDB( df_d, db, chunk_size=chunk_size, logger=logger)
-    msg = 'step2_binner :: binned: {}:{}'.format(dd[0], hh[0])
-    logger.info(msg)
-    print(msg)
-
-def write_df_to_mongoDB( df, db_collection, chunk_size=100, logger=None):
-    my_list = df.to_dict('records')
+def write_to_mongoDB( recs, db_collection, chunk_size=100, logger=None):
+    my_list = recs if (isinstance(recs, list)) else list(recs)
     l =  len(my_list)
     _range = range(l)
     steps = _range[chunk_size::chunk_size]
@@ -305,55 +248,25 @@ def write_df_to_mongoDB( df, db_collection, chunk_size=100, logger=None):
     print(msg)
     return
 
-limit = nlimit = max(100000, num_events)
-
-__sort = {'start': 1}
-projection = {'start': 1, 'end': 1, 'dstport': 1, 'bytes': 1, 'packets': 1}
-
 with timer.Timer() as timer2:
     try:
         _fpath = os.path.dirname(__file__)
-        checkpoint_filename = '{}{}{}.chkpoint'.format(_fpath, os.sep, '__processing__')
+        stats_filename = '{}{}{}'.format(_fpath, os.sep, '__stats__.json')
         
-        doc_ids = []
-        for doc in docs_generator(db_collection(client, source_db_name, source_coll_name), sort=__sort, criteria={}, projection=projection, skip=0, limit=limit, nlimit=nlimit, maxTimeMS=12*60*60*1000, logger=logger):
-            _id = doc.get('_id', None)
-            assert _id, '_id is None'
-            doc_ids.append(_id)
-        assert len(doc_ids) == num_events, 'len(doc_ids) != num_events, there must be an error in the process of committing the data to the db.'
-        coll = db_collection(client, source_db_name, source_coll_name)
-        for i,_id in enumerate(doc_ids):
-            doc = coll.find_one({'_id': _id})
-            with open(checkpoint_filename, "w") as checkpoint_file:
-                __checkpoint__ = {'_id': str(_id), 'i': i, 'num_events': num_events}
-                json.dump(__checkpoint__, checkpoint_file, indent=4, sort_keys=True)
-            step2_binner(doc_cleaner(doc))
-
-            if (isinstance(__stats__, dict)):
-                _fpath = os.path.dirname(__file__)
-                json_filename = '{}{}{}.json'.format(_fpath, os.sep, '__stats__')
-
-                with open(json_filename, "w") as json_data_file:
-                    json.dump(__stats__, json_data_file, indent=4, sort_keys=True)
-                    
+        with open(stats_filename, 'r') as fIn:
+            __stats__ = json.load(fIn)
+            
+        the_stats = []
+        for k,v in __stats__.items():
+            the_stats.append({'date_hour': k, 'census': v})
+            
+        write_to_mongoDB(the_stats, stats_coll, chunk_size=100, logger=logger)
     except Exception as e:
         logger.error("Error in step2_binner", exc_info=True)
 
-msg = 'Step 1+2 :: num_events: {} of {} in {:.2f} secs'.format(__num_events, num_events, timer2.duration)
+msg = 'Recap :: {:.2f} secs'.format(timer2.duration)
 print(msg)
 logger.info(msg)
-
-if (isinstance(__stats__, dict)):
-    stats_coll_name = dest_coll_name + '_stats'
-    stats_coll = db_collection(client, dest_db_name, stats_coll_name)
-    stats_coll.delete_many({}) # this is intended.
-    
-    stats_coll.insert_one(__stats__)
-
-    logger.info('BEGIN: __stats__')
-    for k,v in __stats__.items():
-        logger.info('{}:{}'.format(k,v))
-    logger.info('END!!! __stats__')
 
 logger.info('Done.')
 
