@@ -215,8 +215,11 @@ def invert_dict(d, dest_dict=None):
             bucket.append(k)
             dest_dict[name] = list(set(bucket))
 
-def doc_cleaner(doc, ignores=[]):
+def doc_cleaner(doc, ignores=[], normalize=[]):
     ignores = ignores if (isinstance(ignores, list)) else []
+    for k in normalize:
+        if (k in doc):
+            doc[k] = str(doc[k])
     return {k:int(v) if (str(v).isdigit() or str(v).isdecimal()) else v for k,v in doc.items() if (k not in ignores)}
 
 def modify_criteria(criteria=None, additional=None):
@@ -226,15 +229,20 @@ def modify_criteria(criteria=None, additional=None):
 
 dest_coll = db_collection(client, dest_db_name, dest_coll_name)
 
-@bin_processor(bin_size=600, chunk_size=100, stats=None, db=db_collection(client, dest_db_name, dest_coll_name), logger=logger)
-def step2_binner(data, bin_count, bin_size, stats={}, db=None, chunk_size=-1, logger=None):
+__stats__ = []
+
+@bin_processor(bin_size=600, chunk_size=100, stats=__stats__, db=db_collection(client, dest_db_name, dest_coll_name), logger=logger)
+def step2_binner(data, bin_count, bin_size, stats=[], db=None, chunk_size=-1, logger=None):
     __bin = {}
     __bin['id'] = str(uuid.uuid4())
-    __bin['data'] = [doc_cleaner(doc) for doc in data]
-    write_to_mongoDB( [__bin], db, chunk_size=chunk_size, logger=logger)
-    msg = 'bin_collector :: scheduled for binning: {}-{}'.format(data[0].get('start'), data[-1].get('start'))
-    logger.info(msg)
-    print(msg)
+    __bin['data'] = [doc_cleaner(doc, normalize=['_id']) for doc in data]
+    stats.append(__bin)
+    if (len(stats) > chunk_size):
+        write_to_mongoDB( stats, db, chunk_size=chunk_size, logger=logger)
+        msg = 'bin_collector :: scheduled for binning: {}-{}'.format(data[0].get('start'), data[-1].get('start'))
+        logger.info(msg)
+        print(msg)
+        del stats[:]
 
 def write_to_mongoDB( recs, db_collection, chunk_size=100, logger=None):
     my_list = recs if (isinstance(recs, list)) else [recs]
@@ -274,7 +282,7 @@ def write_to_mongoDB( recs, db_collection, chunk_size=100, logger=None):
     print(msg)
     return
 
-limit = nlimit = min(100000, num_events)
+limit = nlimit = min(1000000, num_events)
 
 __sort = {'start': 1}
 projection = {'start': 1, 'end': 1, 'dstport': 1}
@@ -282,7 +290,11 @@ projection = {'start': 1, 'end': 1, 'dstport': 1}
 with timer.Timer() as timer2:
     try:
         for doc in docs_generator(db_collection(client, source_db_name, source_coll_name), sort=__sort, criteria={}, projection=projection, skip=0, limit=limit, nlimit=nlimit, maxTimeMS=12*60*60*1000, logger=logger):
-            step2_binner(doc_cleaner(doc))
+            step2_binner(doc_cleaner(doc, normalize=['_id']))
+            
+        if (len(__stats__) > 0):
+            write_to_mongoDB( __stats__, db_collection(client, dest_db_name, dest_coll_name), chunk_size=100, logger=logger)
+            del __stats__[:]
     except Exception as e:
         logger.error("Error in step2_binner", exc_info=True)
 
