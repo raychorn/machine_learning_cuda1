@@ -26,8 +26,6 @@ from expandvars import expandvars
 import numpy as np
 import pandas as pd
 
-from queue import Queue
-
 from binner import processor as bin_processor
 
 ############################################################################
@@ -100,6 +98,8 @@ def get_logger(fpath=__file__, product='scheduler', logPath='logs', is_running_p
 
 logger = get_logger()
 
+import pymongo
+from pymongo import ReturnDocument
 from pymongo.mongo_client import MongoClient
 
 fp_env = dotenv.find_dotenv()
@@ -170,6 +170,8 @@ source_coll_name = os.environ.get('MONGO_SOURCE_DATA_COL')
 dest_db_name = os.environ.get('MONGO_WORK_QUEUE_DATA_DB')
 dest_coll_name = os.environ.get('MONGO_WORK_QUEUE_COL')
 
+dest_master_coll_name = os.environ.get('MONGO_WORK_QUEUE_MASTER_COL')
+
 try:
     client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
 except:
@@ -194,10 +196,17 @@ except Exception:
     sys.exit()
 
 try:
-    assert is_really_something_with_stuff(dest_coll_name, str), 'Cannot continue without the coll_name.'
+    assert is_really_something_with_stuff(dest_coll_name, str), 'Cannot continue without the dest_coll_name.'
 except Exception:
     logger.error("Fatal error with .env, check MONGO_DEST_DATA_COL.", exc_info=True)
     sys.exit()
+
+try:
+    assert is_really_something_with_stuff(dest_master_coll_name, str), 'Cannot continue without the dest_master_coll_name.'
+except Exception:
+    logger.error("Fatal error with .env, check MONGO_DEST_DATA_COL.", exc_info=True)
+    sys.exit()
+
 
 logger.info(str(client))
 
@@ -236,9 +245,11 @@ def modify_criteria(criteria=None, additional=None):
 
 dest_coll = db_collection(client, dest_db_name, dest_coll_name)
 
+master_coll = db_collection(client, dest_db_name, dest_master_coll_name)
+
 __stats__ = []
 
-Q = Queue()
+__bin_count__ = 0
 
 __is_running__ = True
 
@@ -257,16 +268,16 @@ def worker(db=None, chunk_size=100, logger=None):
     assert chunk_size is not None, 'chunk_size is required'
     assert logger is not None, 'logger is required'
     __is__ = False
-    while True:
+    while __is_running__ and (not Q.empty()) and (not __is__):
         try:
             if (not Q.empty()):
                 docs = Q.get_nowait()
                 if (docs):
                     if (len(docs) > 0):
-                        msg = 'bin_collector :: scheduled for binning: {}-{}'.format(docs[0].get('start'), docs[-1].get('start'))
+                        msg = 'bin_collector :: scheduled for binning: {}-{}'.format(docs[0].get('data', [])[0].get('start'), docs[0].get('data', [])[-1].get('start'))
                         logger.info(msg)
                         print(msg)
-                        write_to_mongoDB( docs, db, chunk_size=chunk_size, logger=logger)
+                        db.insert_many(docs)
                     else:
                         msg = 'bin_collector :: shutting down due to end of data.'
                         logger.info(msg)
@@ -284,77 +295,76 @@ def worker(db=None, chunk_size=100, logger=None):
             break
     return __is__
 
-worker(db=db_collection(client, dest_db_name, dest_coll_name), chunk_size=100, logger=logger)
+#worker(db=dest_coll, chunk_size=100, logger=logger)
 
 print('bin_collector :: started')
 
-@bin_processor(bin_size=600, chunk_size=100, stats=__stats__, db=db_collection(client, dest_db_name, dest_coll_name), logger=logger)
+@bin_processor(bin_size=600, chunk_size=100, stats=__stats__, db=dest_coll, logger=logger)
 def step2_binner(data, bin_count, bin_size, stats=[], db=None, chunk_size=-1, logger=None):
+    global __bin_count__
     __bin = {}
-    __bin['id'] = str(uuid.uuid4())
+    __bin_count__ += 1
+    __bin['bin_num'] = __bin_count__
+    __bin['bin_count'] = bin_count
+    __bin['bin_size'] = bin_size
+    __bin['uuid'] = str(uuid.uuid4())
     __bin['data'] = [doc_cleaner(doc, normalize=['_id']) for doc in data]
     stats.append(__bin)
-    if (len(stats) > chunk_size):
-        Q.put(stats)
-        msg = 'bin_collector :: queued for binning: {}-{}'.format(data[0].get('start'), data[-1].get('start'))
+    l = len(stats)
+    if (l > chunk_size):
+        db.insert_many(stats)
+        msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, data[0].get('start'), data[-1].get('start'))
         logger.info(msg)
         print(msg)
         del stats[:]
 
-def write_to_mongoDB( recs, db_collection, chunk_size=100, logger=None):
-    my_list = recs if (isinstance(recs, list)) else [recs]
-    l =  len(my_list)
-    _range = range(l)
-    steps = _range[chunk_size::chunk_size]
-
-    i = 0
-    t_chunks = 0
-    for j in steps:
-        chunk = my_list[i:j]
-        msg = '{}:{} -> {}'.format(i, j, len(chunk))
-        if (logger):
-            logger.info(msg)
-        print(msg)
-        db_collection.insert_many(chunk)
-        i = j
-        t_chunks += len(chunk)
-
-    msg = '{}:{} -> {}'.format(i, l, len(my_list[i:]))
-    if (logger):
-        logger.info(msg)
-    print(msg)
-    if (i < l):
-        chunk = my_list[i:]
-        msg = '{}:{} -> {}'.format(i, len(my_list), len(chunk))
-        if (logger):
-            logger.info(msg)
-        print(msg)
-        db_collection.insert_many(chunk)
-        t_chunks += len(chunk)
-
-    assert t_chunks == l, 't_chunks != l, there must be an error in the process of committing the data to the db.'
-    msg = 'Done, {} total, {} expected'.format(t_chunks, l)
-    if (logger):
-        logger.info(msg)
-    print(msg)
-    return
-
-limit = nlimit = max(1000000, num_events)
+limit = nlimit = min(100000, num_events)
 
 __sort = {'start': 1}
 projection = {'start': 1, 'end': 1, 'dstport': 1}
 
+__sort2 = {'num': 1}
+
 with timer.Timer() as timer2:
     try:
         _num_events = 1
+        events = []
         for doc in docs_generator(db_collection(client, source_db_name, source_coll_name), sort=__sort, criteria={}, projection=projection, skip=0, limit=limit, nlimit=nlimit, maxTimeMS=12*60*60*1000, logger=logger):
-            step2_binner(doc_cleaner(doc, normalize=['_id']))
+            events.append({'num': _num_events, 'doc': doc, 'selected': False})
+            if (len(events) >= 100):
+                master_coll.insert_many(events)
+                msg = 'bin_collector :: created master record: {}-{}'.format(events[0].get('num'), events[-1].get('num'))
+                logger.info(msg)
+                print(msg)
+                del events[:]
             _num_events += 1
+
+        msg = 'bin_collector :: master records created: {}'.format(_num_events)
+        logger.info(msg)
+        print(msg)
             
-        if (len(__stats__) > 0):
-            Q.put(__stats__)
+        seq_num = 1
+        while (1):
+            _doc = master_coll.find_one_and_update({ "num": seq_num, "selected": False }, { "$set": { "selected": True } }, return_document=ReturnDocument.AFTER, sort=[('_id', pymongo.ASCENDING)])
+            msg = 'bin_collector :: choose master record: num --> {}'.format(_doc.get('num', -1))
+            logger.info(msg)
+            print(msg)
+            if (_doc):
+                step2_binner(_doc.get('doc'), normalize=['_id'])
+                seq_num += 1
+            else:
+                msg = 'bin_collector :: nothing to choose from master records, nothing more to do.'
+                logger.info(msg)
+                print(msg)
+                break
+            
+        l = len(__stats__)
+        if (l > 0):
+            dest_coll.insert_many(__stats__)
+            msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, __stats__[0].get('start'), __stats__[-1].get('start'))
+            logger.info(msg)
+            print(msg)
             del __stats__[:]
-        Q.put(__stats__) # this is to ensure that the last batch is written to the db and cause the thread to end.
     except Exception as e:
         logger.error("Error in step2_binner", exc_info=True)
 
@@ -362,12 +372,11 @@ msg = 'Bin Collector :: num_events: {} in {:.2f} secs'.format(_num_events, timer
 print(msg)
 logger.info(msg)
 
-msg = 'bin collector :: __is_running__={}'.format(__is_running__)
-print(msg)
-logger.info(msg)
+#msg = 'bin collector :: __is_running__={}'.format(__is_running__)
+#print(msg)
+#logger.info(msg)
 
-if (not __is_running__):
-    executor.shutdown()
+#executor.shutdown()
 
 logger.info('Done.')
 
