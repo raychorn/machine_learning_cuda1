@@ -240,7 +240,16 @@ __stats__ = []
 
 Q = Queue()
 
-_executor = pooled.BoundedExecutor(2, 5, callback=None)
+__is_running__ = True
+
+def callback(*args, **kwargs):
+    global __is_running__
+    msg = 'bin_collector :: confirmed shutdown.'
+    logger.info(msg)
+    print(msg)
+    __is_running__ = False
+
+_executor = pooled.BoundedExecutor(2, 5, callback=callback)
 
 @executor.threaded(_executor)
 def worker(db=None, chunk_size=100, logger=None):
@@ -254,11 +263,14 @@ def worker(db=None, chunk_size=100, logger=None):
                 docs = Q.get_nowait()
                 if (docs):
                     if (len(docs) > 0):
-                        write_to_mongoDB( docs, db, chunk_size=chunk_size, logger=logger)
                         msg = 'bin_collector :: scheduled for binning: {}-{}'.format(docs[0].get('start'), docs[-1].get('start'))
                         logger.info(msg)
                         print(msg)
+                        write_to_mongoDB( docs, db, chunk_size=chunk_size, logger=logger)
                     else:
+                        msg = 'bin_collector :: shutting down due to end of data.'
+                        logger.info(msg)
+                        print(msg)
                         __is__ = True
                         break
                 else:
@@ -327,15 +339,17 @@ def write_to_mongoDB( recs, db_collection, chunk_size=100, logger=None):
     print(msg)
     return
 
-limit = nlimit = min(1000000, num_events)
+limit = nlimit = max(1000000, num_events)
 
 __sort = {'start': 1}
 projection = {'start': 1, 'end': 1, 'dstport': 1}
 
 with timer.Timer() as timer2:
     try:
+        _num_events = 1
         for doc in docs_generator(db_collection(client, source_db_name, source_coll_name), sort=__sort, criteria={}, projection=projection, skip=0, limit=limit, nlimit=nlimit, maxTimeMS=12*60*60*1000, logger=logger):
             step2_binner(doc_cleaner(doc, normalize=['_id']))
+            _num_events += 1
             
         if (len(__stats__) > 0):
             Q.put(__stats__)
@@ -344,17 +358,16 @@ with timer.Timer() as timer2:
     except Exception as e:
         logger.error("Error in step2_binner", exc_info=True)
 
-msg = 'Bin Collector :: num_events: {} in {:.2f} secs'.format(num_events, timer2.duration)
+msg = 'Bin Collector :: num_events: {} in {:.2f} secs'.format(_num_events, timer2.duration)
 print(msg)
 logger.info(msg)
 
-msg = 'Q :: waiting for empty Q'
+msg = 'bin collector :: __is_running__={}'.format(__is_running__)
 print(msg)
 logger.info(msg)
 
-Q.join()
-
-executor.shutdown()
+if (not __is_running__):
+    executor.shutdown()
 
 logger.info('Done.')
 
