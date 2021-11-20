@@ -1,5 +1,7 @@
 import os
 import sys
+
+import time
 import json
 
 import uuid
@@ -23,6 +25,8 @@ from expandvars import expandvars
 
 import numpy as np
 import pandas as pd
+
+from queue import Queue
 
 from binner import processor as bin_processor
 
@@ -144,6 +148,9 @@ from database import docs_generator
 
 from vyperlogix.contexts import timer
 
+from vyperlogix.threads import pooled
+from vyperlogix.decorators import executor
+
 __env__ = {}
 __literals__ = os.environ.get('LITERALS', [])
 __literals__ = [__literals__] if (not isinstance(__literals__, list)) else __literals__
@@ -231,6 +238,44 @@ dest_coll = db_collection(client, dest_db_name, dest_coll_name)
 
 __stats__ = []
 
+Q = Queue()
+
+_executor = pooled.BoundedExecutor(2, 5, callback=None)
+
+@executor.threaded(_executor)
+def worker(db=None, chunk_size=100, logger=None):
+    assert db is not None, 'db is required'
+    assert chunk_size is not None, 'chunk_size is required'
+    assert logger is not None, 'logger is required'
+    __is__ = False
+    while True:
+        try:
+            if (not Q.empty()):
+                docs = Q.get_nowait()
+                if (docs):
+                    if (len(docs) > 0):
+                        write_to_mongoDB( docs, db, chunk_size=chunk_size, logger=logger)
+                        msg = 'bin_collector :: scheduled for binning: {}-{}'.format(docs[0].get('start'), docs[-1].get('start'))
+                        logger.info(msg)
+                        print(msg)
+                    else:
+                        __is__ = True
+                        break
+                else:
+                    print('bin_collector :: no docs to process, so sleeping.')
+                    time.sleep(1)
+            else:
+                print('bin_collector :: Q is empty, so sleeping.')
+                time.sleep(1)
+        except Exception as e:
+            logger.error(str(e), exc_info=True)
+            break
+    return __is__
+
+worker(db=db_collection(client, dest_db_name, dest_coll_name), chunk_size=100, logger=logger)
+
+print('bin_collector :: started')
+
 @bin_processor(bin_size=600, chunk_size=100, stats=__stats__, db=db_collection(client, dest_db_name, dest_coll_name), logger=logger)
 def step2_binner(data, bin_count, bin_size, stats=[], db=None, chunk_size=-1, logger=None):
     __bin = {}
@@ -238,8 +283,8 @@ def step2_binner(data, bin_count, bin_size, stats=[], db=None, chunk_size=-1, lo
     __bin['data'] = [doc_cleaner(doc, normalize=['_id']) for doc in data]
     stats.append(__bin)
     if (len(stats) > chunk_size):
-        write_to_mongoDB( stats, db, chunk_size=chunk_size, logger=logger)
-        msg = 'bin_collector :: scheduled for binning: {}-{}'.format(data[0].get('start'), data[-1].get('start'))
+        Q.put(stats)
+        msg = 'bin_collector :: queued for binning: {}-{}'.format(data[0].get('start'), data[-1].get('start'))
         logger.info(msg)
         print(msg)
         del stats[:]
@@ -293,14 +338,23 @@ with timer.Timer() as timer2:
             step2_binner(doc_cleaner(doc, normalize=['_id']))
             
         if (len(__stats__) > 0):
-            write_to_mongoDB( __stats__, db_collection(client, dest_db_name, dest_coll_name), chunk_size=100, logger=logger)
+            Q.put(__stats__)
             del __stats__[:]
+        Q.put(__stats__) # this is to ensure that the last batch is written to the db and cause the thread to end.
     except Exception as e:
         logger.error("Error in step2_binner", exc_info=True)
 
 msg = 'Bin Collector :: num_events: {} in {:.2f} secs'.format(num_events, timer2.duration)
 print(msg)
 logger.info(msg)
+
+msg = 'Q :: waiting for empty Q'
+print(msg)
+logger.info(msg)
+
+Q.join()
+
+executor.shutdown()
 
 logger.info('Done.')
 
