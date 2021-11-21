@@ -299,7 +299,9 @@ def worker(db=None, chunk_size=100, logger=None):
 
 print('bin_collector :: started')
 
-@bin_processor(bin_size=600, chunk_size=100, stats=__stats__, db=dest_coll, logger=logger)
+__bin_size__ = 600
+
+@bin_processor(bin_size=__bin_size__, chunk_size=10, stats=__stats__, db=dest_coll, logger=logger)
 def step2_binner(data, bin_count, bin_size, stats=[], db=None, chunk_size=-1, logger=None):
     global __bin_count__
     __bin = {}
@@ -342,15 +344,25 @@ with timer.Timer() as timer2:
         msg = 'bin_collector :: master records created: {}'.format(_num_events)
         logger.info(msg)
         print(msg)
-            
+
+        is_verbose = False
+        
         seq_num = 1
         while (1):
             _doc = master_coll.find_one_and_update({ "num": seq_num, "selected": False }, { "$set": { "selected": True } }, return_document=ReturnDocument.AFTER, sort=[('_id', pymongo.ASCENDING)])
-            msg = 'bin_collector :: choose master record: num --> {}'.format(_doc.get('num', -1))
-            logger.info(msg)
-            print(msg)
+            if (is_verbose):
+                msg = 'bin_collector :: choose master record: num --> {}'.format(_doc.get('num', -1))
+                logger.info(msg)
+                print(msg)
             if (_doc):
-                step2_binner(_doc.get('doc'), normalize=['_id'])
+                st = _doc.get('doc', {}).get('start', -1)
+                tt = st + dt.timedelta(seconds=__bin_size__)
+                _docs = master_coll.find({ "doc.start": {"$lte": tt }, "selected": False }, { "doc": 1, "selected" : 1, "num": 1 }, sort=[('doc.start', pymongo.ASCENDING)])
+                newvalues = { "$set": { "selected": True } }
+                for d in _docs:
+                    step2_binner(doc_cleaner(d.get('doc'), normalize=['_id']))
+                    master_coll.update_one(d, newvalues)
+                    seq_num = d.get('num', seq_num)
                 seq_num += 1
             else:
                 msg = 'bin_collector :: nothing to choose from master records, nothing more to do.'
