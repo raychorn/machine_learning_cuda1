@@ -217,9 +217,22 @@ criteria = {'$and': [{'action': {'$ne': 'REJECT'}}, {'srcaddr': {'$ne': "-"}, 'd
 
 #projection = {'srcaddr': 1, 'dstaddr': 1, 'srcport': 1, 'dstport': 1, 'protocol': 1, 'packets': 1, 'bytes': 1, 'start': 1, 'end': 1, 'log-status': 1, '__metadata__.srcaddr.owner': 1, '__metadata__.dstaddr.owner': 1, '__dataset__': 1, '__dataset_index__': 1}
 
+source_coll = db_collection(client, source_db_name, source_coll_name)
+
+dest_coll = db_collection(client, dest_db_name, dest_coll_name)
+
+master_coll = db_collection(client, dest_db_name, dest_master_coll_name)
+
+
 with timer.Timer() as timer1:
-    num_events = db_collection(client, source_db_name, source_coll_name).count_documents({})
+    num_events = source_coll.count_documents({})
 msg = 'Data read :: num_events: {} in {:.2f} secs'.format(num_events, timer1.duration)
+print(msg)
+logger.info(msg)
+
+with timer.Timer() as timer1a:
+    num_master_events = master_coll.count_documents({})
+msg = 'Data read :: num_master_events: {} in {:.2f} secs'.format(num_master_events, timer1.duration)
 print(msg)
 logger.info(msg)
 
@@ -242,10 +255,6 @@ def modify_criteria(criteria=None, additional=None):
     items = criteria.get('$and', [])
     items.append(additional)
     return criteria
-
-dest_coll = db_collection(client, dest_db_name, dest_coll_name)
-
-master_coll = db_collection(client, dest_db_name, dest_master_coll_name)
 
 __stats__ = []
 
@@ -301,7 +310,7 @@ print('bin_collector :: started')
 
 __bin_size__ = 600
 
-@bin_processor(bin_size=__bin_size__, chunk_size=10, stats=__stats__, db=dest_coll, logger=logger)
+@bin_processor(bin_size=__bin_size__, chunk_size=1, stats=__stats__, db=dest_coll, logger=logger)
 def step2_binner(data, bin_count, bin_size, stats=[], db=None, chunk_size=-1, logger=None):
     global __bin_count__
     __bin = {}
@@ -313,35 +322,46 @@ def step2_binner(data, bin_count, bin_size, stats=[], db=None, chunk_size=-1, lo
     __bin['data'] = [doc_cleaner(doc, normalize=['_id']) for doc in data]
     stats.append(__bin)
     l = len(stats)
-    if (l > chunk_size):
-        db.insert_many(stats)
-        msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, data[0].get('start'), data[-1].get('start'))
+    if (l >= chunk_size):
+        for aBin in stats:
+            db.insert_one(aBin)
+        msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, stats[0].get('data', [])[0].get('start'), stats[0].get('data', [])[-1].get('start'))
         logger.info(msg)
         print(msg)
         del stats[:]
 
-limit = nlimit = min(100000, num_events)
+limit = nlimit = max(100000, num_events) # - num_master_events
 
 __sort = {'start': 1}
 projection = {'start': 1, 'end': 1, 'dstport': 1}
-
-__sort2 = {'num': 1}
 
 with timer.Timer() as timer2:
     try:
         _num_events = 1
         events = []
-        for doc in docs_generator(db_collection(client, source_db_name, source_coll_name), sort=__sort, criteria={}, projection=projection, skip=0, limit=limit, nlimit=nlimit, maxTimeMS=12*60*60*1000, logger=logger):
-            events.append({'num': _num_events, 'doc': doc, 'selected': False})
-            if (len(events) >= 100):
+        if (0) and (num_master_events < num_events):
+            for doc in docs_generator(source_coll, sort=__sort, criteria={}, projection=projection, skip=0, limit=limit, nlimit=nlimit, maxTimeMS=12*60*60*1000, logger=logger):
+                _doc = master_coll.find_one({'doc._id': doc.get('_id')})
+                if (_doc):
+                    continue
+                events.append({'num': _num_events, 'doc': doc, 'selected': False})
+                if (len(events) >= 100):
+                    master_coll.insert_many(events)
+                    msg = 'bin_collector :: created master record: {}-{}'.format(events[0].get('num'), events[-1].get('num'))
+                    logger.info(msg)
+                    print(msg)
+                    del events[:]
+                _num_events += 1
+            if (len(events) > 0):
                 master_coll.insert_many(events)
                 msg = 'bin_collector :: created master record: {}-{}'.format(events[0].get('num'), events[-1].get('num'))
                 logger.info(msg)
                 print(msg)
                 del events[:]
-            _num_events += 1
+        else:
+            _num_events = num_master_events
 
-        msg = 'bin_collector :: master records created: {}'.format(_num_events)
+        msg = 'bin_collector :: master records {}: {}'.format('created' if (len(events) > 0) else 'has', _num_events)
         logger.info(msg)
         print(msg)
 
@@ -357,12 +377,14 @@ with timer.Timer() as timer2:
             if (_doc):
                 st = _doc.get('doc', {}).get('start', -1)
                 tt = st + dt.timedelta(seconds=__bin_size__)
-                _docs = master_coll.find({ "doc.start": {"$lte": tt }, "selected": False }, { "doc": 1, "selected" : 1, "num": 1 }, sort=[('doc.start', pymongo.ASCENDING)])
+                _docs = master_coll.find({ "$and": [ { "doc.start": {"$gte": st } }, { "doc.start": {"$lte": tt } }, {"selected": False} ] }, sort=[('doc.start', pymongo.ASCENDING)])
                 newvalues = { "$set": { "selected": True } }
+                _cnt = 0
                 for d in _docs:
                     step2_binner(doc_cleaner(d.get('doc'), normalize=['_id']))
-                    master_coll.update_one(d, newvalues)
                     seq_num = d.get('num', seq_num)
+                    _cnt += 1
+                _d = master_coll.update_many({ "$and": [ { "doc.start": {"$gte": st } }, { "doc.start": {"$lte": tt } }, {"selected": False} ] }, { "$set": { "selected": True } } )
                 seq_num += 1
             else:
                 msg = 'bin_collector :: nothing to choose from master records, nothing more to do.'
@@ -372,8 +394,9 @@ with timer.Timer() as timer2:
             
         l = len(__stats__)
         if (l > 0):
-            dest_coll.insert_many(__stats__)
-            msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, __stats__[0].get('start'), __stats__[-1].get('start'))
+            for aBin in __stats__:
+                db.insert_one(aBin)
+            msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, __stats__[0].get('data', [])[0].get('start'), __stats__[0].get('data', [])[-1].get('start'))
             logger.info(msg)
             print(msg)
             del __stats__[:]
