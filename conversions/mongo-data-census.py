@@ -30,6 +30,10 @@ from logging.handlers import RotatingFileHandler
 production_token = 'production'
 development_token = 'development'
 
+first_item = lambda x: next(iter(x))
+
+index_of_item = lambda item,items: first_item([i for i,x in enumerate(items) if (x == item)])
+
 is_running_production = lambda : (socket.gethostname() not in ['raychorn-alienware'])
 
 something_greater_than_zero = lambda s:(s > 0)
@@ -140,6 +144,8 @@ from whois import ip_address_owner
 
 from database import docs_generator
 
+from vyperlogix import misc
+
 from vyperlogix.contexts import timer
 
 from vyperlogix.decorators import threading
@@ -194,7 +200,35 @@ db_collection = lambda cl,n,c:db(cl,n).get_collection(c)
 dest_coll = db_collection(client, dest_db_name, dest_coll_name)
 dest_coll.delete_many({})
 
+__bulk_size__ = int(os.environ.get('MONGO_BULK_SIZE', 100))
+
 fname_cols = ['account', 'bucket', 'region', 'name', 'timestamp', 'fname']
+
+acceptable_numeric_special_chars = ['+','-','.',',']
+acceptable_numeric_digits = ['0','1','2','3','4','5','6','7','8','9']
+acceptable_numeric_chars = acceptable_numeric_digits + acceptable_numeric_special_chars
+is_numeric_char = lambda ch:(ch in acceptable_numeric_chars) if (len(ch) > 0) else False
+is_really_numeric = lambda s:(len(s) > 0) and (len(str(s).split('.')) < 2) and all([is_numeric_char(ch) for ch in s])
+only_numeric_chars = lambda s:''.join([ch for ch in s if (is_numeric_char(ch))])
+only_numeric_special_chars = lambda s:''.join([ch for ch in s if (ch in acceptable_numeric_special_chars)])
+def normalize_numeric(value):
+    value = str(value)
+    if (len(value) == len(only_numeric_chars(value)+only_numeric_special_chars(value))):
+        value = value.replace(',', '')
+        is_positive = value.find('+') > -1
+        if (is_positive):
+            value = value.replace('+', '')
+        is_negative = value.find('-') > -1
+        if (is_negative):
+            value = value.replace('-', '')
+        is_floating = len(value.split('.')) == 2
+        try:
+            value = int(value) if (not is_floating) else float(value)
+        except Exception as ex:
+            logger.exception(str(ex), exc_info=sys.exc_info())
+        if (is_negative):
+            value = -value
+    return value
 
 def iterate_directory(root):
     for subdir, dirs, files in os.walk(root):
@@ -203,21 +237,81 @@ def iterate_directory(root):
             logger.info('{} :: {}'.format(misc.funcName(), fp))
             yield fp
 
-def process_source_file(fpath, fcols=fname_cols, collection=None):
+def decompress_gzip(fp=None, _id=None, environ=None, logger=None):
+    import gzip
+    diff = -1
+    num_rows = -1
+    __status__ = []
+    if (logger):
+        logger.info('BEGIN: decompress_gzip :: fp is "{}".'.format(fp))
+    assert os.path.exists(fp) and os.path.isfile(fp), 'Cannot do much with the provided filename ("{}"). Please fix.'.format(fp)
+    try:
+        with gzip.open(fp, 'r') as infile:
+            outfile_content = infile.read().decode('UTF-8')
+        __status__.append({'gzip': True})
+        if (logger):
+            logger.info('INFO: decompress_gzip :: __status__ is {}.'.format(__status__))
+    except Exception as ex:
+        logger.exception(str(ex), exc_info=sys.exc_info())
+        __status__.append({'gzip': False})
+        if (logger):
+            logger.info('INFO: decompress_gzip :: __status__ is {}.'.format(__status__))
+    try:
+        lines = [l.split() for l in outfile_content.split('\n')]
+        rows = [{k:normalize_numeric(v) for k,v in dict(zip(lines[0], l)).items()} for l in lines[1:]]
+        rows = [row for row in rows if (len(row) > 0)]
+        diff = rows[-1].get('start', 0) - rows[0].get('start', 0)
+        num_rows = len(rows)
+    except Exception as ex:
+        if (logger):
+            logger.exception(str(ex), exc_info=sys.exc_info())
+    if (logger):
+        logger.info('END!!! decompress_gzip :: fp is "{}".'.format(fp))
+        logger.info('INFO: decompress_gzip :: __status__ is {}.'.format(__status__))
+    return {'status': __status__, 'diff': diff, 'num_rows':num_rows}
+
+
+def ingest_source_file(doc, collection=None, logger=None):
+    try:
+        fpath = doc.get('fpath')
+        assert os.path.exists(fpath) and os.path.isfile(fpath), 'Cannot continue without a valid file path ({}).'.format(fpath)
+        vector = decompress_gzip(fp=fpath, logger=logger)
+        if (isinstance(collection, list)):
+            vector['tag'] = doc.get('tag')
+            collection.append(vector)
+            if (len(collection) >= __bulk_size__):
+                dest_coll.insert_many(collection)
+                collection.clear()
+    except Exception as ex:
+        logger.exception(str(ex), exc_info=sys.exc_info())
+    
+
+def process_source_file(fpath, fcols=fname_cols, collection=None, logger=None):
     doc = dict(zip(*[fcols, os.path.basename(fpath).split('_')]))
     if (str(doc.get('account')).isdigit()):
         doc['account'] = int(doc.get('account'))
     if (isinstance(doc.get('timestamp'), str)):
-        doc['timestamp'] = datetime.datetime.strptime(doc.get('timestamp'), "%Y%m%dT%H%MZ")
+        doc['timestamp'] = dt.datetime.strptime(doc.get('timestamp'), "%Y%m%dT%H%MZ")
+    doc['fpath'] = fpath
     __source__ = doc.get('__source__', fpath)
     if (__source__.find('/mnt/') > -1):
-        doc['__source__'] = os.sep.join(__source__.split(os.sep)[3:])
-    return None
+        toks = __source__.split(os.sep)
+        doc['tag'] = os.sep.join(toks[index_of_item('vpcflowlogs',toks)-1:])
+    return ingest_source_file(doc, collection=collection, logger=logger)
 
+data_cache = []
+
+files_count = 0
 with timer.Timer() as timer1:
     for fp in iterate_directory(raw_data_source):
-        process_source_file(fp, collection=coll)
-msg = 'Data read :: num_events: {} in {:.2f} secs'.format(num_events, timer1.duration)
+        process_source_file(fp, collection=data_cache, logger=logger)
+        files_count += 1
+        if (files_count % 100 == 0):
+            print(files_count)
+    if (len(data_cache) > 0):
+        dest_coll.insert_many(data_cache)
+        data_cache.clear()
+msg = 'Data read :: number of files: {} in {:.2f} secs'.format(files_count, timer1.duration)
 print(msg)
 logger.info(msg)
 
