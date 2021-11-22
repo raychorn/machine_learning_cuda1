@@ -239,51 +239,60 @@ def iterate_directory(root):
 
 def decompress_gzip(fp=None, _id=None, environ=None, logger=None):
     import gzip
-    diff = -1
-    num_rows = -1
-    __status__ = []
-    if (logger):
-        logger.info('BEGIN: decompress_gzip :: fp is "{}".'.format(fp))
-    assert os.path.exists(fp) and os.path.isfile(fp), 'Cannot do much with the provided filename ("{}"). Please fix.'.format(fp)
-    try:
-        with gzip.open(fp, 'r') as infile:
-            outfile_content = infile.read().decode('UTF-8')
-        __status__.append({'gzip': True})
+
+    with timer.Timer() as timer3:
+        diff = -1
+        num_rows = -1
+        __status__ = []
         if (logger):
-            logger.info('INFO: decompress_gzip :: __status__ is {}.'.format(__status__))
-    except Exception as ex:
-        logger.exception(str(ex), exc_info=sys.exc_info())
-        __status__.append({'gzip': False})
-        if (logger):
-            logger.info('INFO: decompress_gzip :: __status__ is {}.'.format(__status__))
-    try:
-        lines = [l.split() for l in outfile_content.split('\n')]
-        rows = [{k:normalize_numeric(v) for k,v in dict(zip(lines[0], l)).items()} for l in lines[1:]]
-        rows = [row for row in rows if (len(row) > 0)]
-        diff = rows[-1].get('start', 0) - rows[0].get('start', 0)
-        num_rows = len(rows)
-    except Exception as ex:
-        if (logger):
+            logger.info('BEGIN: decompress_gzip :: fp is "{}".'.format(fp))
+        assert os.path.exists(fp) and os.path.isfile(fp), 'Cannot do much with the provided filename ("{}"). Please fix.'.format(fp)
+        try:
+            with gzip.open(fp, 'r') as infile:
+                outfile_content = infile.read().decode('UTF-8')
+            __status__.append({'gzip': True})
+            if (logger):
+                logger.info('INFO: decompress_gzip :: __status__ is {}.'.format(__status__))
+        except Exception as ex:
             logger.exception(str(ex), exc_info=sys.exc_info())
-    if (logger):
-        logger.info('END!!! decompress_gzip :: fp is "{}".'.format(fp))
-        logger.info('INFO: decompress_gzip :: __status__ is {}.'.format(__status__))
-    return {'status': __status__, 'diff': diff, 'num_rows':num_rows}
+            __status__.append({'gzip': False})
+            if (logger):
+                logger.info('INFO: decompress_gzip :: __status__ is {}.'.format(__status__))
+        try:
+            lines = [l.split() for l in outfile_content.split('\n')]
+            rows = [{k:normalize_numeric(v) for k,v in dict(zip(lines[0], l)).items()} for l in lines[1:]]
+            rows = [row for row in rows if (len(row) > 0)]
+            diff = rows[-1].get('start', 0) - rows[0].get('start', 0)
+            num_rows = len(rows)
+        except Exception as ex:
+            if (logger):
+                logger.exception(str(ex), exc_info=sys.exc_info())
+        if (logger):
+            logger.info('END!!! decompress_gzip :: fp is "{}".'.format(fp))
+            logger.info('INFO: decompress_gzip :: __status__ is {}.'.format(__status__))
+    msg = 'decompress_gzip :: {:.2f} secs'.format(timer3.duration)
+    print(msg)
+    logger.info(msg)
+    return {'status': __status__[0], 'diff': diff, 'num_rows':num_rows, 'rows':rows}
 
 
 def ingest_source_file(doc, collection=None, logger=None):
-    try:
-        fpath = doc.get('fpath')
-        assert os.path.exists(fpath) and os.path.isfile(fpath), 'Cannot continue without a valid file path ({}).'.format(fpath)
-        vector = decompress_gzip(fp=fpath, logger=logger)
-        if (isinstance(collection, list)):
-            vector['tag'] = doc.get('tag')
-            collection.append(vector)
-            if (len(collection) >= __bulk_size__):
-                dest_coll.insert_many(collection)
-                collection.clear()
-    except Exception as ex:
-        logger.exception(str(ex), exc_info=sys.exc_info())
+    with timer.Timer() as timer2:
+        try:
+            fpath = doc.get('fpath')
+            assert os.path.exists(fpath) and os.path.isfile(fpath), 'Cannot continue without a valid file path ({}).'.format(fpath)
+            vector = decompress_gzip(fp=fpath, logger=logger)
+            if (isinstance(collection, list)):
+                vector['tag'] = doc.get('tag')
+                collection.append(vector)
+                if (len(collection) >= __bulk_size__):
+                    dest_coll.insert_many(collection)
+                    collection.clear()
+        except Exception as ex:
+            logger.exception(str(ex), exc_info=sys.exc_info())
+    msg = 'ingest_source_file :: {:.2f} secs'.format(timer2.duration)
+    print(msg)
+    logger.info(msg)
     
 
 def process_source_file(fpath, fcols=fname_cols, collection=None, logger=None):
@@ -314,55 +323,6 @@ with timer.Timer() as timer1:
 msg = 'Data read :: number of files: {} in {:.2f} secs'.format(files_count, timer1.duration)
 print(msg)
 logger.info(msg)
-
-def doc_cleaner(doc, ignores=[]):
-    ignores = ignores if (isinstance(ignores, list)) else []
-    return {k:int(v) if (str(v).isdigit() or str(v).isdecimal()) else v for k,v in doc.items() if (k not in ignores)}
-
-def modify_criteria(criteria=None, additional=None):
-    items = criteria.get('$and', [])
-    items.append(additional)
-    return criteria
-
-__stats__ = {}
-
-__num_events = 0
-@bin_processor(bin_size=600, chunk_size=100, stats=__stats__, db=db_collection(client, dest_db_name, dest_coll_name), logger=logger)
-def step2_binner(data, bin_count, bin_size, stats={}, db=None, chunk_size=-1, logger=None):
-    if (logger):
-        logger.info('step2_binner :: bin size: {}'.format(len(data)))
-    start_date = data[0]['start']
-    end_date = data[-1]['end']
-    df_d = pd.DataFrame(data)
-
-    df_d["date"] = start_date.date()
-    df_d["hour"] = start_date.hour
-    df_d = df_d.groupby(["dstport", "date", "hour"],  as_index=False).sum()
-    
-    #BPP
-    df_d["bpp"] = df_d["bytes"]/df_d["packets"] 
-    df_d["bpp_norm"] =  np.log(df_d['bpp'])
-    df_d["bpp_zscore+log"] = (df_d["bpp_norm"] - df_d["bpp_norm"].mean()) / df_d["bpp_norm"].std()   
-    
-    df_d[["date", "hour"]] = df_d[["date", "hour"]].astype(str)
-    dd = df_d["date"]
-    hh = df_d["hour"]
-    bin_id = dd +" h-"+ hh + " b-" + str(bin_count)
-    df_d["bin"] = bin_id
-    df_d["start"] = start_date
-    df_d["end"] = end_date
-    
-    if (isinstance(stats, dict)):
-        kk = '{}:{}'.format(dd[0], hh[0])
-        b_stats = stats.get(kk, {})
-        b_stats['bin_count'] = b_stats.get('bin_count', 0) + 1
-        b_stats['bin_size'] = b_stats.get('bin_size', 0) + int(df_d.size)
-        stats[kk] = b_stats
-
-    #write_df_to_mongoDB( df_d, db, chunk_size=chunk_size, logger=logger)
-    msg = 'step2_binner :: binned: {}:{}'.format(dd[0], hh[0])
-    logger.info(msg)
-    print(msg)
 
 logger.info('Done.')
 
