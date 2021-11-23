@@ -273,7 +273,7 @@ def decompress_gzip(fp=None, _id=None, environ=None, logger=None):
     msg = 'decompress_gzip :: {:.2f} secs'.format(timer3.duration)
     print(msg)
     logger.info(msg)
-    return {'status': __status__[0], 'diff': diff, 'num_rows':num_rows}
+    return {'status': __status__[0], 'diff': diff, 'num_rows':num_rows, 'rows':rows}
 
 
 def ingest_source_file(doc, collection=None, logger=None):
