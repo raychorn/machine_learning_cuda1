@@ -150,8 +150,8 @@ for f in f_libs:
 from utils2 import typeName
 from whois import ip_address_owner
 
-from database import docs_generator
-from database import get_pipeline_for
+from vyperlogix.mongo.database import docs_generator
+from vyperlogix.mongo.database import get_pipeline_for
 
 from vyperlogix.contexts import timer
 
@@ -172,7 +172,7 @@ source_db_name = os.environ.get('MONGO_SOURCE_DATA_DB')
 source_coll_name = os.environ.get('MONGO_SOURCE_DATA_COL')
 
 dest_db_name = os.environ.get('MONGO_WORK_QUEUE_DATA_DB')
-dest_coll_name = os.environ.get('MONGO_WORK_QUEUE_COL')
+dest_coll_work_queue_name = os.environ.get('MONGO_WORK_QUEUE_COL')
 
 dest_stats_coll_name = os.environ.get('MONGO_WORK_QUEUE_STATS_COL')
 
@@ -200,9 +200,9 @@ except Exception:
     sys.exit()
 
 try:
-    assert is_really_something_with_stuff(dest_coll_name, str), 'Cannot continue without the dest_coll_name.'
+    assert is_really_something_with_stuff(dest_coll_work_queue_name, str), 'Cannot continue without the dest_coll_work_queue_name.'
 except Exception:
-    logger.error("Fatal error with .env, check MONGO_DEST_DATA_COL.", exc_info=True)
+    logger.error("Fatal error with .env, check MONGO_WORK_QUEUE_COL.", exc_info=True)
     sys.exit()
 
 try:
@@ -227,7 +227,7 @@ criteria = {'$and': [{'action': {'$ne': 'REJECT'}}, {'srcaddr': {'$ne': "-"}, 'd
 
 source_coll = db_collection(client, source_db_name, source_coll_name)
 
-dest_coll = db_collection(client, dest_db_name, dest_coll_name)
+dest_coll = db_collection(client, dest_db_name, dest_coll_work_queue_name)
 
 dest_stats_coll = db_collection(client, dest_db_name, dest_stats_coll_name)
 
@@ -328,13 +328,38 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
     assert process_stats is not None, 'process_stats is required'
     assert logger is not None, 'logger is required'
 
+    __stats__ = []
+
+    client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
+
+    dest_work_queue = db_coll(client, dest_db_name, dest_coll_work_queue_name)
+    
+    @bin_processor(bin_size=__bin_size__, chunk_size=1, stats=__stats__, db=dest_work_queue, logger=logger)
+    def bin_scheduler(data, bin_count, bin_size, stats=[], db=None, chunk_size=-1, logger=logger):
+        global __bin_count__
+        __bin = {}
+        __bin_count__ += 1
+        __bin['bin_num'] = __bin_count__
+        __bin['bin_count'] = bin_count
+        __bin['bin_size'] = bin_size
+        __bin['uuid'] = str(uuid.uuid4())
+        __bin['data'] = [doc_cleaner(doc, normalize=['_id']) for doc in data]
+        stats.append(__bin)
+        l = len(stats)
+        if (l >= chunk_size):
+            bins = [aBin for aBin in stats]
+            db.insert_many(bins)
+            msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, stats[0].get('data', [])[0].get('start'), stats[0].get('data', [])[-1].get('start'))
+            logger.info(msg)
+            print(msg)
+            del stats[:]
+
     msg = 'BEGIN: process_cursor ({}) :: skip_n={}, limit_n={}, nlimit={}'.format(proc_id, skip_n, limit_n, nlimit)
     if (logger):
         logger.info(msg)
     print(msg)
 
     try:
-        client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
         with timer.Timer() as timer3:
             n_blk = int(limit_n/100)
             doc_cnt = 0
@@ -347,11 +372,17 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
                         num_cells = (doc_cnt / limit_n)
                         #print('{}{}::({}|{})'.format(repeat_char(' ', 2-len(str(proc_id))), proc_id, repeat_char('.', num_cells), repeat_char('.', 99-num_cells)))
                         print('{}{}::({:2f})'.format(repeat_char(' ', 2-len(str(proc_id))), proc_id, num_cells), end='\n')
-                    #<do your magic> 
-                    # for example:
-                    #result = your_function(doc['your_field'] # do some processing on each document
-                    # update that document by adding the result into a new field
-                    #collection.update_one({'_id': doc['_id']}, {'$set': {'<new_field_eg>': result} })
+                    #<do your magic>
+                    bin_scheduler(doc_cleaner(doc, normalize=['_id']))
+
+                l = len(__stats__)
+                if (l > 0):
+                    bins = [aBin for aBin in __stats__]
+                    db.insert_many(bins)
+                    msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, __stats__[0].get('data', [])[0].get('start'), __stats__[0].get('data', [])[-1].get('start'))
+                    logger.info(msg)
+                    print(msg)
+                    del __stats__[:]
             except Exception as e:
                 if (logger):
                     logger.error("Error in step2_binner", exc_info=True)
@@ -373,28 +404,6 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
 print('bin_collector :: started')
 
 __bin_size__ = 600
-
-@bin_processor(bin_size=__bin_size__, chunk_size=1, stats=__stats__, db=dest_coll, logger=logger)
-def step2_binner(data, bin_count, bin_size, stats=[], db=None, chunk_size=-1, logger=None):
-    global __bin_count__
-    __bin = {}
-    __bin_count__ += 1
-    __bin['bin_num'] = __bin_count__
-    __bin['bin_count'] = bin_count
-    __bin['bin_size'] = bin_size
-    __bin['uuid'] = str(uuid.uuid4())
-    __bin['data'] = [doc_cleaner(doc, normalize=['_id']) for doc in data]
-    stats.append(__bin)
-    l = len(stats)
-    if (l >= chunk_size):
-        for aBin in stats:
-            db.insert_one(aBin)
-        msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, stats[0].get('data', [])[0].get('start'), stats[0].get('data', [])[-1].get('start'))
-        logger.info(msg)
-        print(msg)
-        del stats[:]
-
-limit = nlimit = max(100000, num_events) # - num_master_events
 
 __sort = {'start': pymongo.ASCENDING}
 projection = {'start': 1, 'end': 1, 'dstport': 1}
@@ -421,40 +430,6 @@ with timer.Timer() as timer2:
 
         is_verbose = False
         
-        if (0):
-            seq_num = 1
-            while (1):
-                _doc = master_coll.find_one_and_update({ "num": seq_num, "selected": False }, { "$set": { "selected": True } }, return_document=ReturnDocument.AFTER, sort=[('_id', pymongo.ASCENDING)])
-                if (is_verbose):
-                    msg = 'bin_collector :: choose master record: num --> {}'.format(_doc.get('num', -1))
-                    logger.info(msg)
-                    print(msg)
-                if (_doc):
-                    st = _doc.get('doc', {}).get('start', -1)
-                    tt = st + dt.timedelta(seconds=__bin_size__)
-                    _docs = master_coll.find({ "$and": [ { "doc.start": {"$gte": st } }, { "doc.start": {"$lte": tt } }, {"selected": False} ] }, sort=[('doc.start', pymongo.ASCENDING)])
-                    newvalues = { "$set": { "selected": True } }
-                    _cnt = 0
-                    for d in _docs:
-                        step2_binner(doc_cleaner(d.get('doc'), normalize=['_id']))
-                        seq_num = d.get('num', seq_num)
-                        _cnt += 1
-                    _d = master_coll.update_many({ "$and": [ { "doc.start": {"$gte": st } }, { "doc.start": {"$lte": tt } }, {"selected": False} ] }, { "$set": { "selected": True } } )
-                    seq_num += 1
-                else:
-                    msg = 'bin_collector :: nothing to choose from master records, nothing more to do.'
-                    logger.info(msg)
-                    print(msg)
-                    break
-                
-            l = len(__stats__)
-            if (l > 0):
-                for aBin in __stats__:
-                    db.insert_one(aBin)
-                msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, __stats__[0].get('data', [])[0].get('start'), __stats__[0].get('data', [])[-1].get('start'))
-                logger.info(msg)
-                print(msg)
-                del __stats__[:]
     except Exception as e:
         logger.error("Error in step2_binner", exc_info=True)
 
