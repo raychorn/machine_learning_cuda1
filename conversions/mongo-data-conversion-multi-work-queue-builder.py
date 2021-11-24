@@ -227,13 +227,14 @@ criteria = {'$and': [{'action': {'$ne': 'REJECT'}}, {'srcaddr': {'$ne': "-"}, 'd
 
 source_coll = db_collection(client, source_db_name, source_coll_name)
 
-dest_coll = db_collection(client, dest_db_name, dest_coll_work_queue_name)
+dest_work_queue_coll = db_collection(client, dest_db_name, dest_coll_work_queue_name)
 
 dest_stats_coll = db_collection(client, dest_db_name, dest_stats_coll_name)
 
 n_cores = multiprocessing.cpu_count() / 2
 
 dest_stats_coll.delete_many({})
+dest_work_queue_coll.delete_many({})
 
 msg = 'BEGIN: Count docs in {}'.format(source_coll_name)
 print(msg)
@@ -335,12 +336,12 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
     dest_work_queue = db_coll(client, dest_db_name, dest_coll_work_queue_name)
     
     @bin_processor(bin_size=__bin_size__, chunk_size=1, stats=__stats__, db=dest_work_queue, logger=logger)
-    def bin_scheduler(data, bin_count, bin_size, stats=[], db=None, chunk_size=-1, logger=logger):
+    def bin_scheduler(data, bin_count, bin_size, stats=[], db=None, chunk_size=-1, proc_id=None, logger=logger):
         global __bin_count__
         __bin = {}
         __bin_count__ += 1
+        __bin['proc_id'] = proc_id
         __bin['bin_num'] = __bin_count__
-        __bin['bin_count'] = bin_count
         __bin['bin_size'] = bin_size
         __bin['uuid'] = str(uuid.uuid4())
         __bin['data'] = [doc_cleaner(doc, normalize=['_id']) for doc in data]
@@ -373,7 +374,7 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
                         #print('{}{}::({}|{})'.format(repeat_char(' ', 2-len(str(proc_id))), proc_id, repeat_char('.', num_cells), repeat_char('.', 99-num_cells)))
                         print('{}{}::({:2f})'.format(repeat_char(' ', 2-len(str(proc_id))), proc_id, num_cells), end='\n')
                     #<do your magic>
-                    bin_scheduler(doc_cleaner(doc, normalize=['_id']))
+                    bin_scheduler(doc_cleaner(doc, normalize=['_id']), proc_id=proc_id)
 
                 l = len(__stats__)
                 if (l > 0):

@@ -29,7 +29,7 @@ class processor(object):
                         __is__ = (secs >= self.bin_size)
                 self.bin.append(doc)
                 if (__is__):
-                    f(self.bin, self.bin_count, self.bin_size, stats=self.stats, db=self.db, chunk_size=self.chunk_size, logger=self.logger)
+                    f(self.bin, self.bin_count, self.bin_size, stats=self.stats, db=self.db, chunk_size=self.chunk_size, logger=self.logger, **kwargs)
                     self.bin = []
             return wrapped_f
         except Exception as ex:
