@@ -168,6 +168,28 @@ __env__['MONGO_INITDB_USERNAME'] = os.environ.get("MONGO_INITDB_ROOT_USERNAME")
 __env__['MONGO_INITDB_PASSWORD'] = os.environ.get("MONGO_INITDB_ROOT_PASSWORD")
 __env__['MONGO_AUTH_MECHANISM'] ='SCRAM-SHA-1'
 
+data_source = os.environ.get('VPCFLOWLOGS_DATA_SOURCE')
+
+is_data_source_filesystem = (os.path.exists(data_source) and os.path.isdir(data_source))
+is_data_source_s3 = data_source.startswith('s3://')
+is_data_source_mongodb = (not is_data_source_filesystem and not is_data_source_s3)
+
+msg = 'data_source: {}'.format(data_source)
+print(msg)
+logger.info(msg)
+
+msg = 'is_data_source_filesystem: {}'.format(is_data_source_filesystem)
+print(msg)
+logger.info(msg)
+
+msg = 'is_data_source_s3: {}'.format(is_data_source_s3)
+print(msg)
+logger.info(msg)
+
+msg = 'is_data_source_mongodb: {}'.format(is_data_source_mongodb)
+print(msg)
+logger.info(msg)
+
 source_db_name = os.environ.get('MONGO_SOURCE_DATA_DB')
 source_coll_name = os.environ.get('MONGO_SOURCE_DATA_COL')
 
@@ -236,20 +258,44 @@ n_cores = multiprocessing.cpu_count() / 2
 dest_stats_coll.delete_many({})
 dest_work_queue_coll.delete_many({})
 
-msg = 'BEGIN: Count docs in {}'.format(source_coll_name)
-print(msg)
-logger.info(msg)
+if (is_data_source_mongodb):
+    msg = 'BEGIN: Count docs in {}'.format(source_coll_name)
+    print(msg)
+    logger.info(msg)
 
-with timer.Timer() as timer1:
-    num_events = source_coll.count_documents({})
-msg = 'END!!! Count docs in {} :: num_events: {} in {:.2f} secs'.format(source_coll_name, num_events, timer1.duration)
-print(msg)
-logger.info(msg)
+    with timer.Timer() as timer1:
+        num_events = source_coll.count_documents({})
+    msg = 'END!!! Count docs in {} :: num_events: {} in {:.2f} secs'.format(source_coll_name, num_events, timer1.duration)
+    print(msg)
+    logger.info(msg)
 
-collection_size = num_events
-batch_size = round(collection_size / n_cores)
-_skips = [i for i in range(0, collection_size, int(batch_size))]
-skips = range(0, collection_size, int(batch_size))
+    collection_size = num_events
+    batch_size = round(collection_size / n_cores)
+    skips = range(0, collection_size, int(batch_size))
+elif (is_data_source_filesystem):
+    msg = 'BEGIN: Count files in {}'.format(data_source)
+    print(msg)
+    logger.info(msg)
+
+    def iterate_directory(root):
+        for subdir, dirs, files in os.walk(root):
+            for file in files:
+                fp = os.path.join(subdir, file)
+                yield fp
+
+    with timer.Timer() as timer1:
+        files = []
+        for fp in iterate_directory(data_source):
+            files.append(fp)
+        num_files = len(files)
+        batch_size = round(num_files / n_cores)
+        skips = [files[n:batch_size] for n in range(0, num_files, batch_size)]
+    msg = 'END!!! Count files in {} :: num_files: {} in {:.2f} secs'.format(data_source, num_files, timer1.duration)
+    print(msg)
+    logger.info(msg)
+
+elif (is_data_source_s3):
+    pass
 
 def invert_dict(d, dest_dict=None):
     for k,v in d.items():
@@ -279,6 +325,19 @@ __bin_count__ = 0
 
 __is_running__ = True
 
+def _aggregate(pipeline, db_name, coll_name):
+    client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
+    cursor = db_coll(client, db_name, coll_name).aggregate(pipeline, allowDiskUse=True, maxTimeMS=12*3600*1000)
+
+    _total = {'total': 0}
+    try:
+        for doc in cursor:
+            _total['total'] = doc.get('total', -1)
+    finally:
+        client.close()
+    return _total
+    
+
 def aggregate_docs_count():
     pipeline = [
         {
@@ -303,20 +362,29 @@ def aggregate_docs_count():
             }
         }
     ]
+    return _aggregate(pipeline, dest_db_name, dest_stats_coll_name)
 
-    client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
-    cursor = db_coll(client, dest_db_name, dest_stats_coll_name).aggregate(pipeline, allowDiskUse=True, maxTimeMS=12*3600*1000)
-
-    _total = {'total': 0}
-    try:
-        for doc in cursor:
-            _total['total'] = doc.get('total', -1)
-    finally:
-        client.close()
-    return _total
+def aggregate_bins_docs_total():
+    pipeline = [
+        {
+            u"$project": {
+                u"datasize": {
+                    u"$size": u"$data"
+                }
+            }
+        }, 
+        {
+            u"$group": {
+                u"_id": None,
+                u"total": {
+                    u"$sum": u"$datasize"
+                }
+            }
+        }
+    ]
+    return _aggregate(pipeline, dest_db_name, dest_coll_work_queue_name)
 
 def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, projection, skip_n, limit_n, nlimit, process_stats, logger):
-    global __process_stats__
     assert proc_id is not None, 'proc_id is required'
     assert source_db_name is not None, 'source_db_name is required'
     assert source_coll_name is not None, 'source_coll_name is required'
@@ -402,6 +470,186 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
         logger.info(msg)
     print(msg)
 
+###########################################################################
+def process_files(proc_id, skip_n, logger):
+    assert isinstance(proc_id, int), 'int proc_id is required.'
+    assert isinstance(skip_n, list), 'skip_n is required as a list of files.'
+    assert logger is not None, 'logger is required.'
+
+    __stats__ = []
+
+    client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
+
+    dest_work_queue = db_coll(client, dest_db_name, dest_coll_work_queue_name)
+
+    @bin_processor(bin_size=__bin_size__, chunk_size=1, stats=__stats__, db=dest_work_queue, logger=logger)
+    def bin_scheduler(data, bin_count, bin_size, stats=[], db=None, chunk_size=-1, proc_id=None, logger=logger):
+        global __bin_count__
+        __bin = {}
+        __bin_count__ += 1
+        __bin['proc_id'] = proc_id
+        __bin['bin_num'] = __bin_count__
+        __bin['bin_size'] = bin_size
+        __bin['uuid'] = str(uuid.uuid4())
+        __bin['data'] = [doc_cleaner(doc, normalize=['_id']) for doc in data]
+        stats.append(__bin)
+        l = len(stats)
+        if (l >= chunk_size):
+            bins = [aBin for aBin in stats]
+            db.insert_many(bins)
+            msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, stats[0].get('data', [])[0].get('start'), stats[0].get('data', [])[-1].get('start'))
+            logger.info(msg)
+            print(msg)
+            del stats[:]
+
+    fname_cols = ['account', 'bucket', 'region', 'name', 'timestamp', 'fname']
+
+    first_item = lambda x: next(iter(x))
+
+    index_of_item = lambda item,items: first_item([i for i,x in enumerate(items) if (x == item)])
+
+    acceptable_numeric_special_chars = ['+','-','.',',']
+    acceptable_numeric_digits = ['0','1','2','3','4','5','6','7','8','9']
+    acceptable_numeric_chars = acceptable_numeric_digits + acceptable_numeric_special_chars
+    is_numeric_char = lambda ch:(ch in acceptable_numeric_chars) if (len(ch) > 0) else False
+    is_really_numeric = lambda s:(len(s) > 0) and (len(str(s).split('.')) < 2) and all([is_numeric_char(ch) for ch in s])
+    only_numeric_chars = lambda s:''.join([ch for ch in s if (is_numeric_char(ch))])
+    only_numeric_special_chars = lambda s:''.join([ch for ch in s if (ch in acceptable_numeric_special_chars)])
+    def normalize_numeric(value):
+        value = str(value)
+        if (len(value) == len(only_numeric_chars(value)+only_numeric_special_chars(value))):
+            value = value.replace(',', '')
+            is_positive = value.find('+') > -1
+            if (is_positive):
+                value = value.replace('+', '')
+            is_negative = value.find('-') > -1
+            if (is_negative):
+                value = value.replace('-', '')
+            is_floating = len(value.split('.')) == 2
+            try:
+                value = int(value) if (not is_floating) else float(value)
+            except Exception as ex:
+                logger.exception(str(ex), exc_info=sys.exc_info())
+            if (is_negative):
+                value = -value
+        return value
+
+    def decompress_gzip(fp=None, _id=None, environ=None, logger=None):
+        import gzip
+
+        with timer.Timer() as timer3:
+            diff = -1
+            num_rows = -1
+            __status__ = []
+            if (logger):
+                logger.info('BEGIN: decompress_gzip :: fp is "{}".'.format(fp))
+            assert os.path.exists(fp) and os.path.isfile(fp), 'Cannot do much with the provided filename ("{}"). Please fix.'.format(fp)
+            try:
+                with gzip.open(fp, 'r') as infile:
+                    outfile_content = infile.read().decode('UTF-8')
+                __status__.append({'gzip': True})
+                if (logger):
+                    logger.info('INFO: decompress_gzip :: __status__ is {}.'.format(__status__))
+            except Exception as ex:
+                logger.exception(str(ex), exc_info=sys.exc_info())
+                __status__.append({'gzip': False})
+                if (logger):
+                    logger.info('INFO: decompress_gzip :: __status__ is {}.'.format(__status__))
+            try:
+                lines = [l.split() for l in outfile_content.split('\n')]
+                rows = [{k:normalize_numeric(v) for k,v in dict(zip(lines[0], l)).items()} for l in lines[1:]]
+                rows = [row for row in rows if (len(row) > 0)]
+                diff = rows[-1].get('start', 0) - rows[0].get('start', 0)
+                num_rows = len(rows)
+            except Exception as ex:
+                if (logger):
+                    logger.exception(str(ex), exc_info=sys.exc_info())
+            if (logger):
+                logger.info('END!!! decompress_gzip :: fp is "{}".'.format(fp))
+                logger.info('INFO: decompress_gzip :: __status__ is {}.'.format(__status__))
+        msg = 'decompress_gzip :: {:.2f} secs'.format(timer3.duration)
+        print(msg)
+        logger.info(msg)
+        return {'status': __status__[0], 'diff': diff, 'num_rows':num_rows, 'rows':rows}
+
+    def ingest_source_file(doc, collection=None, logger=None):
+        with timer.Timer() as timer2:
+            try:
+                fpath = doc.get('fpath')
+                assert os.path.exists(fpath) and os.path.isfile(fpath), 'Cannot continue without a valid file path ({}).'.format(fpath)
+                vector = decompress_gzip(fp=fpath, logger=logger)
+                if (isinstance(collection, list)):
+                    vector['tag'] = doc.get('tag')
+                    collection.append(vector)
+            except Exception as ex:
+                logger.exception(str(ex), exc_info=sys.exc_info())
+        msg = 'ingest_source_file :: {:.2f} secs'.format(timer2.duration)
+        print(msg)
+        logger.info(msg)
+
+    def process_source_file(fpath, fcols=fname_cols, collection=None, logger=None):
+        doc = dict(zip(*[fcols, os.path.basename(fpath).split('_')]))
+        if (str(doc.get('account')).isdigit()):
+            doc['account'] = int(doc.get('account'))
+        if (isinstance(doc.get('timestamp'), str)):
+            doc['timestamp'] = dt.datetime.strptime(doc.get('timestamp'), "%Y%m%dT%H%MZ")
+        doc['fpath'] = fpath
+        __source__ = doc.get('__source__', fpath)
+        if (__source__.find('/mnt/') > -1):
+            toks = __source__.split(os.sep)
+            doc['tag'] = os.sep.join(toks[index_of_item('vpcflowlogs',toks)-1:])
+        return ingest_source_file(doc, collection=collection, logger=logger)
+
+    msg = 'BEGIN: process_cursor ({}) :: skip_n={}, limit_n={}, nlimit={}'.format(proc_id, skip_n, limit_n, nlimit)
+    if (logger):
+        logger.info(msg)
+    print(msg)
+
+    try:
+        doc_cnt = 0
+        file_cnt = 0
+        with timer.Timer() as timer3:
+            try:
+                for files in skip_n:
+                    for fp in files:
+                        file_cnt += 1
+                        num_cells = (file_cnt / len(skip_n))
+                        print('{}{}::({:2f})'.format(repeat_char(' ', 2-len(str(proc_id))), proc_id, num_cells), end='\n')
+                        #<do your magic>
+                        data_cache = []
+                        process_source_file(fp, collection=data_cache, logger=logger)
+                        for doc in data_cache:
+                            doc_cnt += 1
+                            bin_scheduler(doc_cleaner(doc, normalize=['_id']), proc_id=proc_id)
+
+                l = len(__stats__)
+                if (l > 0):
+                    bins = [aBin for aBin in __stats__]
+                    db.insert_many(bins)
+                    msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, __stats__[0].get('data', [])[0].get('start'), __stats__[0].get('data', [])[-1].get('start'))
+                    logger.info(msg)
+                    print(msg)
+                    del __stats__[:]
+            except Exception as e:
+                if (logger):
+                    logger.error("Error in step2_binner", exc_info=True)
+                print('Error in step2_binner!')
+
+        _msg = ' in {:.2f} secs'.format(timer3.duration)
+
+        dest_stats_coll = db_coll(client, dest_db_name, dest_stats_coll_name)
+        s = {'proc_id':proc_id, 'file_cnt':file_cnt, 'doc_cnt':doc_cnt, 'duration':timer3.duration}
+        dest_stats_coll.insert_one(s)
+    finally:
+        client.close()
+
+    msg = 'END: process_cursor {} :: completed: doc_cnt={}, skip_n={}, limit_n={}, nlimit={}{}'.format(proc_id, doc_cnt, skip_n, limit_n, nlimit, _msg)
+    if (logger):
+        logger.info(msg)
+    print(msg)
+
+###########################################################################
+
 print('bin_collector :: started')
 
 __bin_size__ = 600
@@ -417,7 +665,14 @@ with timer.Timer() as timer2:
             msg = 'bin_collector :: creating processes.'
             logger.info(msg)
             print(msg)
-            processes = [ multiprocessing.Process(target=process_cursor, args=(_i, source_db_name, source_coll_name, __sort, criteria, projection, skip_n, batch_size, skip_n+batch_size, {}, logger)) for _i,skip_n in enumerate(skips)]
+            if (is_data_source_mongodb):
+                processes = [ multiprocessing.Process(target=process_cursor, args=(_i, source_db_name, source_coll_name, __sort, criteria, projection, skip_n, batch_size, skip_n+batch_size, {}, logger)) for _i,skip_n in enumerate(skips)]
+            elif (is_data_source_filesystem):
+                processes = [ multiprocessing.Process(target=process_files, args=(_i, skip_n, logger)) for _i,skip_n in enumerate(skips)]
+            elif (is_data_source_s3):
+                processes = [ multiprocessing.Process(target=process_buckets, args=(_i, skip_n, logger)) for _i,skip_n in enumerate(skips)]
+            else:
+                raise ValueError('Invalid data source')
 
             for process in processes:
                 process.start()
@@ -438,7 +693,11 @@ total_docs_count = aggregate_docs_count()
 assert 'total' in list(total_docs_count.keys()), 'total not found in total_docs_count'
 assert total_docs_count.get('total', -1) == num_events, 'total_docs_count ({}) != num_events ({}), diff={}'.format(total_docs_count.get('total', -1), num_events, num_events - total_docs_count.get('total', -1))
 
-dest_stats_coll.insert_one({'name':'bin_collector', 'doc_cnt':num_events, 'total': total_docs_count.get('total', -1), 'duration':timer2.duration})
+total_docs_binned = aggregate_bins_docs_total()
+assert 'total' in list(total_docs_binned.keys()), 'total not found in total_docs_binned'
+assert total_docs_binned.get('total', -1) == num_events, 'total_docs_binned ({}) != num_events ({}), diff={}'.format(total_docs_binned.get('total', -1), num_events, num_events - total_docs_binned.get('total', -1))
+
+dest_stats_coll.insert_one({'name':'bin_collector', 'doc_cnt':num_events, 'total_docs_count': total_docs_count.get('total', -1), 'total_docs_binned': total_docs_binned.get('total', -1), 'duration':timer2.duration})
 
 msg = 'Bin Collector :: num_events: {} in {:.2f} secs'.format(_num_events, timer2.duration)
 print(msg)
