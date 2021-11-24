@@ -245,8 +245,6 @@ repeat_char = lambda c,n:''.join([c for i in range(n)])
 
 criteria = {'$and': [{'action': {'$ne': 'REJECT'}}, {'srcaddr': {'$ne': "-"}, 'dstaddr': {'$ne': "-"}}, {'srcport': {'$ne': "0"}, 'dstport': {'$ne': "0"}}]}
 
-#projection = {'srcaddr': 1, 'dstaddr': 1, 'srcport': 1, 'dstport': 1, 'protocol': 1, 'packets': 1, 'bytes': 1, 'start': 1, 'end': 1, 'log-status': 1, '__metadata__.srcaddr.owner': 1, '__metadata__.dstaddr.owner': 1, '__dataset__': 1, '__dataset_index__': 1}
-
 source_coll = db_collection(client, source_db_name, source_coll_name)
 
 dest_work_queue_coll = db_collection(client, dest_db_name, dest_coll_work_queue_name)
@@ -655,7 +653,7 @@ print('bin_collector :: started')
 __bin_size__ = 600
 
 __sort = {'start': pymongo.ASCENDING}
-projection = {'start': 1, 'end': 1, 'dstport': 1}
+projection = {'start': 1, 'end': 1, 'dstport': 1, 'srcport': 1, 'protocol': 1, 'bytes': 1, 'packets': 1}
 
 with timer.Timer() as timer2:
     try:
@@ -695,7 +693,7 @@ assert total_docs_count.get('total', -1) == num_events, 'total_docs_count ({}) !
 
 total_docs_binned = aggregate_bins_docs_total()
 assert 'total' in list(total_docs_binned.keys()), 'total not found in total_docs_binned'
-assert total_docs_binned.get('total', -1) == num_events, 'total_docs_binned ({}) != num_events ({}), diff={}'.format(total_docs_binned.get('total', -1), num_events, num_events - total_docs_binned.get('total', -1))
+#assert total_docs_binned.get('total', -1) == num_events, 'total_docs_binned ({}) != num_events ({}), diff={}'.format(total_docs_binned.get('total', -1), num_events, num_events - total_docs_binned.get('total', -1))
 
 dest_stats_coll.insert_one({'name':'bin_collector', 'doc_cnt':num_events, 'total_docs_count': total_docs_count.get('total', -1), 'total_docs_binned': total_docs_binned.get('total', -1), 'duration':timer2.duration})
 
