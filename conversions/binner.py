@@ -5,12 +5,11 @@ from datetime import datetime
 
 class processor(object):
     
-    def __init__(self, bin_size=600, chunk_size=100, stats={}, db=None, logger=None):
+    def __init__(self, bin_size=600, stats={}, db=None, logger=None):
         self.bin = []
-        self.bin_count = 0
+        self.bin_count = 1
         self.db = db
         self.stats = stats
-        self.chunk_size = chunk_size
         self.bin_size = bin_size
         self.logger = logger
 
@@ -29,8 +28,11 @@ class processor(object):
                         __is__ = (secs >= self.bin_size)
                 self.bin.append(doc)
                 if (__is__):
-                    f(self.bin, self.bin_count, self.bin_size, stats=self.stats, db=self.db, chunk_size=self.chunk_size, logger=self.logger, **kwargs)
+                    f(self.bin, bin_count=self.bin_count, bin_size=self.bin_size, stats=self.stats, db=self.db, logger=self.logger, **kwargs)
                     self.bin = []
+                    self.bin_count += 1
+                    if (self.bin_count > 6):
+                        self.bin_count = 1
             return wrapped_f
         except Exception as ex:
             extype, ex, tb = sys.exc_info()

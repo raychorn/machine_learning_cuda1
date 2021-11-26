@@ -32,6 +32,8 @@ import pandas as pd
 
 import multiprocessing
 
+from binner import processor as bin_processor
+
 ############################################################################
 from logging.handlers import RotatingFileHandler
 
@@ -215,8 +217,6 @@ repeat_char = lambda c,n:''.join([c for i in range(n)])
 
 criteria = {'$and': [{'action': {'$ne': 'REJECT'}}, {'srcaddr': {'$ne': "-"}, 'dstaddr': {'$ne': "-"}}, {'srcport': {'$ne': "0"}, 'dstport': {'$ne': "0"}}]}
 
-#projection = {'srcaddr': 1, 'dstaddr': 1, 'srcport': 1, 'dstport': 1, 'protocol': 1, 'packets': 1, 'bytes': 1, 'start': 1, 'end': 1, 'log-status': 1, '__metadata__.srcaddr.owner': 1, '__metadata__.dstaddr.owner': 1, '__dataset__': 1, '__dataset_index__': 1}
-
 source_coll = db_collection(client, source_db_name, source_coll_name)
 
 dest_coll = db_collection(client, dest_db_name, dest_coll_name)
@@ -224,8 +224,12 @@ dest_stats_coll = db_collection(client, dest_db_name, dest_stats_coll_name)
 
 n_cores = multiprocessing.cpu_count() / 2
 
-dest_coll.delete_many({})
-dest_stats_coll.delete_many({})
+yn = input("Please approve {} delete all. (y/n)".format(dest_coll.full_name))
+if (str(yn.upper()) == 'Y'):
+    dest_coll.delete_many({})
+yn = input("Please approve {} delete all. (y/n)".format(dest_stats_coll.full_name))
+if (str(yn.upper()) == 'Y'):
+    dest_stats_coll.delete_many({})
 
 msg = 'BEGIN: Count scheduled bins in {}'.format(source_coll_name)
 print(msg)
@@ -343,7 +347,8 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
 
     dest_work_queue = db_coll(client, dest_db_name, dest_coll_name)
     
-    def step2_binner(data, bin_count=-1, bin_size=-1, stats={}, proc_id=-1, logger=None):
+    @bin_processor(bin_size=600, stats=__stats__, db=dest_work_queue, logger=logger)
+    def step2_binner(data, db=None, bin_count=-1, bin_size=-1, stats={}, proc_id=-1, logger=None):
         if (logger):
             logger.info('step2_binner :: bin size: {}'.format(len(data)))
         if (isinstance(data, list)):
@@ -394,16 +399,16 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
                         print('{}{}::({:2f})'.format(repeat_char(' ', 2-len(str(proc_id))), proc_id, num_cells), end='\n')
                     #<do your magic>
                     _data = doc.get('data', [])
-                    step2_binner(_data, proc_id=proc_id, bin_count=doc_cnt, bin_size=len(_data), stats=__stats__, logger=logger)
+                    for dd in _data:
+                        step2_binner(dd, proc_id=proc_id)
 
                     l = len(__stats__)
                     if (l > 0):
-                        keyname = [k for k in list(__stats__[-1].keys()) if (k.find('-bin') > -1)][0]
-                        newvalues = { "$set": { keyname: __stats__[-1].get(keyname, []) } }
-                        db.update_one({ "_id": doc.get('_id') }, newvalues)
-                        msg = 'bin_collector :: bin: #{}'.format(doc.get('uuid'))
-                        logger.info(msg)
-                        print(msg)
+                        for stat in __stats__:
+                            dstport_bin = stat.get('dstport-bin', [])
+                            for _bin in dstport_bin:
+                                _bin['uuid'] = doc.get('uuid')
+                            dest_work_queue.insert_many(dstport_bin)
                         del __stats__[:]
             except Exception as e:
                 if (logger):

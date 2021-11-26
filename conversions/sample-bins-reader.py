@@ -158,6 +158,21 @@ def maximum_absolute_scaling(df):
         df_scaled[column] = df_scaled[column]  / df_scaled[column].abs().max()
     return df_scaled
     
+    
+def sklearn_MaxAbsScaler(df):
+    from sklearn.preprocessing import MaxAbsScaler
+
+    abs_scaler = MaxAbsScaler()
+
+    abs_scaler.fit(df)
+
+    #val = abs_scaler.max_abs_
+
+    scaled_data = abs_scaler.transform(df)
+
+    df_scaled = pd.DataFrame(scaled_data, columns=df.columns)
+    return df_scaled
+
 try:
     client = get_mongo_client(mongouri=MONGO_URI, db_name=MONGO_INITDB_DATABASE, username=MONGO_INITDB_USERNAME, password=MONGO_INITDB_PASSWORD, authMechanism=MONGO_AUTH_MECHANISM)
 except:
@@ -201,16 +216,25 @@ _sort = {
         "dstport-bin.hour": 1
     }
 
+def get_bin_data(skips, source_coll=None, projection=None, sort=None, maxTimeMS=60*1000, batch_size=-1, n_limit=-1, verbose=False, logger=None):
+    items = []
+    for cursor in [docs_generator(source_coll, projection=projection, sort=_sort, skip=skip_n, limit=batch_size, maxTimeMS=maxTimeMS, verbose=verbose, logger=logger) for skip_n in skips]:
+        for doc in cursor:
+            data_list = doc.get('data', [])
+            for dd in data_list:
+                items.append(dd)
+            if (n_limit > 0) and (len(items) >= n_limit):
+                return items
+    return items
+    
+
 items = []
+items_limit = 10000
 try:
     msg = 'BEGIN: Load bins from {}+{}'.format(source_db_name, source_coll_name)
     print(msg)
     with timer.Timer() as timer2:
-        for cursor in [docs_generator(source_coll, projection=projection, sort=_sort, skip=skip_n, limit=batch_size, maxTimeMS=5*60*60*1000, verbose=is_verbose, logger=logger) for skip_n in enumerate(skips)]:
-            for doc in cursor:
-                data_list = doc.get('data', [])
-                for dd in data_list:
-                    items.append(dd)
+        items = get_bin_data(skips, source_coll=source_coll, projection=projection, sort=_sort, maxTimeMS=5*60*60*1000, batch_size=batch_size, n_limit=items_limit, verbose=is_verbose, logger=logger)
     msg = 'END!!! Load bins from {}+{} :: num_items: {} in {:.2f} secs'.format(source_db_name, source_coll_name, len(items), timer2.duration)
     print(msg)
             
@@ -219,9 +243,37 @@ try:
     print(df.shape)
     print(df.head())
 
+    def convert_datetime_to_int(dt):
+        return dt.to_datetime64().astype(int)
+
+    from pyod.utils.example import visualize
+    from pyod.utils.data import generate_data
+
     df_selected = df[['dstport', 'start']]
-    df_selected['start'] = df_selected['start'].dt.total_seconds().astype(int)
+    df_selected['start'] = df_selected['start'].apply(convert_datetime_to_int)
     df_scaled = maximum_absolute_scaling(df_selected)
+    df_scaled2 = sklearn_MaxAbsScaler(df_selected)
+    print(df_scaled.head())
+    print()
+    print(df_scaled2.head())
+    print()
+
+    contamination = 0.0  # percentage of outliers
+    n_train = int(df_scaled.count()[0])  # number of training points
+    n_test = int(df_scaled.count()[0]/2)  # number of testing points
+
+    X_train, y_train, X_test, y_test = \
+        generate_data(n_train=n_train,
+                      n_test=n_test,
+                      n_features=2,
+                      contamination=contamination,
+                      random_state=42)
+
+    y_train_pred = [0 for i in range(len(y_train))]
+    y_test_pred = [0 for i in range(len(y_test))]
+    
+    visualize('sample1', X_train, y_train, X_test, y_test, y_train_pred,
+              y_test_pred, show_figure=True, save_figure=True)
 
 finally:
     client.close()
