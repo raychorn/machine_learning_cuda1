@@ -172,7 +172,8 @@ source_db_name = os.environ.get('MONGO_WORK_QUEUE_DATA_DB')
 source_coll_name = os.environ.get('MONGO_WORK_QUEUE_COL')
 
 dest_db_name = os.environ.get('MONGO_DEST_DATA_DB')
-dest_coll_name = os.environ.get('MONGO_DEST_DATA_COL')
+dest_binned_coll_name = os.environ.get('MONGO_DEST_DATA_BINNED_COL')
+dest_data_coll_name = os.environ.get('MONGO_DEST_DATA_COL')
 
 dest_stats_coll_name = os.environ.get('MONGO_WORK_QUEUE_STATS_COL')
 
@@ -219,14 +220,18 @@ criteria = {'$and': [{'action': {'$ne': 'REJECT'}}, {'srcaddr': {'$ne': "-"}, 'd
 
 source_coll = db_collection(client, source_db_name, source_coll_name)
 
-dest_coll = db_collection(client, dest_db_name, dest_coll_name)
+dest_data_coll = db_collection(client, dest_db_name, dest_data_coll_name)
+dest_binned_coll = db_collection(client, dest_db_name, dest_binned_coll_name)
 dest_stats_coll = db_collection(client, dest_db_name, dest_stats_coll_name)
 
 n_cores = multiprocessing.cpu_count() / 2
 
-yn = input("Please approve {} delete all. (y/n)".format(dest_coll.full_name))
+yn = input("Please approve {} delete all. (y/n)".format(dest_data_coll.full_name))
 if (str(yn.upper()) == 'Y'):
-    dest_coll.delete_many({})
+    dest_data_coll.delete_many({})
+yn = input("Please approve {} delete all. (y/n)".format(dest_binned_coll.full_name))
+if (str(yn.upper()) == 'Y'):
+    dest_binned_coll.delete_many({})
 yn = input("Please approve {} delete all. (y/n)".format(dest_stats_coll.full_name))
 if (str(yn.upper()) == 'Y'):
     dest_stats_coll.delete_many({})
@@ -345,9 +350,10 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
 
     client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
 
-    dest_work_queue = db_coll(client, dest_db_name, dest_coll_name)
+    dest_binned = db_coll(client, dest_db_name, dest_binned_coll_name)
+    dest_data = db_coll(client, dest_db_name, dest_data_coll_name)
     
-    @bin_processor(bin_size=600, stats=__stats__, db=dest_work_queue, logger=logger)
+    @bin_processor(bin_size=600, stats=__stats__, db=dest_binned, logger=logger)
     def step2_binner(data, db=None, bin_count=-1, bin_size=-1, stats={}, proc_id=-1, logger=None):
         if (logger):
             logger.info('step2_binner :: bin size: {}'.format(len(data)))
@@ -401,6 +407,8 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
                     _data = doc.get('data', [])
                     for dd in _data:
                         step2_binner(dd, proc_id=proc_id)
+                        dd['uuid'] = doc.get('uuid')
+                    dest_data.insert_many(_data)
 
                     l = len(__stats__)
                     if (l > 0):
@@ -408,7 +416,7 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
                             dstport_bin = stat.get('dstport-bin', [])
                             for _bin in dstport_bin:
                                 _bin['uuid'] = doc.get('uuid')
-                            dest_work_queue.insert_many(dstport_bin)
+                            dest_binned.insert_many(dstport_bin)
                         del __stats__[:]
             except Exception as e:
                 if (logger):
