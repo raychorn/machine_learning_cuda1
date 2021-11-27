@@ -218,6 +218,8 @@ repeat_char = lambda c,n:''.join([c for i in range(n)])
 
 criteria = {'$and': [{'action': {'$ne': 'REJECT'}}, {'srcaddr': {'$ne': "-"}, 'dstaddr': {'$ne': "-"}}, {'srcport': {'$ne': "0"}, 'dstport': {'$ne': "0"}}]}
 
+print('source_db_name: {}'.format(source_db_name))
+print('source_coll_name: {}'.format(source_coll_name))
 source_coll = db_collection(client, source_db_name, source_coll_name)
 
 dest_data_coll = db_collection(client, dest_db_name, dest_data_coll_name)
@@ -226,14 +228,10 @@ dest_stats_coll = db_collection(client, dest_db_name, dest_stats_coll_name)
 
 n_cores = multiprocessing.cpu_count() / 2
 
-yn = input("Please approve {} delete all. (y/n)".format(dest_data_coll.full_name))
+yn = input("Please approve {},{},{} delete all. (y/n)".format(dest_data_coll.full_name, dest_binned_coll.full_name, dest_stats_coll.full_name))
 if (str(yn.upper()) == 'Y'):
     dest_data_coll.delete_many({})
-yn = input("Please approve {} delete all. (y/n)".format(dest_binned_coll.full_name))
-if (str(yn.upper()) == 'Y'):
     dest_binned_coll.delete_many({})
-yn = input("Please approve {} delete all. (y/n)".format(dest_stats_coll.full_name))
-if (str(yn.upper()) == 'Y'):
     dest_stats_coll.delete_many({})
 
 msg = 'BEGIN: Count scheduled bins in {}'.format(source_coll_name)
@@ -408,6 +406,16 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
                     for dd in _data:
                         step2_binner(dd, proc_id=proc_id)
                         dd['uuid'] = doc.get('uuid')
+                        dd['start_month'] = dd.get('start').month
+                        dd['start_day'] = dd.get('start').day
+                        dd['start_year'] = dd.get('start').year
+                        dd['start_hour'] = dd.get('start').hour
+                        dd['start_minute'] = dd.get('start').minute
+                        dd['end_month'] = dd.get('end').month
+                        dd['end_day'] = dd.get('end').day
+                        dd['end_year'] = dd.get('end').year
+                        dd['end_hour'] = dd.get('end').hour
+                        dd['end_minute'] = dd.get('end').minute
                     dest_data.insert_many(_data)
 
                     l = len(__stats__)
@@ -416,6 +424,16 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
                             dstport_bin = stat.get('dstport-bin', [])
                             for _bin in dstport_bin:
                                 _bin['uuid'] = doc.get('uuid')
+                                _bin['start_month'] = _bin.get('start').month
+                                _bin['start_day'] = _bin.get('start').day
+                                _bin['start_year'] = _bin.get('start').year
+                                _bin['start_hour'] = _bin.get('start').hour
+                                _bin['start_minute'] = _bin.get('start').minute
+                                _bin['end_month'] = _bin.get('end').month
+                                _bin['end_day'] = _bin.get('end').day
+                                _bin['end_year'] = _bin.get('end').year
+                                _bin['end_hour'] = _bin.get('end').hour
+                                _bin['end_minute'] = _bin.get('end').minute
                             dest_binned.insert_many(dstport_bin)
                         del __stats__[:]
             except Exception as e:

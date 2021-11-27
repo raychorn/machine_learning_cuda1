@@ -21,6 +21,7 @@ filelock==3.0.12
 future==0.18.2
 idna==2.10
 ipwhois==1.2.0
+isodate==0.6.0
 jmespath==0.10.0
 joblib==1.0.1
 kiwisolver==1.3.2
