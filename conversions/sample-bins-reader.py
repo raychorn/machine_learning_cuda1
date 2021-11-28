@@ -13,7 +13,10 @@ import shutil
 import datetime as dt
 from datetime import datetime
 
+import numpy as np
 import pandas as pd
+
+import multiprocessing
 
 from pymongo.mongo_client import MongoClient
 
@@ -143,6 +146,8 @@ is_not_none = lambda s:(s is not None)
 db = lambda cl,n:cl.get_database(n)
 db_collection = lambda cl,n,c:db(cl,n).get_collection(c)
 
+n_cores = int(multiprocessing.cpu_count() / 2)
+
 def get_mongo_client(mongouri=None, db_name=None, username=None, password=None, authMechanism=None):
     if (is_not_none(authMechanism)):
         assert is_not_none(username), 'Cannot continue without a username ({}).'.format(username)
@@ -179,20 +184,17 @@ except:
     sys.exit()
 
 source_db_name = 'DataScience1-processed2'
-source_coll_name = 'sx-vpclogss3-filtered-dstport-data2'
+source_coll_name = 'sx-vpclogss3-filtered-raw-data2'
 
 source_coll = db_collection(client, source_db_name, source_coll_name)
 
-msg = 'BEGIN: Count bins in {}+{}'.format(source_db_name, source_coll_name)
+msg = 'BEGIN: Count events in {}+{}'.format(source_db_name, source_coll_name)
 print(msg)
 with timer.Timer() as timer1:
     num_items = source_coll.count_documents({})
-msg = 'END!!! Count bins in {}+{} :: num_items: {} in {:.2f} secs'.format(source_db_name, source_coll_name, num_items, timer1.duration)
+msg = 'END!!! Count events in {}+{} :: num_items: {} in {:.2f} secs'.format(source_db_name, source_coll_name, num_items, timer1.duration)
+logger.info(msg)
 print(msg)
-
-collection_size = num_items
-batch_size = round(collection_size / 10)
-skips = range(0, collection_size, int(batch_size))
 
 import dateutil.parser
 
@@ -207,9 +209,10 @@ to_isodate = dateutil.parser.parse(to_dateStr)
 to_isodate2 = parse_datetime(to_dateStr)
 
 _criteria = {
-    'start': {
-        '$gte': from_isodate2,
-        '$lte': to_isodate2
+    'start_month': 6,
+    'start_day': {
+        '$gte': 3,
+        '$lte': 4
     }
 }
 
@@ -221,6 +224,155 @@ _projection = {
 _sort = {
         "start": 1
     }
+
+test_criteria = {
+}
+
+def visualize_histogram():
+    import numpy as np
+    import matplotlib.mlab as mlab
+    import matplotlib.pyplot as plt
+
+    # example data
+    mu = 100 # mean of distribution
+    sigma = 15 # standard deviation of distribution
+    x = mu + sigma * np.random.randn(10000)
+
+    num_bins = 20
+    # the histogram of the data
+    n, bins, patches = plt.hist(x, num_bins, normed=1, facecolor='blue', alpha=0.5)
+
+    # add a 'best fit' line
+    y = mlab.normpdf(bins, mu, sigma)
+    plt.plot(bins, y, 'r--')
+    plt.xlabel('Smarts')
+    plt.ylabel('Probability')
+    plt.title(r'Histogram of IQ: $\mu=100$, $\sigma=15$')
+
+    # Tweak spacing to prevent clipping of ylabel
+    plt.subplots_adjust(left=0.15)
+    plt.show()
+
+__stats__ = {}
+__runtimes__ = {}
+average_runtime = 0
+
+def callback(vector):
+    _stats = vector.get('stats')
+    if (_stats is not None):
+        for k, v in _stats.items():
+            __stats__[k] = v
+    _runtimes = vector.get('runtimes')
+    if (_runtimes is not None):
+        for k, v in _runtimes.items():
+            __runtimes__[k] = v
+    count_iterations = vector.get('count_iterations', 0)
+    __runtimes__['count_iterations'] = __runtimes__.get('count_iterations', 0) + count_iterations
+    average_runtime = vector.get('average_runtime', 0)
+    
+    num_iterations = vector.get('num_iterations', 0)
+    
+    logger = vector.get('logger')
+
+    expected_runtime = average_runtime * num_iterations
+    
+    expected_runtime_hours = int(expected_runtime / 3600.0)
+    expected_runtime_minutes = int((expected_runtime / 60.0) % 60)
+    
+    pcent_complete = round(count_iterations / num_iterations * 100, 2)
+
+    msg = 'Expected runtime ({:.2f}%%) :: num_iterations: {}, average_runtime: {} in {:.2f} secs or {} hours {} minutes'.format(pcent_complete, num_iterations, average_runtime, expected_runtime, expected_runtime_hours, expected_runtime_minutes)
+    if (logger is not None):
+        logger.info(msg)
+    print('\n'+msg)
+    
+    if (len(__stats__) > 10) and (sum(list(__stats__.values())) > 100):
+        visualize_histogram([('{}:{}'.format(k[0], k[-1]), v) for k, v in __stats__.items()])
+    
+    
+def process_batch(n, batches, _callback, num_iterations, logger):
+    try:
+        client = get_mongo_client(mongouri=MONGO_URI, db_name=MONGO_INITDB_DATABASE, username=MONGO_INITDB_USERNAME, password=MONGO_INITDB_PASSWORD, authMechanism=MONGO_AUTH_MECHANISM)
+    except:
+        sys.exit()
+
+    source_coll = db_collection(client, source_db_name, source_coll_name)
+
+    _stats = {}
+    _runtimes = {}
+    
+    average_runtime = -1
+    
+    count_iterations = 1
+    for day_num,day_hour in batches:
+        test_criteria['start_month'] = 6
+        test_criteria['start_year'] = 2021
+        test_criteria['start_day'] = {
+            '$gte': day_num,
+            '$lte': day_num + 1
+        }
+        test_criteria['start_hour'] = {
+            '$gte': day_hour,
+            '$lte': day_hour + 1
+        }
+
+        msg = 'BEGIN: Count events matching {} in {}+{}'.format(test_criteria, source_db_name, source_coll_name)
+        logger.info(msg)
+        print(msg)
+        with timer.Timer() as timer2:
+            num_items = source_coll.count_documents(test_criteria)
+        msg = 'END!!! Count events matching {} in {}+{} :: num_items: {} in {:.2f} secs'.format(test_criteria, source_db_name, source_coll_name, num_items, timer2.duration)
+        logger.info(msg)
+        print(msg)
+
+        _runtimes[day_num, day_hour] = timer2.duration
+        
+        average_runtime = np.average(list(_runtimes.values()))
+        
+        _stats[day_num, day_hour] = num_items
+        
+        count_iterations += 1
+        
+    if (isinstance(_callback, types.FunctionType)):
+        _callback({'stats':_stats, 'runtimes':_runtimes, 'average_runtime':average_runtime, 'count_iterations':count_iterations, 'num_iterations':num_iterations, 'logger':logger})
+
+
+num_days = 1 #30
+num_hours = min(n_cores,24)
+num_iterations = num_days*num_hours
+
+def skipper():
+    for day_num in range(1, num_days+1):
+        for day_hour in range(0, num_hours):
+            yield day_num, day_hour
+            
+_skips = [n for n in skipper()]
+
+collection_size = len(_skips)
+batch_size = round(collection_size / n_cores)
+skips = [_skips[i:i+batch_size] for i in range(0, len(_skips), batch_size)]
+
+with timer.Timer() as timer1a:
+    processes = [ multiprocessing.Process(target=process_batch, args=(_i, skip_n, callback, num_iterations, logger)) for _i,skip_n in enumerate(skips)]
+
+    for process in processes:
+        process.start()
+
+    for process in processes:
+        process.join()
+    
+msg = 'Analysis in {:.2f} secs'.format(timer1a.duration)
+logger.info(msg)
+print(msg)
+
+msg = '='*30
+print(msg)
+logger.info(msg)
+print()
+
+collection_size = num_items
+batch_size = round(collection_size / 10)
+skips = range(0, collection_size, int(batch_size))
 
 def get_bin_data(skips, source_coll=None, criteria={}, projection=None, sort=None, maxTimeMS=60*1000, batch_size=-1, n_limit=-1, verbose=False, logger=None):
     items = []
