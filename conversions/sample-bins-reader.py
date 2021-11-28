@@ -259,15 +259,8 @@ average_runtime = 0
 
 def callback(vector):
     _stats = vector.get('stats')
-    if (_stats is not None):
-        for k, v in _stats.items():
-            __stats__[k] = v
     _runtimes = vector.get('runtimes')
-    if (_runtimes is not None):
-        for k, v in _runtimes.items():
-            __runtimes__[k] = v
     count_iterations = vector.get('count_iterations', 0)
-    __runtimes__['count_iterations'] = __runtimes__.get('count_iterations', 0) + count_iterations
     average_runtime = vector.get('average_runtime', 0)
     
     num_iterations = vector.get('num_iterations', 0)
@@ -286,11 +279,8 @@ def callback(vector):
         logger.info(msg)
     print('\n'+msg)
     
-    if (len(__stats__) > 10) and (sum(list(__stats__.values())) > 100):
-        visualize_histogram([('{}:{}'.format(k[0], k[-1]), v) for k, v in __stats__.items()])
     
-    
-def process_batch(n, batches, _callback, num_iterations, logger):
+def process_batch(n, batches, _callback, num_iterations, results_dict, logger):
     try:
         client = get_mongo_client(mongouri=MONGO_URI, db_name=MONGO_INITDB_DATABASE, username=MONGO_INITDB_USERNAME, password=MONGO_INITDB_PASSWORD, authMechanism=MONGO_AUTH_MECHANISM)
     except:
@@ -336,9 +326,21 @@ def process_batch(n, batches, _callback, num_iterations, logger):
     if (isinstance(_callback, types.FunctionType)):
         _callback({'stats':_stats, 'runtimes':_runtimes, 'average_runtime':average_runtime, 'count_iterations':count_iterations, 'num_iterations':num_iterations, 'logger':logger})
 
+    __stats = results_dict.get('stats', {})
+    for k, v in _stats.items():
+        __stats[k] = v
+    results_dict['stats'] = __stats
 
-num_days = 1 #30
-num_hours = min(n_cores,24)
+    __runtimes = results_dict.get('runtimes', {})
+    for k, v in _runtimes.items():
+        __runtimes[k] = v
+
+    __runtimes['count_iterations'] = __runtimes.get('count_iterations', 0) + count_iterations
+
+    results_dict['runtimes'] = __runtimes
+
+num_days = 6 #30
+num_hours = max(n_cores,24)
 num_iterations = num_days*num_hours
 
 def skipper():
@@ -352,8 +354,14 @@ collection_size = len(_skips)
 batch_size = round(collection_size / n_cores)
 skips = [_skips[i:i+batch_size] for i in range(0, len(_skips), batch_size)]
 
+manager = multiprocessing.Manager()
+results_dict = manager.dict()
+
+results_dict['stats'] = __stats__
+results_dict['runtimes'] = __runtimes__
+
 with timer.Timer() as timer1a:
-    processes = [ multiprocessing.Process(target=process_batch, args=(_i, skip_n, callback, num_iterations, logger)) for _i,skip_n in enumerate(skips)]
+    processes = [ multiprocessing.Process(target=process_batch, args=(_i, skip_n, callback, num_iterations, results_dict, logger)) for _i,skip_n in enumerate(skips)]
 
     for process in processes:
         process.start()
@@ -369,6 +377,10 @@ msg = '='*30
 print(msg)
 logger.info(msg)
 print()
+
+if (len(__stats__) > 10) and (sum(list(__stats__.values())) > 100):
+    visualize_histogram([('{}:{}'.format(k[0], k[-1]), v) for k, v in __stats__.items()])
+
 
 collection_size = num_items
 batch_size = round(collection_size / 10)
