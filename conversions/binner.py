@@ -3,6 +3,17 @@ import traceback
 
 from datetime import datetime
 
+import datetime
+from datetime import timezone
+
+__ts = lambda t:datetime.datetime.fromtimestamp(datetime.datetime.fromtimestamp(t).timestamp(), tz=timezone.utc)
+day_id = lambda t:int(int(((__ts(t).month-1) * (365.25/12)) + __ts(t).day) + (__ts(t).year * 365.25)) + (__ts(t).hour / 100)
+__bin_id = lambda t:(int(t / 600))
+_bin_id = lambda t:t - (int(t / 3600) * 3600)
+bin_id = lambda t:(t - (int(t / 86400) * 86400))
+
+BinID = lambda t:'{}.{}'.format(day_id(t), __bin_id(_bin_id(bin_id(t))))
+
 class processor(object):
     
     def __init__(self, bin_size=600, stats={}, db=None, logger=None):
