@@ -156,27 +156,17 @@ if (not os.path.exists(DESTDIR) or not os.path.isdir(DESTDIR)):
     os.makedirs(DESTDIR)
 
 if (0):
-    import time
-    import datetime
-    import datetime as dt
-    from datetime import timezone
+    import binner
 
-    __ts = lambda t:datetime.datetime.fromtimestamp(datetime.datetime.fromtimestamp(t).timestamp(), tz=timezone.utc)
-    day_id = lambda t:int(int(((__ts(t).month-1) * (365.25/12)) + __ts(t).day) + (__ts(t).year * 365.25)) + (__ts(t).hour / 100)
-    __bin_id = lambda t:(int(t / 600))
-    _bin_id = lambda t:t - (int(t / 3600) * 3600)
-    bin_id = lambda t:(t - (int(t / 86400) * 86400)) #int((t - (int(t / 86400) * 86400) - (int(t / 3600) * 3600)) / 600)
-    
     def unix_time_secs():
+        import time
         return int(time.time())
 
     ts = unix_time_secs() * 1
     cnt = 0
     for n in range(0, 86400, 300):
         _ts = ts + n
-        #dt2 = datetime.datetime.fromtimestamp(_ts)
-        #dt_ts = datetime.datetime.fromtimestamp(dt2.timestamp(), tz=timezone.utc)
-        print('#{}: {} {}'.format(cnt, day_id(_ts), __bin_id(_bin_id(bin_id(_ts)))))
+        print('#{}: {}'.format(cnt, binner.BinID(_ts)))
         cnt += 1
     print()
 

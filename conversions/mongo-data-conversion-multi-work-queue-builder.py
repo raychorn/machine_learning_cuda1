@@ -32,8 +32,6 @@ import pandas as pd
 
 import multiprocessing
 
-from binner import processor as bin_processor
-
 ############################################################################
 from logging.handlers import RotatingFileHandler
 
@@ -202,6 +200,8 @@ try:
     client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
 except:
     sys.exit()
+    
+print('client: {}'.format(client))
 
 try:
     assert is_really_something_with_stuff(source_db_name, str), 'Cannot continue without the db_name.'
@@ -253,8 +253,10 @@ dest_stats_coll = db_collection(client, dest_db_name, dest_stats_coll_name)
 
 n_cores = multiprocessing.cpu_count() / 2
 
-dest_stats_coll.delete_many({})
-dest_work_queue_coll.delete_many({})
+yn = input("Please approve {},{} delete all. (y/n)".format(dest_stats_coll.full_name, dest_work_queue_coll.full_name))
+if (str(yn.upper()) == 'Y'):
+    dest_stats_coll.delete_many({})
+    dest_work_queue_coll.delete_many({})
 
 if (is_data_source_mongodb):
     msg = 'BEGIN: Count docs in {}'.format(source_coll_name)
@@ -287,7 +289,7 @@ elif (is_data_source_filesystem):
             files.append(fp)
         num_files = len(files)
         batch_size = round(num_files / n_cores)
-        skips = [files[n:batch_size] for n in range(0, num_files, batch_size)]
+        skips = [files[n:n+batch_size] for n in range(0, num_files, batch_size)]
     msg = 'END!!! Count files in {} :: num_files: {} in {:.2f} secs'.format(data_source, num_files, timer1.duration)
     print(msg)
     logger.info(msg)
@@ -401,8 +403,7 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
 
     dest_work_queue = db_coll(client, dest_db_name, dest_coll_work_queue_name)
     
-    @bin_processor(bin_size=__bin_size__, chunk_size=1, stats=__stats__, db=dest_work_queue, logger=logger)
-    def bin_scheduler(data, bin_count, bin_size, stats=[], db=None, chunk_size=-1, proc_id=None, logger=logger):
+    def bin_processor(data, bin_count, bin_size, stats=[], db=None, chunk_size=-1, proc_id=None, logger=logger):
         global __bin_count__
         __bin = {}
         __bin_count__ += 1
@@ -416,7 +417,7 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
         if (l >= chunk_size):
             bins = [aBin for aBin in stats]
             db.insert_many(bins)
-            msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, stats[0].get('data', [])[0].get('start'), stats[0].get('data', [])[-1].get('start'))
+            msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, stats[0].get('data', {}).get('start'), stats[0].get('data', {}).get('start'))
             logger.info(msg)
             print(msg)
             del stats[:]
@@ -440,7 +441,7 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
                         #print('{}{}::({}|{})'.format(repeat_char(' ', 2-len(str(proc_id))), proc_id, repeat_char('.', num_cells), repeat_char('.', 99-num_cells)))
                         print('{}{}::({:2f})'.format(repeat_char(' ', 2-len(str(proc_id))), proc_id, num_cells), end='\n')
                     #<do your magic>
-                    bin_scheduler(doc_cleaner(doc, normalize=['_id']), proc_id=proc_id)
+                    bin_processor(doc_cleaner(doc, normalize=['_id']), proc_id=proc_id)
 
                 l = len(__stats__)
                 if (l > 0):
@@ -452,8 +453,8 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
                     del __stats__[:]
             except Exception as e:
                 if (logger):
-                    logger.error("Error in step2_binner", exc_info=True)
-                print('Error in step2_binner!')
+                    logger.error("Error in process_cursor", exc_info=True)
+                print('Error in process_cursor!')
 
         _msg = ' in {:.2f} secs'.format(timer3.duration)
 
@@ -470,6 +471,8 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
 
 ###########################################################################
 def process_files(proc_id, skip_n, logger):
+    import binner
+    
     assert isinstance(proc_id, int), 'int proc_id is required.'
     assert isinstance(skip_n, list), 'skip_n is required as a list of files.'
     assert logger is not None, 'logger is required.'
@@ -480,25 +483,25 @@ def process_files(proc_id, skip_n, logger):
 
     dest_work_queue = db_coll(client, dest_db_name, dest_coll_work_queue_name)
 
-    @bin_processor(bin_size=__bin_size__, chunk_size=1, stats=__stats__, db=dest_work_queue, logger=logger)
-    def bin_scheduler(data, bin_count, bin_size, stats=[], db=None, chunk_size=-1, proc_id=None, logger=logger):
+    def bin_processor(doc, stats=None, db=dest_work_queue, chunk_size=2000, logger=logger):
         global __bin_count__
-        __bin = {}
-        __bin_count__ += 1
-        __bin['proc_id'] = proc_id
-        __bin['bin_num'] = __bin_count__
-        __bin['bin_size'] = bin_size
-        __bin['uuid'] = str(uuid.uuid4())
-        __bin['data'] = [doc_cleaner(doc, normalize=['_id']) for doc in data]
-        stats.append(__bin)
-        l = len(stats)
-        if (l >= chunk_size):
-            bins = [aBin for aBin in stats]
-            db.insert_many(bins)
-            msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, stats[0].get('data', [])[0].get('start'), stats[0].get('data', [])[-1].get('start'))
-            logger.info(msg)
-            print(msg)
-            del stats[:]
+        for _doc in doc.get('rows', []):
+            __bin = {}
+            __bin_count__ += 1
+            __bin['BinID'] = the_binid = binner.BinID(_doc.get('start'))
+            toks = the_binid.split('.')
+            assert len(toks) == 3, 'BinID must be of the form: XXXXXXX.YY.Z'
+            __bin['BinID_X'], __bin['BinID_Y'], __bin['BinID_Z'] = int(toks[0]), int(toks[1]), int(toks[2])
+            __bin['data'] = doc_cleaner(_doc, normalize=['_id'])
+            __bin['tag'] = doc.get('tag')
+            stats.append(__bin)
+            l = len(stats)
+            if (l >= chunk_size):
+                db.insert_many(stats)
+                msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, stats[0].get('data', {}).get('start'), stats[0].get('data', {}).get('start'))
+                logger.info(msg)
+                print(msg)
+                del stats[:]
 
     fname_cols = ['account', 'bucket', 'region', 'name', 'timestamp', 'fname']
 
@@ -598,7 +601,7 @@ def process_files(proc_id, skip_n, logger):
             doc['tag'] = os.sep.join(toks[index_of_item('vpcflowlogs',toks)-1:])
         return ingest_source_file(doc, collection=collection, logger=logger)
 
-    msg = 'BEGIN: process_cursor ({}) :: skip_n={}, limit_n={}, nlimit={}'.format(proc_id, skip_n, limit_n, nlimit)
+    msg = 'BEGIN: process_cursor ({}) :: skip_n={}'.format(proc_id, len(skip_n))
     if (logger):
         logger.info(msg)
     print(msg)
@@ -608,30 +611,28 @@ def process_files(proc_id, skip_n, logger):
         file_cnt = 0
         with timer.Timer() as timer3:
             try:
-                for files in skip_n:
-                    for fp in files:
-                        file_cnt += 1
-                        num_cells = (file_cnt / len(skip_n))
-                        print('{}{}::({:2f})'.format(repeat_char(' ', 2-len(str(proc_id))), proc_id, num_cells), end='\n')
-                        #<do your magic>
-                        data_cache = []
-                        process_source_file(fp, collection=data_cache, logger=logger)
-                        for doc in data_cache:
-                            doc_cnt += 1
-                            bin_scheduler(doc_cleaner(doc, normalize=['_id']), proc_id=proc_id)
+                for fp in skip_n:
+                    file_cnt += 1
+                    num_cells = (file_cnt / len(skip_n))
+                    print('{}{}::({:2f})'.format(repeat_char(' ', 2-len(str(proc_id))), proc_id, num_cells), end='\n')
+                    #<do your magic>
+                    data_cache = []
+                    process_source_file(fp, collection=data_cache, logger=logger)
+                    for doc in data_cache:
+                        doc_cnt += 1
+                        bin_processor(doc_cleaner(doc, normalize=['_id']), stats=__stats__, logger=logger)
 
                 l = len(__stats__)
                 if (l > 0):
-                    bins = [aBin for aBin in __stats__]
-                    db.insert_many(bins)
-                    msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, __stats__[0].get('data', [])[0].get('start'), __stats__[0].get('data', [])[-1].get('start'))
+                    db.insert_many(__stats__)
+                    msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, __stats__[0].get('data', {}).get('start'), __stats__[0].get('data', {}).get('start'))
                     logger.info(msg)
                     print(msg)
                     del __stats__[:]
             except Exception as e:
                 if (logger):
-                    logger.error("Error in step2_binner", exc_info=True)
-                print('Error in step2_binner!')
+                    logger.error("Error in process_files", exc_info=True)
+                print('Error in process_files!')
 
         _msg = ' in {:.2f} secs'.format(timer3.duration)
 
@@ -641,10 +642,15 @@ def process_files(proc_id, skip_n, logger):
     finally:
         client.close()
 
-    msg = 'END: process_cursor {} :: completed: doc_cnt={}, skip_n={}, limit_n={}, nlimit={}{}'.format(proc_id, doc_cnt, skip_n, limit_n, nlimit, _msg)
+    msg = 'END: process_cursor {} :: completed: doc_cnt={}, skip_n={} {}'.format(proc_id, doc_cnt, len(skip_n), _msg)
     if (logger):
         logger.info(msg)
     print(msg)
+
+###########################################################################
+
+def process_buckets(proc_id, skip_n, logger):
+    raise NotImplementedError('process_buckets')
 
 ###########################################################################
 
@@ -685,7 +691,7 @@ with timer.Timer() as timer2:
         is_verbose = False
         
     except Exception as e:
-        logger.error("Error in step2_binner", exc_info=True)
+        logger.error("Error in main loop.", exc_info=True)
 
 total_docs_count = aggregate_docs_count()
 assert 'total' in list(total_docs_count.keys()), 'total not found in total_docs_count'
