@@ -91,8 +91,8 @@ def get_logger(fpath=__file__, product='list-databases', logPath='logs', is_runn
 LOGPATH = os.environ.get('LOGPATH')
 if (LOGPATH is None) or (not os.path.exists(LOGPATH)):
     LOGPATH = __file__
-#print('*** LOGPATH: {}'.format(LOGPATH))
-logger = get_logger(fpath=LOGPATH, product='list-databases')
+print('*** LOGPATH: {}'.format(LOGPATH))
+logger = get_logger(fpath=LOGPATH, product=os.path.splitext(os.path.basename(__file__))[0])
 
 from pymongo.mongo_client import MongoClient
 
@@ -166,7 +166,7 @@ def process_batch(env, vector, logger):
         _cursor = _db.aggregate(_pipeline, allowDiskUse=True, maxTimeMS=12*3600*1000)
 
         docs = [doc for doc in _cursor]
-        msg = 'DEBUG: {}.{} -> len(docs) -> {} of {}'.format(_db_name, _coll_name, len(docs), limit_n)
+        msg = 'DEBUG: {} {}.{} -> len(docs) -> {} of {}'.format(proc_id, _db_name, _coll_name, len(docs), limit_n)
         print(msg)
         logger.info(msg)
         with open('{}/{}{}.json'.format(_destfpath, _coll_name, skip_n), 'w') as file:
