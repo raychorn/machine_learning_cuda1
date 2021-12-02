@@ -155,34 +155,23 @@ DESTDIR = sys.argv[1] if (len(sys.argv) > 1) else os.sep.join([os.path.dirname(_
 if (not os.path.exists(DESTDIR) or not os.path.isdir(DESTDIR)):
     os.makedirs(DESTDIR)
 
-if (0):
-    try:
-        db_names = [db_name for db_name in client.list_database_names() if (db_name not in ignores)]
-        for dbName in db_names:
-            _db = db(client, dbName)
-            for collName in _db.list_collection_names():
-                _destfpath = os.sep.join([DESTDIR, dbName])
-                os.makedirs(_destfpath, exist_ok=True)
-                collection = db_collection(client, dbName, collName)
-                num_items = collection.count_documents({})
-                cursor = collection.find({})
-                docs = [doc for doc in cursor]
-                print('DEBUG: {}.{} -> len(docs) -> {} of {}'.format(dbName, collName, len(docs), num_items))
-                with open('{}/{}.json'.format(_destfpath, collName), 'w') as file:
-                    json.dump(json.loads(dumps(docs)), file)
-    except Exception as ex:
-        extype, ex, tb = sys.exc_info()
-        formatted = traceback.format_exception_only(extype, ex)[-1]
-        if (logger):
-            logger.error(formatted)
-        else:
-            print(formatted)
-
 
 def process_batch(env, vector, logger):
 
     def process_cursor(proc_id, _destfpath, _db_name, _coll_name, _sort, _criteria, _projection, skip_n, limit_n, logger):
         _client = get_mongo_client(mongouri=env.get('MONGO_URI'), db_name=env.get('MONGO_INITDB_DATABASE'), username=env.get('MONGO_INITDB_USERNAME'), password=env.get('MONGO_INITDB_PASSWORD'), authMechanism=env.get('MONGO_AUTH_MECHANISM'))
+
+        _pipeline = get_pipeline_for(_criteria, _projection, skip_n, limit_n, _sort)
+        _db = db_collection(_client, _db_name, _coll_name)
+        _cursor = _db.aggregate(_pipeline, allowDiskUse=True, maxTimeMS=12*3600*1000)
+
+        docs = [doc for doc in _cursor]
+        msg = 'DEBUG: {}.{} -> len(docs) -> {} of {}'.format(_db_name, _coll_name, len(docs), limit_n)
+        print(msg)
+        logger.info(msg)
+        with open('{}/{}{}.json'.format(_destfpath, _coll_name, skip_n), 'w') as file:
+            json.dump(json.loads(dumps(docs)), file)
+
     
     __client = get_mongo_client(mongouri=env.get('MONGO_URI'), db_name=env.get('MONGO_INITDB_DATABASE'), username=env.get('MONGO_INITDB_USERNAME'), password=env.get('MONGO_INITDB_PASSWORD'), authMechanism=env.get('MONGO_AUTH_MECHANISM'))
 
