@@ -624,7 +624,7 @@ def process_files(proc_id, skip_n, logger):
 
                 l = len(__stats__)
                 if (l > 0):
-                    db.insert_many(__stats__)
+                    dest_work_queue.insert_many(__stats__)
                     msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, __stats__[0].get('data', {}).get('start'), __stats__[0].get('data', {}).get('start'))
                     logger.info(msg)
                     print(msg)
