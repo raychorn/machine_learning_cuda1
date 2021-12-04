@@ -1,0 +1,70 @@
+asset
+BEGIN: theTable.columns
+asset :: asset.id
+asset :: asset.name
+asset :: asset.createdat
+asset :: asset.updatedat
+asset :: asset.companyassetid
+asset :: asset.osid
+asset :: asset.networkzoneid
+asset :: asset.datacenterid    <--  datacenter.id ?
+asset :: asset.middleware
+asset :: asset.hardware
+asset :: asset.assetowneruserid
+asset :: asset.provisionedby
+asset :: asset.provisioneddate
+asset :: asset.decommissioned
+asset :: asset.assettype
+asset :: asset.servicetype
+asset :: asset.servertype
+asset :: asset.hostname       <-- ?  IP Address or domain name.
+asset :: asset.serveropenports
+asset :: asset.servertlsversion
+asset :: asset.companyid
+asset :: asset.servicedeploymenttype
+asset :: asset.riskscore
+asset :: asset.riskseverity
+asset :: asset.ispublicfacing
+asset :: asset.asset_tags
+END!!! theTable.columns
+
+
+networkobject
+BEGIN: theTable.columns
+networkobject :: networkobject.id
+networkobject :: networkobject.assetid
+networkobject :: networkobject.macaddress
+networkobject :: networkobject.ipaddress     <-- ?
+networkobject :: networkobject.ipv6address
+networkobject :: networkobject.subnetid
+networkobject :: networkobject.firewallopenportssrv
+networkobject :: networkobject.fqdn
+networkobject :: networkobject.domainname
+networkobject :: networkobject.networkid     <-- networkinfraasset.id ?
+networkobject :: networkobject.privateipaddress
+END!!! theTable.columns
+
+
+networkinfraasset
+BEGIN: theTable.columns
+networkinfraasset :: networkinfraasset.id
+networkinfraasset :: networkinfraasset.name
+networkinfraasset :: networkinfraasset.tag
+networkinfraasset :: networkinfraasset.priority
+networkinfraasset :: networkinfraasset.type
+networkinfraasset :: networkinfraasset.networkzoneid
+END!!! theTable.columns
+
+
+datacenter
+BEGIN: theTable.columns
+datacenter :: datacenter.id
+datacenter :: datacenter.name
+datacenter :: datacenter.networkid
+datacenter :: datacenter.tag
+datacenter :: datacenter.datacentertype
+datacenter :: datacenter.description
+datacenter :: datacenter.address
+END!!! theTable.columns
+
+

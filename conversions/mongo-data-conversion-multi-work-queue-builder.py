@@ -1,6 +1,8 @@
 import os
 import sys
 
+import re
+
 import math
 
 import time
@@ -139,7 +141,7 @@ if (is_really_something_with_stuff(docker_libs, str)):
 else:
     f_libs = os.environ.get('libs')
 
-f_libs = f_libs.split(';')
+f_libs = re.split(';|:|,', f_libs)
 for f in f_libs:
     if (os.path.exists(f) and os.path.isdir(f)):
         if (f not in sys.path):
@@ -494,6 +496,29 @@ def process_files(proc_id, skip_n, logger):
             __bin['BinID_X'], __bin['BinID_Y'], __bin['BinID_Z'] = int(toks[0]), int(toks[1]), int(toks[2])
             __bin['data'] = doc_cleaner(_doc, normalize=['_id'])
             __bin['tag'] = doc.get('tag')
+            __metadata__ = {}
+            __metadata__['srcaddr'] = ip_address_owner(_doc.get('srcaddr'))
+            def normalize_asn_description(subj={}, owner={}):
+                '''
+                    self.__the_metadata__[k] = {k:v, 'owner': asn_description.replace(',', '') if (_owner) else 'LAN'}
+
+                '''
+                try:
+                    asn_description = subj.get('asn_description', 'UNKNOWN')
+                    if (asn_description is None):
+                        _nets = owner.get('nets', [])
+                        if (len(_nets) > 0):
+                            asn_description = _nets[0].get('name', 'UNKNOWN')
+                    toks = re.split('[^a-zA-Z]', asn_description)
+                    if (len([t for t in toks if (t == '')]) > 0):
+                        toks = toks[0:toks.index('')]
+                        asn_description = ' '.join(toks)
+                except Exception as e:
+                    pass
+                return asn_description
+            __metadata__['srcaddr']['asn_description'] = normalize_asn_description(subj=__metadata__['srcaddr'], owner=__metadata__['srcaddr'])
+            __metadata__['dstaddr'] = ip_address_owner(_doc.get('dstaddr'))
+            __metadata__['dstaddr']['asn_description'] = normalize_asn_description(subj=__metadata__['dstaddr'], owner=__metadata__['dstaddr'])
             stats.append(__bin)
             l = len(stats)
             if (l >= chunk_size):
