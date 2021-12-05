@@ -72,7 +72,7 @@ class Query(object):
                 with db_session(self.engine) as session:
                     kwargs['self'] = self
                     kwargs['session'] = session
-                    f(*args, **kwargs)
+                    return f(*args, **kwargs)
             return wrapped_f
         except Exception as ex:
             extype, ex, tb = sys.exc_info()

@@ -22,6 +22,8 @@ import shutil
 import socket
 import logging
 
+import ipaddress
+
 import datetime as dt
 from datetime import datetime
 
@@ -542,13 +544,17 @@ def process_files(proc_id, skip_n, logger):
             __isgoodipv4__ = isgoodipv4(_doc.get('srcaddr'))
             __metadata__['srcaddr'] = ip_address_owner(_doc.get('srcaddr')) if (__isgoodipv4__) else {}
             __metadata__['srcaddr']['asn_description'] = normalize_asn_description(subj=__metadata__['srcaddr'], owner=__metadata__['srcaddr'])
-            if (use_postgres_db and __isgoodipv4__):
-                __metadata__['srcaddr']['securex'] = __securex_metadata__.get(_doc.get('srcaddr'), None)
+            if (__isgoodipv4__):
+                __metadata__['srcaddr']['is_private'] = ipaddress.ip_address(_doc.get('srcaddr')).is_private
+                if (use_postgres_db):
+                    __metadata__['srcaddr']['securex'] = __securex_metadata__.get(_doc.get('srcaddr'), None)
             __isgoodipv4__ = isgoodipv4(_doc.get('dstaddr'))
             __metadata__['dstaddr'] = ip_address_owner(_doc.get('dstaddr')) if (__isgoodipv4__) else {}
             __metadata__['dstaddr']['asn_description'] = normalize_asn_description(subj=__metadata__['dstaddr'], owner=__metadata__['dstaddr'])
-            if (use_postgres_db and __isgoodipv4__):
-                __metadata__['dstaddr']['securex'] = __securex_metadata__.get(_doc.get('dstaddr'), None)
+            if (__isgoodipv4__):
+                __metadata__['dstaddr']['is_private'] = ipaddress.ip_address(_doc.get('dstaddr')).is_private
+                if (use_postgres_db):
+                    __metadata__['dstaddr']['securex'] = __securex_metadata__.get(_doc.get('dstaddr'), None)
             __bin['__metadata__'] = __metadata__
             
             stats.append(__bin)
