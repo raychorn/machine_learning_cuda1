@@ -170,7 +170,26 @@ __env__['MONGO_INITDB_USERNAME'] = os.environ.get("MONGO_INITDB_ROOT_USERNAME")
 __env__['MONGO_INITDB_PASSWORD'] = os.environ.get("MONGO_INITDB_ROOT_PASSWORD")
 __env__['MONGO_AUTH_MECHANISM'] ='SCRAM-SHA-256'
 
+__securex_metadata__ = {}
+
 use_postgres_db = eval(os.environ.get('USE_POSTGRES_DB', False))
+
+if (use_postgres_db):
+    @Query('asset', 'hostname', None)
+    def get_all_postgres_metadata(self=None, session=None):
+        _results = {}
+        try:
+            results = session.query(self.Table).all()
+            items = [list(r) for r in results]
+            items = [dict(zip(self.Table.columns.keys(), r)) for r in items]
+            for item in items:
+                hostname = item.get('hostname')
+                if (isgoodipv4(hostname)):
+                    _results[hostname] = item
+        except Exception as e:
+            pass
+        return _results
+    __securex_metadata__ = get_all_postgres_metadata()
 
 data_source = os.environ.get('VPCFLOWLOGS_DATA_SOURCE')
 
@@ -520,27 +539,16 @@ def process_files(proc_id, skip_n, logger):
                     pass
                 return asn_description
             
-            @Query('asset', 'hostname', None)
-            def get_postgres_metadata(self=None, session=None, ip_addr=None):
-                _result = {}
-                assert ip_addr is not None, 'ip_addr is required.'
-                result = session.query(self.Table).filter(self.Table.c.hostname=='{}'.format(ip_addr)).one()
-                if (type(result).__name__ == 'Row'):
-                    _result = dict(zip(self.Table.columns.keys(), result))
-                return _result
-            
             __isgoodipv4__ = isgoodipv4(_doc.get('srcaddr'))
             __metadata__['srcaddr'] = ip_address_owner(_doc.get('srcaddr')) if (__isgoodipv4__) else {}
             __metadata__['srcaddr']['asn_description'] = normalize_asn_description(subj=__metadata__['srcaddr'], owner=__metadata__['srcaddr'])
             if (use_postgres_db and __isgoodipv4__):
-                result = get_postgres_metadata(ip_addr=_doc.get('srcaddr'))
-                __metadata__['srcaddr']['securex'] = result
+                __metadata__['srcaddr']['securex'] = __securex_metadata__.get(_doc.get('srcaddr'), None)
             __isgoodipv4__ = isgoodipv4(_doc.get('dstaddr'))
             __metadata__['dstaddr'] = ip_address_owner(_doc.get('dstaddr')) if (__isgoodipv4__) else {}
             __metadata__['dstaddr']['asn_description'] = normalize_asn_description(subj=__metadata__['dstaddr'], owner=__metadata__['dstaddr'])
             if (use_postgres_db and __isgoodipv4__):
-                result = get_postgres_metadata(ip_addr=_doc.get('dstaddr'))
-                __metadata__['dstaddr']['securex'] = result
+                __metadata__['dstaddr']['securex'] = __securex_metadata__.get(_doc.get('dstaddr'), None)
             __bin['__metadata__'] = __metadata__
             
             stats.append(__bin)
