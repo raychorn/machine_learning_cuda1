@@ -253,7 +253,7 @@ dest_work_queue_coll = db_collection(client, dest_db_name, dest_coll_work_queue_
 
 dest_stats_coll = db_collection(client, dest_db_name, dest_stats_coll_name)
 
-n_cores = multiprocessing.cpu_count() / 2
+n_cores = multiprocessing.cpu_count()
 
 yn = input("Please approve {},{} delete all. (y/n)".format(dest_stats_coll.full_name, dest_work_queue_coll.full_name))
 if (str(yn.upper()) == 'Y'):
@@ -497,7 +497,7 @@ def process_files(proc_id, skip_n, logger):
             __bin['data'] = doc_cleaner(_doc, normalize=['_id'])
             __bin['tag'] = doc.get('tag')
             __metadata__ = {}
-            __metadata__['srcaddr'] = ip_address_owner(_doc.get('srcaddr'))
+            __metadata__['srcaddr'] = ip_address_owner(_doc.get('srcaddr')) if (isgoodipv4(_doc.get('srcaddr'))) else {}
             def normalize_asn_description(subj={}, owner={}):
                 '''
                     self.__the_metadata__[k] = {k:v, 'owner': asn_description.replace(',', '') if (_owner) else 'LAN'}
@@ -517,8 +517,9 @@ def process_files(proc_id, skip_n, logger):
                     pass
                 return asn_description
             __metadata__['srcaddr']['asn_description'] = normalize_asn_description(subj=__metadata__['srcaddr'], owner=__metadata__['srcaddr'])
-            __metadata__['dstaddr'] = ip_address_owner(_doc.get('dstaddr'))
+            __metadata__['dstaddr'] = ip_address_owner(_doc.get('dstaddr')) if (isgoodipv4(_doc.get('dstaddr'))) else {}
             __metadata__['dstaddr']['asn_description'] = normalize_asn_description(subj=__metadata__['dstaddr'], owner=__metadata__['dstaddr'])
+            __bin['__metadata__'] = __metadata__
             stats.append(__bin)
             l = len(stats)
             if (l >= chunk_size):
