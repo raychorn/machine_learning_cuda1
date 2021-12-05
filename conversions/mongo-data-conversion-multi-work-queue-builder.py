@@ -150,6 +150,8 @@ for f in f_libs:
 from utils2 import typeName
 from whois import ip_address_owner
 
+from postgres import Query
+
 from vyperlogix.mongo.database import docs_generator
 from vyperlogix.mongo.database import get_pipeline_for
 
@@ -166,7 +168,9 @@ __env__['MONGO_INITDB_DATABASE'] = os.environ.get('MONGO_INITDB_DATABASE')
 __env__['MONGO_URI'] = os.environ.get('MONGO_URI')
 __env__['MONGO_INITDB_USERNAME'] = os.environ.get("MONGO_INITDB_ROOT_USERNAME")
 __env__['MONGO_INITDB_PASSWORD'] = os.environ.get("MONGO_INITDB_ROOT_PASSWORD")
-__env__['MONGO_AUTH_MECHANISM'] ='SCRAM-SHA-1'
+__env__['MONGO_AUTH_MECHANISM'] ='SCRAM-SHA-256'
+
+use_postgres_db = eval(os.environ.get('USE_POSTGRES_DB', False))
 
 data_source = os.environ.get('VPCFLOWLOGS_DATA_SOURCE')
 
@@ -497,7 +501,6 @@ def process_files(proc_id, skip_n, logger):
             __bin['data'] = doc_cleaner(_doc, normalize=['_id'])
             __bin['tag'] = doc.get('tag')
             __metadata__ = {}
-            __metadata__['srcaddr'] = ip_address_owner(_doc.get('srcaddr')) if (isgoodipv4(_doc.get('srcaddr'))) else {}
             def normalize_asn_description(subj={}, owner={}):
                 '''
                     self.__the_metadata__[k] = {k:v, 'owner': asn_description.replace(',', '') if (_owner) else 'LAN'}
@@ -516,10 +519,30 @@ def process_files(proc_id, skip_n, logger):
                 except Exception as e:
                     pass
                 return asn_description
+            
+            @Query('asset', 'hostname', None)
+            def get_postgres_metadata(self=None, session=None, ip_addr=None):
+                _result = {}
+                assert ip_addr is not None, 'ip_addr is required.'
+                result = session.query(self.Table).filter(self.Table.c.hostname=='{}'.format(ip_addr)).one()
+                if (type(result).__name__ == 'Row'):
+                    _result = dict(zip(self.Table.columns.keys(), result))
+                return _result
+            
+            __isgoodipv4__ = isgoodipv4(_doc.get('srcaddr'))
+            __metadata__['srcaddr'] = ip_address_owner(_doc.get('srcaddr')) if (__isgoodipv4__) else {}
             __metadata__['srcaddr']['asn_description'] = normalize_asn_description(subj=__metadata__['srcaddr'], owner=__metadata__['srcaddr'])
-            __metadata__['dstaddr'] = ip_address_owner(_doc.get('dstaddr')) if (isgoodipv4(_doc.get('dstaddr'))) else {}
+            if (use_postgres_db and __isgoodipv4__):
+                result = get_postgres_metadata(ip_addr=_doc.get('srcaddr'))
+                __metadata__['srcaddr']['securex'] = result
+            __isgoodipv4__ = isgoodipv4(_doc.get('dstaddr'))
+            __metadata__['dstaddr'] = ip_address_owner(_doc.get('dstaddr')) if (__isgoodipv4__) else {}
             __metadata__['dstaddr']['asn_description'] = normalize_asn_description(subj=__metadata__['dstaddr'], owner=__metadata__['dstaddr'])
+            if (use_postgres_db and __isgoodipv4__):
+                result = get_postgres_metadata(ip_addr=_doc.get('dstaddr'))
+                __metadata__['dstaddr']['securex'] = result
             __bin['__metadata__'] = __metadata__
+            
             stats.append(__bin)
             l = len(stats)
             if (l >= chunk_size):
