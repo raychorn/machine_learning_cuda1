@@ -32,8 +32,6 @@ import pandas as pd
 
 import multiprocessing
 
-from binner import processor as bin_processor
-
 ############################################################################
 from logging.handlers import RotatingFileHandler
 
@@ -147,6 +145,8 @@ for f in f_libs:
         if (f not in sys.path):
             sys.path.insert(0, f)
 
+from binning import binner
+
 from utils2 import typeName
 from whois import ip_address_owner
 
@@ -175,7 +175,7 @@ dest_db_name = os.environ.get('MONGO_DEST_DATA_DB')
 dest_binned_coll_name = os.environ.get('MONGO_DEST_DATA_BINNED_COL')
 dest_data_coll_name = os.environ.get('MONGO_DEST_DATA_COL')
 
-dest_stats_coll_name = os.environ.get('MONGO_WORK_QUEUE_STATS_COL')
+dest_stats_coll_name = os.environ.get('MONGO_DEST_DATA_STATS_COL')
 
 try:
     client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
@@ -226,7 +226,7 @@ dest_data_coll = db_collection(client, dest_db_name, dest_data_coll_name)
 dest_binned_coll = db_collection(client, dest_db_name, dest_binned_coll_name)
 dest_stats_coll = db_collection(client, dest_db_name, dest_stats_coll_name)
 
-n_cores = multiprocessing.cpu_count() / 2
+n_cores = multiprocessing.cpu_count() - 1
 
 yn = input("Please approve {},{},{} delete all. (y/n)".format(dest_data_coll.full_name, dest_binned_coll.full_name, dest_stats_coll.full_name))
 if (str(yn.upper()) == 'Y'):

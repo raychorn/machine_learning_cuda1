@@ -52,3 +52,42 @@ class processor(object):
                 self.logger.error(formatted)
             else:
                 print(formatted)
+
+
+class collector(object):
+    bins = {}  # {bin_id: [doc]}
+    last_binid = None
+    
+    def __init__(self, db=None, flush=False, logger=None):
+        self.db = db
+        self.logger = logger
+        self.flush = flush
+        
+    def __call__(self, f, *args, **kwargs):
+        try:
+            def wrapped_f(*args, **kwargs):
+                if (self.flush):
+                    f(*args, self=self, collector=collector, **kwargs)
+                    del collector.bins[collector.last_binid]
+                else:
+                    doc = args[0]
+                    binid = doc.get('BinID', '')
+                    if (len(binid) > 0):
+                        bucket = collector.bins.get(binid, [])
+                        bucket.append(doc)
+                        collector.bins[binid] = bucket
+                        
+                        if (collector.last_binid is None):
+                            collector.last_binid = binid
+                        elif (collector.last_binid != binid):
+                            f(_bin=collector.bins.get(collector.last_binid, []), db=self.db, **kwargs)
+                            del collector.bins[collector.last_binid]
+                            collector.last_binid = binid
+            return wrapped_f
+        except Exception as ex:
+            extype, ex, tb = sys.exc_info()
+            formatted = traceback.format_exception_only(extype, ex)[-1]
+            if (self.logger):
+                self.logger.error(formatted)
+            else:
+                print(formatted)

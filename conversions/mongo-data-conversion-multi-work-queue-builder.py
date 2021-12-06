@@ -36,6 +36,8 @@ import pandas as pd
 
 import multiprocessing
 
+from binner import collector as bin_collector
+
 ############################################################################
 from logging.handlers import RotatingFileHandler
 
@@ -278,7 +280,7 @@ dest_work_queue_coll = db_collection(client, dest_db_name, dest_coll_work_queue_
 
 dest_stats_coll = db_collection(client, dest_db_name, dest_stats_coll_name)
 
-n_cores = multiprocessing.cpu_count()
+n_cores = 1 # multiprocessing.cpu_count() - 1
 
 yn = input("Please approve {},{} delete all. (y/n)".format(dest_stats_coll.full_name, dest_work_queue_coll.full_name))
 if (str(yn.upper()) == 'Y'):
@@ -504,68 +506,81 @@ def process_files(proc_id, skip_n, logger):
     assert isinstance(skip_n, list), 'skip_n is required as a list of files.'
     assert logger is not None, 'logger is required.'
 
-    __stats__ = []
-
     client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
 
     dest_work_queue = db_coll(client, dest_db_name, dest_coll_work_queue_name)
 
     def bin_processor(doc, stats=None, db=dest_work_queue, chunk_size=2000, logger=logger):
-        global __bin_count__
-        for _doc in doc.get('rows', []):
-            __bin = {}
-            __bin_count__ += 1
-            __bin['BinID'] = the_binid = binner.BinID(_doc.get('start'))
-            toks = the_binid.split('.')
-            assert len(toks) == 3, 'BinID must be of the form: XXXXXXX.YY.Z'
-            __bin['BinID_X'], __bin['BinID_Y'], __bin['BinID_Z'] = int(toks[0]), int(toks[1]), int(toks[2])
-            __bin['data'] = doc_cleaner(_doc, normalize=['_id'])
-            __bin['tag'] = doc.get('tag')
-            __metadata__ = {}
-            def normalize_asn_description(subj={}, owner={}):
-                '''
-                    self.__the_metadata__[k] = {k:v, 'owner': asn_description.replace(',', '') if (_owner) else 'LAN'}
+        try:
+            for _doc in doc.get('rows', []):
+                __bin = {}
+                __bin['BinID'] = the_binid = binner.BinID(_doc.get('start'))
+                toks = the_binid.split('.')
+                assert len(toks) == 3, 'BinID must be of the form: XXXXXXX.YY.Z'
+                __bin['BinID_X'], __bin['BinID_Y'], __bin['BinID_Z'] = int(toks[0]), int(toks[1]), int(toks[2])
+                __bin['data'] = doc_cleaner(_doc, normalize=['_id'])
+                __bin['tag'] = doc.get('tag')
+                __metadata__ = {}
+                def normalize_asn_description(subj={}, owner={}):
+                    '''
+                        self.__the_metadata__[k] = {k:v, 'owner': asn_description.replace(',', '') if (_owner) else 'LAN'}
 
-                '''
-                try:
-                    asn_description = subj.get('asn_description', 'UNKNOWN')
-                    if (asn_description is None):
-                        _nets = owner.get('nets', [])
-                        if (len(_nets) > 0):
-                            asn_description = _nets[0].get('name', 'UNKNOWN')
-                    toks = re.split('[^a-zA-Z]', asn_description)
-                    if (len([t for t in toks if (t == '')]) > 0):
-                        toks = toks[0:toks.index('')]
-                        asn_description = ' '.join(toks)
-                except Exception as e:
-                    pass
-                return asn_description
+                    '''
+                    try:
+                        asn_description = subj.get('asn_description', 'UNKNOWN')
+                        if (asn_description is None):
+                            _nets = owner.get('nets', [])
+                            if (len(_nets) > 0):
+                                asn_description = _nets[0].get('name', 'UNKNOWN')
+                        toks = re.split('[^a-zA-Z]', asn_description)
+                        if (len([t for t in toks if (t == '')]) > 0):
+                            toks = toks[0:toks.index('')]
+                            asn_description = ' '.join(toks)
+                    except Exception as e:
+                        pass
+                    return asn_description
+                
+                __isgoodipv4__ = isgoodipv4(_doc.get('srcaddr'))
+                __metadata__['srcaddr'] = ip_address_owner(_doc.get('srcaddr')) if (__isgoodipv4__) else {}
+                __metadata__['srcaddr']['asn_description'] = normalize_asn_description(subj=__metadata__['srcaddr'], owner=__metadata__['srcaddr'])
+                if (__isgoodipv4__):
+                    __metadata__['srcaddr']['is_private'] = ipaddress.ip_address(_doc.get('srcaddr')).is_private
+                    if (use_postgres_db):
+                        __metadata__['srcaddr']['securex'] = __securex_metadata__.get(_doc.get('srcaddr'), None)
+                __isgoodipv4__ = isgoodipv4(_doc.get('dstaddr'))
+                __metadata__['dstaddr'] = ip_address_owner(_doc.get('dstaddr')) if (__isgoodipv4__) else {}
+                __metadata__['dstaddr']['asn_description'] = normalize_asn_description(subj=__metadata__['dstaddr'], owner=__metadata__['dstaddr'])
+                if (__isgoodipv4__):
+                    __metadata__['dstaddr']['is_private'] = ipaddress.ip_address(_doc.get('dstaddr')).is_private
+                    if (use_postgres_db):
+                        __metadata__['dstaddr']['securex'] = __securex_metadata__.get(_doc.get('dstaddr'), None)
+                __bin['__metadata__'] = __metadata__
+                
+                @bin_collector(db=db, logger=logger)
+                def db_insert(_bin=None, db=None, logger=None):
+                    assert db is not None, 'db is required.'
+                    assert _bin is not None, '_bin is required.'
+                    assert isinstance(_bin, list), '_bin must be a list.'
+                    assert len(_bin) > 0, '_bin must be a list of length > 0.'
+                    binid = _bin[0].get('BinID')
+                    doc = db.find_one({"BinID" : binid})
+                    if (doc is None):
+                        db.insert_one({'BinID':binid, 'data':_bin})
+                    else:
+                        for item in _bin:
+                            doc['data'].append(item)
+                        _bin = doc.get('data', [])
+                        db.replace_one({'BinID':binid}, doc, upsert=True)
+                    msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
+                    if (logger):
+                        logger.info(msg)
+                    print(msg)
+                db_insert(__bin)
+        except Exception as e:
+            if (logger):
+                logger.error("Error in process_files", exc_info=True)
+            print('Error in process_files!')
             
-            __isgoodipv4__ = isgoodipv4(_doc.get('srcaddr'))
-            __metadata__['srcaddr'] = ip_address_owner(_doc.get('srcaddr')) if (__isgoodipv4__) else {}
-            __metadata__['srcaddr']['asn_description'] = normalize_asn_description(subj=__metadata__['srcaddr'], owner=__metadata__['srcaddr'])
-            if (__isgoodipv4__):
-                __metadata__['srcaddr']['is_private'] = ipaddress.ip_address(_doc.get('srcaddr')).is_private
-                if (use_postgres_db):
-                    __metadata__['srcaddr']['securex'] = __securex_metadata__.get(_doc.get('srcaddr'), None)
-            __isgoodipv4__ = isgoodipv4(_doc.get('dstaddr'))
-            __metadata__['dstaddr'] = ip_address_owner(_doc.get('dstaddr')) if (__isgoodipv4__) else {}
-            __metadata__['dstaddr']['asn_description'] = normalize_asn_description(subj=__metadata__['dstaddr'], owner=__metadata__['dstaddr'])
-            if (__isgoodipv4__):
-                __metadata__['dstaddr']['is_private'] = ipaddress.ip_address(_doc.get('dstaddr')).is_private
-                if (use_postgres_db):
-                    __metadata__['dstaddr']['securex'] = __securex_metadata__.get(_doc.get('dstaddr'), None)
-            __bin['__metadata__'] = __metadata__
-            
-            stats.append(__bin)
-            l = len(stats)
-            if (l >= chunk_size):
-                db.insert_many(stats)
-                msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, stats[0].get('data', {}).get('start'), stats[0].get('data', {}).get('start'))
-                logger.info(msg)
-                print(msg)
-                del stats[:]
-
     fname_cols = ['account', 'bucket', 'region', 'name', 'timestamp', 'fname']
 
     first_item = lambda x: next(iter(x))
@@ -685,13 +700,26 @@ def process_files(proc_id, skip_n, logger):
                         doc_cnt += 1
                         bin_processor(doc_cleaner(doc, normalize=['_id']), stats=__stats__, logger=logger)
 
-                l = len(__stats__)
-                if (l > 0):
-                    dest_work_queue.insert_many(__stats__)
-                    msg = 'bin_collector :: scheduled for binning: {} bins, {}-{}'.format(l, __stats__[0].get('data', {}).get('start'), __stats__[0].get('data', {}).get('start'))
-                    logger.info(msg)
+                @bin_collector(db=dest_work_queue, flush=True, logger=logger)
+                def db_insert(_bin=None, db=None, logger=None):
+                    assert db is not None, 'db is required.'
+                    assert _bin is not None, '_bin is required.'
+                    assert isinstance(_bin, list), '_bin must be a list.'
+                    assert len(_bin) > 0, '_bin must be a list of length > 0.'
+                    binid = _bin[0].get('BinID')
+                    doc = db.find_one({"BinID" : binid})
+                    if (doc is None):
+                        db.insert_one({'BinID':binid, 'data':[_bin]})
+                    else:
+                        for item in _bin:
+                            doc['data'].append(item)
+                        db.replace_one({'BinID':binid}, doc, upsert=True)
+                    msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(doc['data']))
+                    if (logger):
+                        logger.info(msg)
                     print(msg)
-                    del __stats__[:]
+                    
+                db_insert([])
             except Exception as e:
                 if (logger):
                     logger.error("Error in process_files", exc_info=True)
