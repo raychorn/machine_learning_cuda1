@@ -40,6 +40,6 @@ END!!!
 ## Method for validation of bin collection (if the bins are valid then the bin processing must be correct):
 
 ### Iterate S3 files and count the events from the database and compare with the count of all events from all bins.
-### Check the max(start) - end(start) for each bin and report any > 10 minutes.
+### Check the max(start) - min(start) for each bin and report any > 10 minutes.
 ### Number of bins per hour? (Cannot exceed 6)
 

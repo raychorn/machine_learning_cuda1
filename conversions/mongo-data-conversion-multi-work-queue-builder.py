@@ -227,7 +227,7 @@ dest_stats_coll_name = os.environ.get('MONGO_WORK_QUEUE_STATS_COL')
 
 dest_bins_coll_name = os.environ.get('MONGO_WORK_QUEUE_BINS_COL')
 dest_bins_processed_coll_name = os.environ.get('MONGO_WORK_QUEUE_BINS_PROCD_COL')
-
+dest_bins_rejected_coll_name = os.environ.get('MONGO_WORK_QUEUE_REJECTED_BINS_COL')
 
 try:
     client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
@@ -277,6 +277,12 @@ try:
 except Exception:
     logger.error("Fatal error with .env, check MONGO_WORK_QUEUE_BINS_PROCD_COL.", exc_info=True)
     sys.exit()
+    
+try:
+    assert is_really_something_with_stuff(dest_bins_rejected_coll_name, str), 'Cannot continue without the dest_bins_rejected_coll_name.'
+except Exception:
+    logger.error("Fatal error with .env, check MONGO_WORK_QUEUE_REJECTED_BINS_COL.", exc_info=True)
+    sys.exit()
 
 logger.info(str(client))
 
@@ -289,6 +295,12 @@ repeat_char = lambda c,n:''.join([c for i in range(n)])
 
 criteria = {'$and': [{'action': {'$ne': 'REJECT'}}, {'srcaddr': {'$ne': "-"}, 'dstaddr': {'$ne': "-"}}, {'srcport': {'$ne': "0"}, 'dstport': {'$ne': "0"}}]}
 
+def __criteria__(doc):
+    '''
+    criteria = {'$and': [{'action': {'$ne': 'REJECT'}}, {'srcaddr': {'$ne': "-"}, 'dstaddr': {'$ne': "-"}}, {'srcport': {'$ne': "0"}, 'dstport': {'$ne': "0"}}]}
+    '''
+    return (doc.get('action') != 'REJECT') and (doc.get('srcaddr') != '-') and (doc.get('dstaddr') != '-') and (doc.get('srcport') != '0') and (doc.get('dstport') != '0')
+
 source_coll = db_collection(client, source_db_name, source_coll_name)
 
 dest_work_queue_coll = db_collection(client, dest_db_name, dest_coll_work_queue_name)
@@ -299,9 +311,11 @@ dest_bins_coll = db_collection(client, dest_db_name, dest_bins_coll_name)
 
 dest_bins_processed_coll = db_collection(client, dest_db_name, dest_bins_processed_coll_name)
 
+dest_bins_rejected_coll = db_collection(client, dest_db_name, dest_bins_rejected_coll_name)
+
 n_cores = multiprocessing.cpu_count() - 1
 
-deletable_cols = [dest_stats_coll.full_name, dest_work_queue_coll.full_name, dest_bins_coll.full_name, dest_bins_processed_coll.full_name]
+deletable_cols = [dest_stats_coll.full_name, dest_work_queue_coll.full_name, dest_bins_coll.full_name, dest_bins_processed_coll.full_name, dest_bins_rejected_coll.name]
 
 yn = input("Please approve {} delete all. (y/n)".format(', '.join(deletable_cols)))
 if (str(yn.upper()) == 'Y'):
@@ -309,6 +323,7 @@ if (str(yn.upper()) == 'Y'):
     dest_work_queue_coll.delete_many({})
     dest_bins_coll.delete_many({})
     dest_bins_processed_coll.delete_many({})
+    dest_bins_rejected_coll.delete_many({})
 
 if (is_data_source_mongodb):
     msg = 'BEGIN: Count docs in {}'.format(source_coll_name)
@@ -534,6 +549,7 @@ def process_files(proc_id, skip_n, logger):
     dest_work_queue = db_coll(client, dest_db_name, dest_coll_work_queue_name)
     
     dest_bins_coll = db_collection(client, dest_db_name, dest_bins_coll_name)
+    dest_bins_rejected_coll = db_collection(client, dest_db_name, dest_bins_rejected_coll_name)
     dest_bins_processed_coll = db_collection(client, dest_db_name, dest_bins_processed_coll_name)
 
     def bin_processor(doc, stats=None, db=dest_work_queue, chunk_size=2000, logger=logger):
@@ -591,7 +607,12 @@ def process_files(proc_id, skip_n, logger):
                     binid = _bin[0].get('BinID')
                     binid_doc = {'BinID':binid}
                     db.find_one_and_update(binid_doc, {'$set': binid_doc}, upsert=True)
-                    dest_bins_coll.insert_many(_bin, ordered=False)
+                    filtered_bin = [b for b in _bin if (__criteria__(b.get('data', {})))]
+                    rejected_bin = [b for b in _bin  if (not __criteria__(b.get('data', {})))]
+                    if (len(filtered_bin) > 0):
+                        dest_bins_coll.insert_many(filtered_bin, ordered=False)
+                    if (len(rejected_bin) > 0):
+                        dest_bins_rejected_coll.insert_many(rejected_bin, ordered=False)
                     msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
                     if (logger):
                         logger.info(msg)
@@ -798,7 +819,12 @@ def db_insert(_bin=None, db=None, logger=None):
     binid = _bin[0].get('BinID')
     binid_doc = {'BinID':binid}
     db.find_one_and_update(binid_doc, {'$set': binid_doc}, upsert=True)
-    dest_bins_coll.insert_many(_bin, ordered=False)
+    filtered_bin = [b for b in _bin if (__criteria__(b.get('data', {})))]
+    rejected_bin = [b for b in _bin  if (not __criteria__(b.get('data', {})))]
+    if (len(filtered_bin) > 0):
+        dest_bins_coll.insert_many(filtered_bin, ordered=False)
+    if (len(rejected_bin) > 0):
+        dest_bins_rejected_coll.insert_many(rejected_bin, ordered=False)
     msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
     if (logger):
         logger.info(msg)
