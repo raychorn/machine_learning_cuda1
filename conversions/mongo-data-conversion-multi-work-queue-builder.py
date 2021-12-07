@@ -299,7 +299,7 @@ dest_bins_coll = db_collection(client, dest_db_name, dest_bins_coll_name)
 
 dest_bins_processed_coll = db_collection(client, dest_db_name, dest_bins_processed_coll_name)
 
-n_cores = 1 #multiprocessing.cpu_count() - 1
+n_cores = multiprocessing.cpu_count() - 1
 
 deletable_cols = [dest_stats_coll.full_name, dest_work_queue_coll.full_name, dest_bins_coll.full_name, dest_bins_processed_coll.full_name]
 
@@ -532,6 +532,9 @@ def process_files(proc_id, skip_n, logger):
     client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
 
     dest_work_queue = db_coll(client, dest_db_name, dest_coll_work_queue_name)
+    
+    dest_bins_coll = db_collection(client, dest_db_name, dest_bins_coll_name)
+    dest_bins_processed_coll = db_collection(client, dest_db_name, dest_bins_processed_coll_name)
 
     def bin_processor(doc, stats=None, db=dest_work_queue, chunk_size=2000, logger=logger):
         try:
@@ -586,9 +589,9 @@ def process_files(proc_id, skip_n, logger):
                     assert isinstance(_bin, list), '_bin must be a list.'
                     assert len(_bin) > 0, '_bin must be a list of length > 0.'
                     binid = _bin[0].get('BinID')
-                    for item in _bin:
-                        item['BinID'] = binid
-                    db.insert_many(_bin, ordered=False)
+                    binid_doc = {'BinID':binid}
+                    db.find_one_and_update(binid_doc, {'$set': binid_doc}, upsert=True)
+                    dest_bins_coll.insert_many(_bin, ordered=False)
                     msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
                     if (logger):
                         logger.info(msg)
@@ -793,9 +796,9 @@ def db_insert(_bin=None, db=None, logger=None):
     assert isinstance(_bin, list), '_bin must be a list.'
     assert len(_bin) > 0, '_bin must be a list of length > 0.'
     binid = _bin[0].get('BinID')
-    for item in _bin:
-        item['BinID'] = binid
-    db.insert_many(_bin, ordered=False)
+    binid_doc = {'BinID':binid}
+    db.find_one_and_update(binid_doc, {'$set': binid_doc}, upsert=True)
+    dest_bins_coll.insert_many(_bin, ordered=False)
     msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
     if (logger):
         logger.info(msg)
