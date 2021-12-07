@@ -67,8 +67,10 @@ class collector(object):
         try:
             def wrapped_f(*args, **kwargs):
                 if (self.flush):
-                    f(*args, self=self, collector=collector, **kwargs)
-                    del collector.bins[collector.last_binid]
+                    final_bin = collector.bins.get(collector.last_binid, [])
+                    if (len(final_bin) > 0):
+                        f(_bin=final_bin, db=self.db, **kwargs)
+                        del collector.bins[collector.last_binid]
                 else:
                     doc = args[0]
                     binid = doc.get('BinID', '')

@@ -42,4 +42,4 @@ END!!!
 ### Iterate S3 files and count the events from the database and compare with the count of all events from all bins.
 ### Check the max(start) - min(start) for each bin and report any > 10 minutes.
 ### Number of bins per hour? (Cannot exceed 6)
-
+### Charts and Graphs for binned data???  This would take a good deal of time to generate.

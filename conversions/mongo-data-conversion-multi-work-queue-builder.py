@@ -815,16 +815,16 @@ def db_insert(_bin=None, db=None, logger=None):
     assert db is not None, 'db is required.'
     assert _bin is not None, '_bin is required.'
     assert isinstance(_bin, list), '_bin must be a list.'
-    assert len(_bin) > 0, '_bin must be a list of length > 0.'
-    binid = _bin[0].get('BinID')
-    binid_doc = {'BinID':binid}
-    db.find_one_and_update(binid_doc, {'$set': binid_doc}, upsert=True)
-    filtered_bin = [b for b in _bin if (__criteria__(b.get('data', {})))]
-    rejected_bin = [b for b in _bin  if (not __criteria__(b.get('data', {})))]
-    if (len(filtered_bin) > 0):
-        dest_bins_coll.insert_many(filtered_bin, ordered=False)
-    if (len(rejected_bin) > 0):
-        dest_bins_rejected_coll.insert_many(rejected_bin, ordered=False)
+    if (len(_bin) > 0):
+        binid = _bin[0].get('BinID')
+        binid_doc = {'BinID':binid}
+        db.find_one_and_update(binid_doc, {'$set': binid_doc}, upsert=True)
+        filtered_bin = [b for b in _bin if (__criteria__(b.get('data', {})))]
+        rejected_bin = [b for b in _bin  if (not __criteria__(b.get('data', {})))]
+        if (len(filtered_bin) > 0):
+            dest_bins_coll.insert_many(filtered_bin, ordered=False)
+        if (len(rejected_bin) > 0):
+            dest_bins_rejected_coll.insert_many(rejected_bin, ordered=False)
     msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
     if (logger):
         logger.info(msg)
