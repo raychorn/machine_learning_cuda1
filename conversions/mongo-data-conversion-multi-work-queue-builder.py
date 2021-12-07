@@ -280,7 +280,7 @@ dest_work_queue_coll = db_collection(client, dest_db_name, dest_coll_work_queue_
 
 dest_stats_coll = db_collection(client, dest_db_name, dest_stats_coll_name)
 
-n_cores = 1 # multiprocessing.cpu_count() - 1
+n_cores = multiprocessing.cpu_count() - 1
 
 yn = input("Please approve {},{} delete all. (y/n)".format(dest_stats_coll.full_name, dest_work_queue_coll.full_name))
 if (str(yn.upper()) == 'Y'):
@@ -784,15 +784,16 @@ with timer.Timer() as timer2:
     except Exception as e:
         logger.error("Error in main loop.", exc_info=True)
 
-total_docs_count = aggregate_docs_count()
-assert 'total' in list(total_docs_count.keys()), 'total not found in total_docs_count'
-assert total_docs_count.get('total', -1) == num_events, 'total_docs_count ({}) != num_events ({}), diff={}'.format(total_docs_count.get('total', -1), num_events, num_events - total_docs_count.get('total', -1))
+if (0):
+    total_docs_count = aggregate_docs_count()
+    assert 'total' in list(total_docs_count.keys()), 'total not found in total_docs_count'
+    assert total_docs_count.get('total', -1) == num_events, 'total_docs_count ({}) != num_events ({}), diff={}'.format(total_docs_count.get('total', -1), num_events, num_events - total_docs_count.get('total', -1))
 
-total_docs_binned = aggregate_bins_docs_total()
-assert 'total' in list(total_docs_binned.keys()), 'total not found in total_docs_binned'
-#assert total_docs_binned.get('total', -1) == num_events, 'total_docs_binned ({}) != num_events ({}), diff={}'.format(total_docs_binned.get('total', -1), num_events, num_events - total_docs_binned.get('total', -1))
+    total_docs_binned = aggregate_bins_docs_total()
+    assert 'total' in list(total_docs_binned.keys()), 'total not found in total_docs_binned'
+    #assert total_docs_binned.get('total', -1) == num_events, 'total_docs_binned ({}) != num_events ({}), diff={}'.format(total_docs_binned.get('total', -1), num_events, num_events - total_docs_binned.get('total', -1))
 
-dest_stats_coll.insert_one({'name':'bin_collector', 'doc_cnt':num_events, 'total_docs_count': total_docs_count.get('total', -1), 'total_docs_binned': total_docs_binned.get('total', -1), 'duration':timer2.duration})
+    dest_stats_coll.insert_one({'name':'bin_collector', 'doc_cnt':num_events, 'total_docs_count': total_docs_count.get('total', -1), 'total_docs_binned': total_docs_binned.get('total', -1), 'duration':timer2.duration})
 
 msg = 'Bin Collector :: num_events: {} in {:.2f} secs'.format(_num_events, timer2.duration)
 print(msg)
