@@ -225,6 +225,10 @@ dest_coll_work_queue_name = os.environ.get('MONGO_WORK_QUEUE_COL')
 
 dest_stats_coll_name = os.environ.get('MONGO_WORK_QUEUE_STATS_COL')
 
+dest_bins_coll_name = os.environ.get('MONGO_WORK_QUEUE_BINS_COL')
+dest_bins_processed_coll_name = os.environ.get('MONGO_WORK_QUEUE_BINS_PROCD_COL')
+
+
 try:
     client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
 except:
@@ -262,6 +266,17 @@ except Exception:
     logger.error("Fatal error with .env, check MONGO_WORK_QUEUE_STATS_COL.", exc_info=True)
     sys.exit()
 
+try:
+    assert is_really_something_with_stuff(dest_bins_coll_name, str), 'Cannot continue without the dest_bins_coll_name.'
+except Exception:
+    logger.error("Fatal error with .env, check MONGO_WORK_QUEUE_BINS_COL.", exc_info=True)
+    sys.exit()
+
+try:
+    assert is_really_something_with_stuff(dest_bins_processed_coll_name, str), 'Cannot continue without the dest_bins_processed_coll_name.'
+except Exception:
+    logger.error("Fatal error with .env, check MONGO_WORK_QUEUE_BINS_PROCD_COL.", exc_info=True)
+    sys.exit()
 
 logger.info(str(client))
 
@@ -280,12 +295,20 @@ dest_work_queue_coll = db_collection(client, dest_db_name, dest_coll_work_queue_
 
 dest_stats_coll = db_collection(client, dest_db_name, dest_stats_coll_name)
 
-n_cores = multiprocessing.cpu_count() - 1
+dest_bins_coll = db_collection(client, dest_db_name, dest_bins_coll_name)
 
-yn = input("Please approve {},{} delete all. (y/n)".format(dest_stats_coll.full_name, dest_work_queue_coll.full_name))
+dest_bins_processed_coll = db_collection(client, dest_db_name, dest_bins_processed_coll_name)
+
+n_cores = 1 #multiprocessing.cpu_count() - 1
+
+deletable_cols = [dest_stats_coll.full_name, dest_work_queue_coll.full_name, dest_bins_coll.full_name, dest_bins_processed_coll.full_name]
+
+yn = input("Please approve {} delete all. (y/n)".format(', '.join(deletable_cols)))
 if (str(yn.upper()) == 'Y'):
     dest_stats_coll.delete_many({})
     dest_work_queue_coll.delete_many({})
+    dest_bins_coll.delete_many({})
+    dest_bins_processed_coll.delete_many({})
 
 if (is_data_source_mongodb):
     msg = 'BEGIN: Count docs in {}'.format(source_coll_name)
@@ -563,14 +586,9 @@ def process_files(proc_id, skip_n, logger):
                     assert isinstance(_bin, list), '_bin must be a list.'
                     assert len(_bin) > 0, '_bin must be a list of length > 0.'
                     binid = _bin[0].get('BinID')
-                    doc = db.find_one({"BinID" : binid})
-                    if (doc is None):
-                        db.insert_one({'BinID':binid, 'data':_bin})
-                    else:
-                        for item in _bin:
-                            doc['data'].append(item)
-                        _bin = doc.get('data', [])
-                        db.replace_one({'BinID':binid}, doc, upsert=True)
+                    for item in _bin:
+                        item['BinID'] = binid
+                    db.insert_many(_bin, ordered=False)
                     msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
                     if (logger):
                         logger.info(msg)
@@ -700,26 +718,6 @@ def process_files(proc_id, skip_n, logger):
                         doc_cnt += 1
                         bin_processor(doc_cleaner(doc, normalize=['_id']), stats=__stats__, logger=logger)
 
-                @bin_collector(db=dest_work_queue, flush=True, logger=logger)
-                def db_insert(_bin=None, db=None, logger=None):
-                    assert db is not None, 'db is required.'
-                    assert _bin is not None, '_bin is required.'
-                    assert isinstance(_bin, list), '_bin must be a list.'
-                    assert len(_bin) > 0, '_bin must be a list of length > 0.'
-                    binid = _bin[0].get('BinID')
-                    doc = db.find_one({"BinID" : binid})
-                    if (doc is None):
-                        db.insert_one({'BinID':binid, 'data':[_bin]})
-                    else:
-                        for item in _bin:
-                            doc['data'].append(item)
-                        db.replace_one({'BinID':binid}, doc, upsert=True)
-                    msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(doc['data']))
-                    if (logger):
-                        logger.info(msg)
-                    print(msg)
-                    
-                db_insert([])
             except Exception as e:
                 if (logger):
                     logger.error("Error in process_files", exc_info=True)
@@ -783,6 +781,30 @@ with timer.Timer() as timer2:
         
     except Exception as e:
         logger.error("Error in main loop.", exc_info=True)
+
+client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
+
+dest_work_queue = db_coll(client, dest_db_name, dest_coll_work_queue_name)
+
+@bin_collector(db=dest_work_queue, flush=True, logger=logger)
+def db_insert(_bin=None, db=None, logger=None):
+    assert db is not None, 'db is required.'
+    assert _bin is not None, '_bin is required.'
+    assert isinstance(_bin, list), '_bin must be a list.'
+    assert len(_bin) > 0, '_bin must be a list of length > 0.'
+    binid = _bin[0].get('BinID')
+    for item in _bin:
+        item['BinID'] = binid
+    db.insert_many(_bin, ordered=False)
+    msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
+    if (logger):
+        logger.info(msg)
+    print(msg)
+    msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(doc['data']))
+    if (logger):
+        logger.info(msg)
+    print(msg)
+db_insert([])
 
 if (0):
     total_docs_count = aggregate_docs_count()
