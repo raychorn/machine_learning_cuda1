@@ -59,7 +59,7 @@ __validation_command_line_option__ = '--validation'
 
 if (not is_running_production()):
     sys.argv.append(__verbose_command_line_option__)
-    sys.argv.append(__validation_command_line_option__)
+    #sys.argv.append(__validation_command_line_option__)
     
 is_verbose = any([str(arg).find(__verbose_command_line_option__) > -1 for arg in sys.argv])
 is_validating = any([str(arg).find(__validation_command_line_option__) > -1 for arg in sys.argv])
@@ -240,6 +240,8 @@ dest_bins_coll_name = os.environ.get('MONGO_WORK_QUEUE_BINS_COL')
 dest_bins_processed_coll_name = os.environ.get('MONGO_WORK_QUEUE_BINS_PROCD_COL')
 dest_bins_rejected_coll_name = os.environ.get('MONGO_WORK_QUEUE_REJECTED_BINS_COL')
 
+dest_networks_coll_name = os.environ.get('MONGO_WORK_QUEUE_NETWORKS_COL')
+
 try:
     client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
 except:
@@ -295,6 +297,12 @@ except Exception:
     logger.error("Fatal error with .env, check MONGO_WORK_QUEUE_REJECTED_BINS_COL.", exc_info=True)
     sys.exit()
 
+try:
+    assert is_really_something_with_stuff(dest_networks_coll_name, str), 'Cannot continue without the dest_networks_coll_name.'
+except Exception:
+    logger.error("Fatal error with .env, check MONGO_WORK_QUEUE_NETWORKS_COL.", exc_info=True)
+    sys.exit()
+
 logger.info(str(client))
 
 db = lambda cl,n:cl.get_database(n)
@@ -324,9 +332,18 @@ dest_bins_processed_coll = db_collection(client, dest_db_name, dest_bins_process
 
 dest_bins_rejected_coll = db_collection(client, dest_db_name, dest_bins_rejected_coll_name)
 
+dest_networks_coll = db_collection(client, dest_db_name, dest_networks_coll_name)
+
 n_cores = multiprocessing.cpu_count() - 1
 
-deletable_cols = [dest_stats_coll.full_name, dest_work_queue_coll.full_name, dest_bins_coll.full_name, dest_bins_processed_coll.full_name, dest_bins_rejected_coll.name]
+deletable_cols = [
+                    dest_stats_coll.full_name, 
+                    dest_work_queue_coll.full_name, 
+                    dest_bins_coll.full_name, 
+                    dest_bins_processed_coll.full_name, 
+                    dest_bins_rejected_coll.name,
+                    dest_networks_coll.name
+                ]
 
 if (not is_validating):
     yn = input("Please approve {} delete all. (y/n)".format(', '.join(deletable_cols)))
@@ -565,6 +582,7 @@ def process_files(proc_id, skip_n, logger):
     dest_bins_coll = db_collection(client, dest_db_name, dest_bins_coll_name)
     dest_bins_rejected_coll = db_collection(client, dest_db_name, dest_bins_rejected_coll_name)
     dest_bins_processed_coll = db_collection(client, dest_db_name, dest_bins_processed_coll_name)
+    dest_networks_coll = db_collection(client, dest_db_name, dest_networks_coll_name)
 
     def file_bin_processor(doc, stats=None, db=dest_work_queue, logger=logger):
         try:
@@ -596,21 +614,42 @@ def process_files(proc_id, skip_n, logger):
                         pass
                     return asn_description
                 
-                __isgoodipv4__ = isgoodipv4(_doc.get('srcaddr'))
-                __metadata__['srcaddr'] = ip_address_owner(_doc.get('srcaddr')) if (__isgoodipv4__) else {}
+                cidrs = lambda l:['.'.join(l[0:i]) for i in range(2, len(l))]
+
+                __networks__ = {}
+                
+                _srcaddr = _doc.get('srcaddr')
+                __isgoodipv4__ = isgoodipv4(_srcaddr)
+                __metadata__['srcaddr'] = ip_address_owner(_srcaddr) if (__isgoodipv4__) else {}
                 __metadata__['srcaddr']['asn_description'] = normalize_asn_description(subj=__metadata__['srcaddr'], owner=__metadata__['srcaddr'])
                 if (__isgoodipv4__):
-                    __metadata__['srcaddr']['is_private'] = ipaddress.ip_address(_doc.get('srcaddr')).is_private
+                    __metadata__['srcaddr']['is_private'] = ipaddress.ip_address(_srcaddr).is_private
                     if (use_postgres_db):
-                        __metadata__['srcaddr']['securex'] = __securex_metadata__.get(_doc.get('srcaddr'), None)
-                __isgoodipv4__ = isgoodipv4(_doc.get('dstaddr'))
-                __metadata__['dstaddr'] = ip_address_owner(_doc.get('dstaddr')) if (__isgoodipv4__) else {}
+                        __metadata__['srcaddr']['securex'] = __securex_metadata__.get(_srcaddr, None)
+                        __metadata__['srcaddr']['securex_hostname'] = __metadata__.get('srcaddr', {}).get('securex', {}).get('hostname', None)
+                    _cidrs = cidrs(str(_srcaddr).split('.'))
+                    for c in _cidrs:
+                        __metadata__['srcaddr'][c] = _srcaddr
+                        __networks__[c] = _srcaddr
+                    __networks__[_srcaddr] = ','.join(_cidrs)
+                _dstaddr = _doc.get('dstaddr')
+                __isgoodipv4__ = isgoodipv4(_dstaddr)
+                __metadata__['dstaddr'] = ip_address_owner(_dstaddr) if (__isgoodipv4__) else {}
                 __metadata__['dstaddr']['asn_description'] = normalize_asn_description(subj=__metadata__['dstaddr'], owner=__metadata__['dstaddr'])
                 if (__isgoodipv4__):
-                    __metadata__['dstaddr']['is_private'] = ipaddress.ip_address(_doc.get('dstaddr')).is_private
+                    __metadata__['dstaddr']['is_private'] = ipaddress.ip_address(_dstaddr).is_private
                     if (use_postgres_db):
-                        __metadata__['dstaddr']['securex'] = __securex_metadata__.get(_doc.get('dstaddr'), None)
+                        __metadata__['dstaddr']['securex'] = __securex_metadata__.get(_dstaddr, None)
+                        __metadata__['dstaddr']['securex_hostname'] = __metadata__.get('dstaddr', {}).get('securex', {}).get('hostname', None)
+                    _cidrs = cidrs(str(_dstaddr).split('.'))
+                    for c in _cidrs:
+                        __metadata__['dstaddr'][c] = _dstaddr
+                        __networks__[c] = _dstaddr
+                    __networks__[_dstaddr] = ','.join(_cidrs)
                 __bin['__metadata__'] = __metadata__
+                
+                if (len(__networks__) > 0):
+                    dest_networks_coll.insert_one(__networks__)
                 
                 @bin_collector(db=db, logger=logger)
                 def db_insert(_bin=None, db=None, logger=None):
@@ -774,7 +813,7 @@ def process_files(proc_id, skip_n, logger):
             'master_file_count':master_file_count,
             'duration':timer3.duration
         }
-        db.find_one_and_update({'proc_id':proc_id}, {'$set': s}, upsert=True)
+        dest_stats_coll.find_one_and_update({'proc_id':proc_id}, {'$set': s}, upsert=True)
 
         _msg = 'master_file_count {}, file_cnt {}, events_cnt {} in {:.2f} secs'.format(master_file_count, file_cnt, events_cnt, timer3.duration)
         print(_msg)
