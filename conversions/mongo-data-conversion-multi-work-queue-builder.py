@@ -55,8 +55,19 @@ is_really_something_with_stuff = lambda s,t:is_really_something(s,t) and (len(s)
 default_timestamp = lambda t:t.isoformat().replace(':', '').replace('-','').split('.')[0]
 
 __verbose_command_line_option__ = '--verbose'
+__validation_command_line_option__ = '--validation'
 
+if (not is_running_production()):
+    sys.argv.append(__verbose_command_line_option__)
+    sys.argv.append(__validation_command_line_option__)
+    
 is_verbose = any([str(arg).find(__verbose_command_line_option__) > -1 for arg in sys.argv])
+is_validating = any([str(arg).find(__validation_command_line_option__) > -1 for arg in sys.argv])
+
+print('is_running_production: {}'.format(is_running_production()))
+print('is_verbose: {}'.format(is_verbose))
+print('is_validating: {}'.format(is_validating))
+print()
 
 def get_logger(fpath=__file__, product='scheduler', logPath='logs', is_running_production=is_running_production()):
     def get_stream_handler(streamformat="%(asctime)s:%(levelname)s -> %(message)s"):
@@ -317,13 +328,14 @@ n_cores = multiprocessing.cpu_count() - 1
 
 deletable_cols = [dest_stats_coll.full_name, dest_work_queue_coll.full_name, dest_bins_coll.full_name, dest_bins_processed_coll.full_name, dest_bins_rejected_coll.name]
 
-yn = input("Please approve {} delete all. (y/n)".format(', '.join(deletable_cols)))
-if (str(yn.upper()) == 'Y'):
-    dest_stats_coll.delete_many({})
-    dest_work_queue_coll.delete_many({})
-    dest_bins_coll.delete_many({})
-    dest_bins_processed_coll.delete_many({})
-    dest_bins_rejected_coll.delete_many({})
+if (not is_validating):
+    yn = input("Please approve {} delete all. (y/n)".format(', '.join(deletable_cols)))
+    if (str(yn.upper()) == 'Y'):
+        dest_stats_coll.delete_many({})
+        dest_work_queue_coll.delete_many({})
+        dest_bins_coll.delete_many({})
+        dest_bins_processed_coll.delete_many({})
+        dest_bins_rejected_coll.delete_many({})
 
 if (is_data_source_mongodb):
     msg = 'BEGIN: Count docs in {}'.format(source_coll_name)
@@ -350,14 +362,16 @@ elif (is_data_source_filesystem):
                 fp = os.path.join(subdir, file)
                 yield fp
 
+    master_file_count = 0
     with timer.Timer() as timer1:
         files = []
         for fp in iterate_directory(data_source):
+            master_file_count += 1
             files.append(fp)
         num_files = len(files)
         batch_size = round(num_files / n_cores)
         skips = [files[n:n+batch_size] for n in range(0, num_files, batch_size)]
-    msg = 'END!!! Count files in {} :: num_files: {} in {:.2f} secs'.format(data_source, num_files, timer1.duration)
+    msg = 'END!!! Count files in {} :: num_files: {}, master_file_count {} in {:.2f} secs'.format(data_source, num_files, master_file_count, timer1.duration)
     print(msg)
     logger.info(msg)
 
@@ -552,7 +566,7 @@ def process_files(proc_id, skip_n, logger):
     dest_bins_rejected_coll = db_collection(client, dest_db_name, dest_bins_rejected_coll_name)
     dest_bins_processed_coll = db_collection(client, dest_db_name, dest_bins_processed_coll_name)
 
-    def bin_processor(doc, stats=None, db=dest_work_queue, chunk_size=2000, logger=logger):
+    def file_bin_processor(doc, stats=None, db=dest_work_queue, logger=logger):
         try:
             for _doc in doc.get('rows', []):
                 __bin = {}
@@ -729,33 +743,47 @@ def process_files(proc_id, skip_n, logger):
     try:
         doc_cnt = 0
         file_cnt = 0
+        events_cnt = 0
         with timer.Timer() as timer3:
             try:
                 for fp in skip_n:
                     file_cnt += 1
                     num_cells = (file_cnt / len(skip_n))
                     print('{}{}::({:2f})'.format(repeat_char(' ', 2-len(str(proc_id))), proc_id, num_cells), end='\n')
-                    #<do your magic>
+                    #BEGIN: <do your magic>
                     data_cache = []
                     process_source_file(fp, collection=data_cache, logger=logger)
                     for doc in data_cache:
                         doc_cnt += 1
-                        bin_processor(doc_cleaner(doc, normalize=['_id']), stats=__stats__, logger=logger)
+                        events_cnt += len(doc.get('rows', []))
+                        if (not is_validating):
+                            file_bin_processor(doc_cleaner(doc, normalize=['_id']), stats=__stats__, logger=logger)
+                    #END!!! <do your magic>
 
             except Exception as e:
                 if (logger):
                     logger.error("Error in process_files", exc_info=True)
                 print('Error in process_files!')
 
-        _msg = ' in {:.2f} secs'.format(timer3.duration)
-
         dest_stats_coll = db_coll(client, dest_db_name, dest_stats_coll_name)
-        s = {'proc_id':proc_id, 'file_cnt':file_cnt, 'doc_cnt':doc_cnt, 'duration':timer3.duration}
-        dest_stats_coll.insert_one(s)
+        s = {
+            'proc_id':proc_id,
+            'file_cnt':file_cnt,
+            'doc_cnt':doc_cnt,
+            'events_cnt':events_cnt,
+            'master_file_count':master_file_count,
+            'duration':timer3.duration
+        }
+        db.find_one_and_update({'proc_id':proc_id}, {'$set': s}, upsert=True)
+
+        _msg = 'master_file_count {}, file_cnt {}, events_cnt {} in {:.2f} secs'.format(master_file_count, file_cnt, events_cnt, timer3.duration)
+        print(_msg)
+        if (logger):
+            logger.info(_msg)
     finally:
         client.close()
 
-    msg = 'END: process_cursor {} :: completed: doc_cnt={}, skip_n={} {}'.format(proc_id, doc_cnt, len(skip_n), _msg)
+    msg = 'END: process_files {} :: completed: doc_cnt={}, skip_n={}'.format(proc_id, doc_cnt, len(skip_n))
     if (logger):
         logger.info(msg)
     print(msg)
@@ -810,30 +838,31 @@ client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get
 
 dest_work_queue = db_coll(client, dest_db_name, dest_coll_work_queue_name)
 
-@bin_collector(db=dest_work_queue, flush=True, logger=logger)
-def db_insert(_bin=None, db=None, logger=None):
-    assert db is not None, 'db is required.'
-    assert _bin is not None, '_bin is required.'
-    assert isinstance(_bin, list), '_bin must be a list.'
-    if (len(_bin) > 0):
-        binid = _bin[0].get('BinID')
-        binid_doc = {'BinID':binid}
-        db.find_one_and_update(binid_doc, {'$set': binid_doc}, upsert=True)
-        filtered_bin = [b for b in _bin if (__criteria__(b.get('data', {})))]
-        rejected_bin = [b for b in _bin  if (not __criteria__(b.get('data', {})))]
-        if (len(filtered_bin) > 0):
-            dest_bins_coll.insert_many(filtered_bin, ordered=False)
-        if (len(rejected_bin) > 0):
-            dest_bins_rejected_coll.insert_many(rejected_bin, ordered=False)
-    msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
-    if (logger):
-        logger.info(msg)
-    print(msg)
-    msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(doc['data']))
-    if (logger):
-        logger.info(msg)
-    print(msg)
-db_insert([])
+if (not is_validating):
+    @bin_collector(db=dest_work_queue, flush=True, logger=logger)
+    def db_insert(_bin=None, db=None, logger=None):
+        assert db is not None, 'db is required.'
+        assert _bin is not None, '_bin is required.'
+        assert isinstance(_bin, list), '_bin must be a list.'
+        if (len(_bin) > 0):
+            binid = _bin[0].get('BinID')
+            binid_doc = {'BinID':binid}
+            db.find_one_and_update(binid_doc, {'$set': binid_doc}, upsert=True)
+            filtered_bin = [b for b in _bin if (__criteria__(b.get('data', {})))]
+            rejected_bin = [b for b in _bin  if (not __criteria__(b.get('data', {})))]
+            if (len(filtered_bin) > 0):
+                dest_bins_coll.insert_many(filtered_bin, ordered=False)
+            if (len(rejected_bin) > 0):
+                dest_bins_rejected_coll.insert_many(rejected_bin, ordered=False)
+        msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
+        if (logger):
+            logger.info(msg)
+        print(msg)
+        msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(doc['data']))
+        if (logger):
+            logger.info(msg)
+        print(msg)
+    db_insert([])
 
 if (0):
     total_docs_count = aggregate_docs_count()
