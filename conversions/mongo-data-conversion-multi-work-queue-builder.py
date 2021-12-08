@@ -631,8 +631,9 @@ def process_files(proc_id, skip_n, logger, exception_logger):
                 if (__isgoodipv4__):
                     __metadata__['srcaddr']['is_private'] = ipaddress.ip_address(_srcaddr).is_private
                     if (use_postgres_db):
-                        __metadata__['srcaddr']['securex'] = __securex_metadata__.get(_srcaddr, None)
-                        __metadata__['srcaddr']['securex_hostname'] = __metadata__.get('srcaddr', {}).get('securex', {}).get('hostname', None)
+                        srcaddr_securex = __metadata__['srcaddr']['securex'] = __securex_metadata__.get(_srcaddr, None)
+                        if (srcaddr_securex):
+                            __metadata__['srcaddr']['securex_hostname'] = srcaddr_securex.get('hostname', None)
                     _cidrs = cidrs(str(_srcaddr).split('.'))
                     for c in _cidrs:
                         __metadata__['srcaddr'][c] = _srcaddr
@@ -645,8 +646,9 @@ def process_files(proc_id, skip_n, logger, exception_logger):
                 if (__isgoodipv4__):
                     __metadata__['dstaddr']['is_private'] = ipaddress.ip_address(_dstaddr).is_private
                     if (use_postgres_db):
-                        __metadata__['dstaddr']['securex'] = __securex_metadata__.get(_dstaddr, None)
-                        __metadata__['dstaddr']['securex_hostname'] = __metadata__.get('dstaddr', {}).get('securex', {}).get('hostname', None)
+                        dstaddr_securex = __metadata__['dstaddr']['securex'] = __securex_metadata__.get(_dstaddr, None)
+                        if (dstaddr_securex):
+                            __metadata__['dstaddr']['securex_hostname'] = dstaddr_securex.get('hostname', None)
                     _cidrs = cidrs(str(_dstaddr).split('.'))
                     for c in _cidrs:
                         __metadata__['dstaddr'][c] = _dstaddr
