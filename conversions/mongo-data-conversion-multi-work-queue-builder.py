@@ -117,7 +117,8 @@ def get_logger(fpath=__file__, product='scheduler', logPath='logs', is_running_p
     
     return logger
 
-logger = get_logger()
+logger = get_logger(product='sx-vpcflowlogs-collector')
+exception_logger = get_logger(product='sx-vpcflowlogs-exceptions')
 
 import pymongo
 from pymongo import ReturnDocument
@@ -202,7 +203,7 @@ if (use_postgres_db):
                 if (isgoodipv4(hostname)):
                     _results[hostname] = item
         except Exception as e:
-            pass
+            exception_logger.exception(e, exc_info=True)
         return _results
     __securex_metadata__ = get_all_postgres_metadata()
 
@@ -482,7 +483,7 @@ def aggregate_bins_docs_total():
     ]
     return _aggregate(pipeline, dest_db_name, dest_coll_work_queue_name)
 
-def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, projection, skip_n, limit_n, nlimit, process_stats, logger):
+def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, projection, skip_n, limit_n, nlimit, process_stats, logger, exception_logger):
     assert proc_id is not None, 'proc_id is required'
     assert source_db_name is not None, 'source_db_name is required'
     assert source_coll_name is not None, 'source_coll_name is required'
@@ -494,6 +495,7 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
     assert nlimit is not None, 'nlimit is required'
     assert process_stats is not None, 'process_stats is required'
     assert logger is not None, 'logger is required'
+    assert exception_logger is not None, 'exception_logger is required'
 
     __stats__ = []
 
@@ -552,6 +554,8 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
             except Exception as e:
                 if (logger):
                     logger.error("Error in process_cursor", exc_info=True)
+                if (exception_logger):
+                    exception_logger.critical("Error in process_cursor", exc_info=True)
                 print('Error in process_cursor!')
 
         _msg = ' in {:.2f} secs'.format(timer3.duration)
@@ -568,12 +572,13 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
     print(msg)
 
 ###########################################################################
-def process_files(proc_id, skip_n, logger):
+def process_files(proc_id, skip_n, logger, exception_logger):
     import binner
     
     assert isinstance(proc_id, int), 'int proc_id is required.'
     assert isinstance(skip_n, list), 'skip_n is required as a list of files.'
     assert logger is not None, 'logger is required.'
+    assert exception_logger is not None, 'exception_logger is required.'
 
     client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
 
@@ -611,7 +616,8 @@ def process_files(proc_id, skip_n, logger):
                             toks = toks[0:toks.index('')]
                             asn_description = ' '.join(toks)
                     except Exception as e:
-                        pass
+                        if (exception_logger):
+                            exception_logger.critical("Error in normalize_asn_description", exc_info=True)
                     return asn_description
                 
                 cidrs = lambda l:['.'.join(l[0:i]) for i in range(2, len(l))]
@@ -674,6 +680,8 @@ def process_files(proc_id, skip_n, logger):
         except Exception as e:
             if (logger):
                 logger.error("Error in process_files", exc_info=True)
+            if (exception_logger):
+                exception_logger.critical("Error in process_files", exc_info=True)
             print('Error in process_files!')
             
     fname_cols = ['account', 'bucket', 'region', 'name', 'timestamp', 'fname']
@@ -729,6 +737,8 @@ def process_files(proc_id, skip_n, logger):
                 __status__.append({'gzip': False})
                 if (logger):
                     logger.info('INFO: decompress_gzip :: __status__ is {}.'.format(__status__))
+                if (exception_logger):
+                    exception_logger.critical("Error in decompress_gzip.1", exc_info=True)
             try:
                 lines = [l.split() for l in outfile_content.split('\n')]
                 rows = [{k:normalize_numeric(v) for k,v in dict(zip(lines[0], l)).items()} for l in lines[1:]]
@@ -738,6 +748,8 @@ def process_files(proc_id, skip_n, logger):
             except Exception as ex:
                 if (logger):
                     logger.exception(str(ex), exc_info=sys.exc_info())
+                if (exception_logger):
+                    exception_logger.critical("Error in decompress_gzip.2", exc_info=True)
             if (logger):
                 logger.info('END!!! decompress_gzip :: fp is "{}".'.format(fp))
                 logger.info('INFO: decompress_gzip :: __status__ is {}.'.format(__status__))
@@ -756,7 +768,10 @@ def process_files(proc_id, skip_n, logger):
                     vector['tag'] = doc.get('tag')
                     collection.append(vector)
             except Exception as ex:
-                logger.exception(str(ex), exc_info=sys.exc_info())
+                if (logger):
+                    logger.exception(str(ex), exc_info=sys.exc_info())
+                if (exception_logger):
+                    exception_logger.critical("Error in ingest_source_file", exc_info=True)
         msg = 'ingest_source_file :: {:.2f} secs'.format(timer2.duration)
         print(msg)
         logger.info(msg)
@@ -774,7 +789,7 @@ def process_files(proc_id, skip_n, logger):
             doc['tag'] = os.sep.join(toks[index_of_item('vpcflowlogs',toks)-1:])
         return ingest_source_file(doc, collection=collection, logger=logger)
 
-    msg = 'BEGIN: process_cursor ({}) :: skip_n={}'.format(proc_id, len(skip_n))
+    msg = 'BEGIN: process_files ({}) :: skip_n={}'.format(proc_id, len(skip_n))
     if (logger):
         logger.info(msg)
     print(msg)
@@ -802,6 +817,8 @@ def process_files(proc_id, skip_n, logger):
             except Exception as e:
                 if (logger):
                     logger.error("Error in process_files", exc_info=True)
+                if (exception_logger):
+                    exception_logger.critical("Error in process_files", exc_info=True)
                 print('Error in process_files!')
 
         dest_stats_coll = db_coll(client, dest_db_name, dest_stats_coll_name)
@@ -850,11 +867,11 @@ with timer.Timer() as timer2:
             logger.info(msg)
             print(msg)
             if (is_data_source_mongodb):
-                processes = [ multiprocessing.Process(target=process_cursor, args=(_i, source_db_name, source_coll_name, __sort, criteria, projection, skip_n, batch_size, skip_n+batch_size, {}, logger)) for _i,skip_n in enumerate(skips)]
+                processes = [ multiprocessing.Process(target=process_cursor, args=(_i, source_db_name, source_coll_name, __sort, criteria, projection, skip_n, batch_size, skip_n+batch_size, {}, logger, exception_logger)) for _i,skip_n in enumerate(skips)]
             elif (is_data_source_filesystem):
-                processes = [ multiprocessing.Process(target=process_files, args=(_i, skip_n, logger)) for _i,skip_n in enumerate(skips)]
+                processes = [ multiprocessing.Process(target=process_files, args=(_i, skip_n, logger, exception_logger)) for _i,skip_n in enumerate(skips)]
             elif (is_data_source_s3):
-                processes = [ multiprocessing.Process(target=process_buckets, args=(_i, skip_n, logger)) for _i,skip_n in enumerate(skips)]
+                processes = [ multiprocessing.Process(target=process_buckets, args=(_i, skip_n, logger, exception_logger)) for _i,skip_n in enumerate(skips)]
             else:
                 raise ValueError('Invalid data source')
 
@@ -872,6 +889,7 @@ with timer.Timer() as timer2:
         
     except Exception as e:
         logger.error("Error in main loop.", exc_info=True)
+        exception_logger.critical("Error in main loop.", exc_info=True)
 
 client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
 
