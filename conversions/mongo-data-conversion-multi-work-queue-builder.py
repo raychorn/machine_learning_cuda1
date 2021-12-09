@@ -44,7 +44,8 @@ from logging.handlers import RotatingFileHandler
 production_token = 'production'
 development_token = 'development'
 
-is_running_production = lambda : (socket.gethostname().find('raychorn') == -1)
+my_host_names = ['raychorn', 'elementaryosdesktop8b921662']
+is_running_production = lambda : not any([(socket.gethostname().find(h) == -1) for h in my_host_names])
 
 something_greater_than_zero = lambda s:(s > 0)
 
@@ -670,7 +671,7 @@ def process_files(proc_id, skip_n, logger, exception_logger):
                 
                 if (len(__networks__) > 0):
                     dest_networks_coll.insert_one(__networks__)
-                    dest_networks_unique_coll.find_one_and_update(__networks__, {'$set': __networks__}, upsert=True)
+                    #dest_networks_unique_coll.find_one_and_update(__networks__, {'$set': __networks__}, upsert=True)
                 
                 @bin_collector(db=db, logger=logger)
                 def db_insert(_bin=None, db=None, logger=None):
