@@ -670,7 +670,11 @@ def process_files(proc_id, skip_n, logger, exception_logger):
                 __bin['__metadata__'] = __metadata__
                 
                 if (len(__networks__) > 0):
-                    dest_networks_coll.insert_one(__networks__)
+                    networks_list = []
+                    for k,v in __networks__.items():
+                        n_rec = {'CIDR': k, 'links': __networks__}
+                        networks_list.append(n_rec)
+                    dest_networks_coll.insert_many(networks_list)
                     #dest_networks_unique_coll.find_one_and_update(__networks__, {'$set': __networks__}, upsert=True)
                 
                 @bin_collector(db=db, logger=logger)
