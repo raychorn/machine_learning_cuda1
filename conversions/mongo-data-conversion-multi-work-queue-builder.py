@@ -57,18 +57,22 @@ default_timestamp = lambda t:t.isoformat().replace(':', '').replace('-','').spli
 
 __verbose_command_line_option__ = '--verbose'
 __validation_command_line_option__ = '--validation'
+__networks_command_line_option__ = '--networks'
 
 if (not is_running_production()):
     #sys.argv.append(__verbose_command_line_option__)
     #sys.argv.append(__validation_command_line_option__)
-    pass
+    sys.argv.append(__networks_command_line_option__)
+    #pass
     
 is_verbose = any([str(arg).find(__verbose_command_line_option__) > -1 for arg in sys.argv])
 is_validating = any([str(arg).find(__validation_command_line_option__) > -1 for arg in sys.argv])
+is_networks = any([str(arg).find(__networks_command_line_option__) > -1 for arg in sys.argv])
 
 print('is_running_production: {}'.format(is_running_production()))
 print('is_verbose: {}'.format(is_verbose))
 print('is_validating: {}'.format(is_validating))
+print('is_networks: {}'.format(is_networks))
 print()
 
 def get_logger(fpath=__file__, product='scheduler', logPath='logs', is_running_production=is_running_production()):
@@ -358,7 +362,7 @@ deletable_cols = [
                     dest_networks_unique_coll.name
                 ]
 
-if (not is_validating):
+if (not is_validating) and (not is_networks):
     yn = input("Please approve {} delete all. (y/n)".format(', '.join(deletable_cols)))
     if (str(yn.upper()) == 'Y'):
         dest_stats_coll.delete_many({})
@@ -669,34 +673,39 @@ def process_files(proc_id, skip_n, logger, exception_logger):
                     __networks__[_dstaddr] = ','.join(_cidrs)
                 __bin['__metadata__'] = __metadata__
                 
-                if (len(__networks__) > 0):
-                    networks_list = []
-                    for k,v in __networks__.items():
-                        n_rec = {'CIDR': k, 'links': __networks__}
-                        networks_list.append(n_rec)
-                    dest_networks_coll.insert_many(networks_list)
-                    #dest_networks_unique_coll.find_one_and_update(__networks__, {'$set': __networks__}, upsert=True)
-                
-                @bin_collector(db=db, logger=logger)
-                def db_insert(_bin=None, db=None, logger=None):
-                    assert db is not None, 'db is required.'
-                    assert _bin is not None, '_bin is required.'
-                    assert isinstance(_bin, list), '_bin must be a list.'
-                    assert len(_bin) > 0, '_bin must be a list of length > 0.'
-                    binid = _bin[0].get('BinID')
-                    binid_doc = {'BinID':binid}
-                    db.find_one_and_update(binid_doc, {'$set': binid_doc}, upsert=True)
-                    filtered_bin = [b for b in _bin if (__criteria__(b.get('data', {})))]
-                    rejected_bin = [b for b in _bin  if (not __criteria__(b.get('data', {})))]
-                    if (len(filtered_bin) > 0):
-                        dest_bins_coll.insert_many(filtered_bin, ordered=False)
-                    if (len(rejected_bin) > 0):
-                        dest_bins_rejected_coll.insert_many(rejected_bin, ordered=False)
-                    msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
-                    if (logger):
-                        logger.info(msg)
-                    print(msg)
-                db_insert(__bin)
+                if (is_networks):
+                    if (len(__networks__) > 0):
+                        networks_list = []
+                        for k,v in __networks__.items():
+                            n_rec = {'CIDR': k, 'BinID_X': __bin.get('BinID_X'), 'links': __networks__}
+                            networks_list.append(n_rec)
+                        __fpath = '{}{}{}{}{}{}{}'.format(os.path.dirname(__file__), os.sep, 'networks', os.sep, proc_id, os.sep, __bin.get('BinID_X'))
+                        os.makedirs(__fpath, exist_ok=True)
+                        with open('{}{}{}.json'.format(__fpath, os.sep, uuid.uuid4()), 'w') as fOut:
+                            fOut.write(json.dumps(networks_list, indent=4))
+                        #dest_networks_coll.insert_many(networks_list)
+
+                if (not is_networks):
+                    @bin_collector(db=db, logger=logger)
+                    def db_insert(_bin=None, db=None, logger=None):
+                        assert db is not None, 'db is required.'
+                        assert _bin is not None, '_bin is required.'
+                        assert isinstance(_bin, list), '_bin must be a list.'
+                        assert len(_bin) > 0, '_bin must be a list of length > 0.'
+                        binid = _bin[0].get('BinID')
+                        binid_doc = {'BinID':binid}
+                        db.find_one_and_update(binid_doc, {'$set': binid_doc}, upsert=True)
+                        filtered_bin = [b for b in _bin if (__criteria__(b.get('data', {})))]
+                        rejected_bin = [b for b in _bin  if (not __criteria__(b.get('data', {})))]
+                        if (len(filtered_bin) > 0):
+                            dest_bins_coll.insert_many(filtered_bin, ordered=False)
+                        if (len(rejected_bin) > 0):
+                            dest_bins_rejected_coll.insert_many(rejected_bin, ordered=False)
+                        msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
+                        if (logger):
+                            logger.info(msg)
+                        print(msg)
+                    db_insert(__bin)
         except Exception as e:
             if (exception_logger):
                 exception_logger.critical("Error in process_files", exc_info=True)
@@ -904,7 +913,7 @@ client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get
 
 dest_work_queue = db_coll(client, dest_db_name, dest_coll_work_queue_name)
 
-if (not is_validating):
+if (not is_validating) and (not is_networks):
     @bin_collector(db=dest_work_queue, flush=True, logger=logger)
     def db_insert(_bin=None, db=None, logger=None):
         assert db is not None, 'db is required.'
