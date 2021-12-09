@@ -58,8 +58,9 @@ __verbose_command_line_option__ = '--verbose'
 __validation_command_line_option__ = '--validation'
 
 if (not is_running_production()):
-    sys.argv.append(__verbose_command_line_option__)
+    #sys.argv.append(__verbose_command_line_option__)
     #sys.argv.append(__validation_command_line_option__)
+    pass
     
 is_verbose = any([str(arg).find(__verbose_command_line_option__) > -1 for arg in sys.argv])
 is_validating = any([str(arg).find(__validation_command_line_option__) > -1 for arg in sys.argv])
@@ -118,7 +119,7 @@ def get_logger(fpath=__file__, product='scheduler', logPath='logs', is_running_p
     return logger
 
 logger = get_logger(product='sx-vpcflowlogs-collector')
-exception_logger = get_logger(product='sx-vpcflowlogs-exceptions')
+exception_logger = logger #get_logger(product='sx-vpcflowlogs-exceptions')
 
 import pymongo
 from pymongo import ReturnDocument
@@ -242,6 +243,7 @@ dest_bins_processed_coll_name = os.environ.get('MONGO_WORK_QUEUE_BINS_PROCD_COL'
 dest_bins_rejected_coll_name = os.environ.get('MONGO_WORK_QUEUE_REJECTED_BINS_COL')
 
 dest_networks_coll_name = os.environ.get('MONGO_WORK_QUEUE_NETWORKS_COL')
+dest_networks_unique_coll_name = os.environ.get('MONGO_WORK_QUEUE_UNIQUE_NETWORKS_COL')
 
 try:
     client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
@@ -304,6 +306,12 @@ except Exception:
     logger.error("Fatal error with .env, check MONGO_WORK_QUEUE_NETWORKS_COL.", exc_info=True)
     sys.exit()
 
+try:
+    assert is_really_something_with_stuff(dest_networks_unique_coll_name, str), 'Cannot continue without the dest_networks_unique_coll_name.'
+except Exception:
+    logger.error("Fatal error with .env, check MONGO_WORK_QUEUE_UNIQUE_NETWORKS_COL.", exc_info=True)
+    sys.exit()
+
 logger.info(str(client))
 
 db = lambda cl,n:cl.get_database(n)
@@ -335,6 +343,8 @@ dest_bins_rejected_coll = db_collection(client, dest_db_name, dest_bins_rejected
 
 dest_networks_coll = db_collection(client, dest_db_name, dest_networks_coll_name)
 
+dest_networks_unique_coll = db_collection(client, dest_db_name, dest_networks_unique_coll_name)
+
 n_cores = multiprocessing.cpu_count() - 1
 
 deletable_cols = [
@@ -343,7 +353,8 @@ deletable_cols = [
                     dest_bins_coll.full_name, 
                     dest_bins_processed_coll.full_name, 
                     dest_bins_rejected_coll.name,
-                    dest_networks_coll.name
+                    dest_networks_coll.name,
+                    dest_networks_unique_coll.name
                 ]
 
 if (not is_validating):
@@ -354,6 +365,8 @@ if (not is_validating):
         dest_bins_coll.delete_many({})
         dest_bins_processed_coll.delete_many({})
         dest_bins_rejected_coll.delete_many({})
+        dest_networks_coll.delete_many({})
+        dest_networks_unique_coll.delete_many({})
 
 if (is_data_source_mongodb):
     msg = 'BEGIN: Count docs in {}'.format(source_coll_name)
@@ -552,8 +565,6 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
                     print(msg)
                     del __stats__[:]
             except Exception as e:
-                if (logger):
-                    logger.error("Error in process_cursor", exc_info=True)
                 if (exception_logger):
                     exception_logger.critical("Error in process_cursor", exc_info=True)
                 print('Error in process_cursor!')
@@ -588,6 +599,7 @@ def process_files(proc_id, skip_n, logger, exception_logger):
     dest_bins_rejected_coll = db_collection(client, dest_db_name, dest_bins_rejected_coll_name)
     dest_bins_processed_coll = db_collection(client, dest_db_name, dest_bins_processed_coll_name)
     dest_networks_coll = db_collection(client, dest_db_name, dest_networks_coll_name)
+    dest_networks_unique_coll = db_collection(client, dest_db_name, dest_networks_unique_coll_name)
 
     def file_bin_processor(doc, stats=None, db=dest_work_queue, logger=logger):
         try:
@@ -658,6 +670,7 @@ def process_files(proc_id, skip_n, logger, exception_logger):
                 
                 if (len(__networks__) > 0):
                     dest_networks_coll.insert_one(__networks__)
+                    dest_networks_unique_coll.find_one_and_update(__networks__, {'$set': __networks__}, upsert=True)
                 
                 @bin_collector(db=db, logger=logger)
                 def db_insert(_bin=None, db=None, logger=None):
@@ -680,8 +693,6 @@ def process_files(proc_id, skip_n, logger, exception_logger):
                     print(msg)
                 db_insert(__bin)
         except Exception as e:
-            if (logger):
-                logger.error("Error in process_files", exc_info=True)
             if (exception_logger):
                 exception_logger.critical("Error in process_files", exc_info=True)
             print('Error in process_files!')
@@ -713,7 +724,7 @@ def process_files(proc_id, skip_n, logger, exception_logger):
             try:
                 value = int(value) if (not is_floating) else float(value)
             except Exception as ex:
-                logger.exception(str(ex), exc_info=sys.exc_info())
+                exception_logger.critlcal(str(ex), exc_info=sys.exc_info())
             if (is_negative):
                 value = -value
         return value
@@ -735,10 +746,7 @@ def process_files(proc_id, skip_n, logger, exception_logger):
                 if (logger):
                     logger.info('INFO: decompress_gzip :: __status__ is {}.'.format(__status__))
             except Exception as ex:
-                logger.exception(str(ex), exc_info=sys.exc_info())
                 __status__.append({'gzip': False})
-                if (logger):
-                    logger.info('INFO: decompress_gzip :: __status__ is {}.'.format(__status__))
                 if (exception_logger):
                     exception_logger.critical("Error in decompress_gzip.1", exc_info=True)
             try:
@@ -748,8 +756,6 @@ def process_files(proc_id, skip_n, logger, exception_logger):
                 diff = rows[-1].get('start', 0) - rows[0].get('start', 0)
                 num_rows = len(rows)
             except Exception as ex:
-                if (logger):
-                    logger.exception(str(ex), exc_info=sys.exc_info())
                 if (exception_logger):
                     exception_logger.critical("Error in decompress_gzip.2", exc_info=True)
             if (logger):
@@ -770,8 +776,6 @@ def process_files(proc_id, skip_n, logger, exception_logger):
                     vector['tag'] = doc.get('tag')
                     collection.append(vector)
             except Exception as ex:
-                if (logger):
-                    logger.exception(str(ex), exc_info=sys.exc_info())
                 if (exception_logger):
                     exception_logger.critical("Error in ingest_source_file", exc_info=True)
         msg = 'ingest_source_file :: {:.2f} secs'.format(timer2.duration)
@@ -817,8 +821,6 @@ def process_files(proc_id, skip_n, logger, exception_logger):
                     #END!!! <do your magic>
 
             except Exception as e:
-                if (logger):
-                    logger.error("Error in process_files", exc_info=True)
                 if (exception_logger):
                     exception_logger.critical("Error in process_files", exc_info=True)
                 print('Error in process_files!')

@@ -36,8 +36,6 @@ else
 	apt install python3.9-distutils -y
 fi
 
-if [[ -d "/workspaces/duino-coin" ]]; then echo "9. Found /workspaces/duino-coin" fi
-
 python39=$(which python3.9)
 pip3=$(which pip3)
 setuptools="0"
