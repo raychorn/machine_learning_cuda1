@@ -935,9 +935,9 @@ with timer.Timer() as timer2:
             for process in processes:
                 process.join()
 
-        msg = 'bin_collector :: master records {}: {}'.format('created' if (len(events) > 0) else 'has', _num_events)
-        logger.info(msg)
-        print(msg)
+            msg = 'bin_collector :: master records {}: {}'.format('created' if (len(events) > 0) else 'has', _num_events)
+            logger.info(msg)
+            print(msg)
 
         is_verbose = False
         
@@ -980,16 +980,31 @@ if (is_validating) and (is_networks_commit):
 
     with timer.Timer() as timer4:
         __items = []
+        __batch_size = 2000
         for fp in iterate_directory(__fpath):
             with open(fp, 'rb') as fIn:
+                msg = 'Reading {} for network docs.'.format(fp)
+                print(msg)
+                logger.info(msg)
+
                 data = json.load(fIn)
+                num_items = len(data)
                 for item in data:
                     __items.append(item)
+                msg = 'Read {} items.'.format(num_items)
+                print(msg)
+                logger.info(msg)
+            if (len(__items) > __batch_size):
+                msg = 'Comitting {} items.'.format(__batch_size)
+                print(msg)
+                logger.info(msg)
+
+                dest_networks_coll.insert_many(__items[0:__batch_size])
+                del __items[0:__batch_size]
         msg = 'Committing {} network docs.'.format(len(__items))
         print(msg)
         logger.info(msg)
         if (len(__items) > 0):
-            __batch_size = 2000
             for n in range(0, len(__items), __batch_size):
                 msg = 'Committing {}:{} of {} network docs.'.format(n,n+__batch_size, len(__items))
                 print(msg)
