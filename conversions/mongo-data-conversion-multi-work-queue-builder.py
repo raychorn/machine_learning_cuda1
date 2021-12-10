@@ -58,21 +58,24 @@ default_timestamp = lambda t:t.isoformat().replace(':', '').replace('-','').spli
 __verbose_command_line_option__ = '--verbose'
 __validation_command_line_option__ = '--validation'
 __networks_command_line_option__ = '--networks'
+__networks_commit_command_line_option__ = '--networks-commit'
 
 if (not is_running_production()):
     #sys.argv.append(__verbose_command_line_option__)
-    #sys.argv.append(__validation_command_line_option__)
-    sys.argv.append(__networks_command_line_option__)
+    sys.argv.append(__validation_command_line_option__)
+    #sys.argv.append(__networks_command_line_option__)
+    sys.argv.append(__networks_commit_command_line_option__) # use validation to by-pass the collection of networks.
     #pass
     
 is_verbose = any([str(arg).find(__verbose_command_line_option__) > -1 for arg in sys.argv])
 is_validating = any([str(arg).find(__validation_command_line_option__) > -1 for arg in sys.argv])
 is_networks = any([str(arg).find(__networks_command_line_option__) > -1 for arg in sys.argv])
+is_networks_commit = any([str(arg).find(__networks_commit_command_line_option__) > -1 for arg in sys.argv])
 
 print('is_running_production: {}'.format(is_running_production()))
 print('is_verbose: {}'.format(is_verbose))
 print('is_validating: {}'.format(is_validating))
-print('is_networks: {}'.format(is_networks))
+print('is_networks: {} -> Commit: {}'.format(is_networks, 'True' if (is_networks_commit) else 'False'))
 print()
 
 def get_logger(fpath=__file__, product='scheduler', logPath='logs', is_running_production=is_running_production()):
@@ -357,12 +360,15 @@ deletable_cols = [
                     dest_work_queue_coll.full_name, 
                     dest_bins_coll.full_name, 
                     dest_bins_processed_coll.full_name, 
-                    dest_bins_rejected_coll.name,
+                    dest_bins_rejected_coll.name
+                ]
+
+deletable_network_cols = [
                     dest_networks_coll.name,
                     dest_networks_unique_coll.name
                 ]
 
-if (not is_validating) and (not is_networks):
+if (not is_validating) and (not is_networks) and (not is_networks_commit):
     yn = input("Please approve {} delete all. (y/n)".format(', '.join(deletable_cols)))
     if (str(yn.upper()) == 'Y'):
         dest_stats_coll.delete_many({})
@@ -370,8 +376,18 @@ if (not is_validating) and (not is_networks):
         dest_bins_coll.delete_many({})
         dest_bins_processed_coll.delete_many({})
         dest_bins_rejected_coll.delete_many({})
+
+if (is_networks) and (is_networks_commit):
+    yn = input("Please approve {} delete all. (y/n)".format(', '.join(deletable_network_cols)))
+    if (str(yn.upper()) == 'Y'):
         dest_networks_coll.delete_many({})
         dest_networks_unique_coll.delete_many({})
+
+def iterate_directory(root):
+    for subdir, dirs, files in os.walk(root):
+        for file in files:
+            fp = os.path.join(subdir, file)
+            yield fp
 
 if (is_data_source_mongodb):
     msg = 'BEGIN: Count docs in {}'.format(source_coll_name)
@@ -391,12 +407,6 @@ elif (is_data_source_filesystem):
     msg = 'BEGIN: Count files in {}'.format(data_source)
     print(msg)
     logger.info(msg)
-
-    def iterate_directory(root):
-        for subdir, dirs, files in os.walk(root):
-            for file in files:
-                fp = os.path.join(subdir, file)
-                yield fp
 
     master_file_count = 0
     with timer.Timer() as timer1:
@@ -605,7 +615,7 @@ def process_files(proc_id, skip_n, logger, exception_logger):
     dest_bins_processed_coll = db_collection(client, dest_db_name, dest_bins_processed_coll_name)
     dest_networks_coll = db_collection(client, dest_db_name, dest_networks_coll_name)
     dest_networks_unique_coll = db_collection(client, dest_db_name, dest_networks_unique_coll_name)
-
+    
     def file_bin_processor(doc, stats=None, db=dest_work_queue, logger=logger):
         try:
             for _doc in doc.get('rows', []):
@@ -818,42 +828,68 @@ def process_files(proc_id, skip_n, logger, exception_logger):
         doc_cnt = 0
         file_cnt = 0
         events_cnt = 0
-        with timer.Timer() as timer3:
-            try:
-                for fp in skip_n:
-                    file_cnt += 1
-                    num_cells = (file_cnt / len(skip_n))
-                    print('{}{}::({:2f})'.format(repeat_char(' ', 2-len(str(proc_id))), proc_id, num_cells), end='\n')
-                    #BEGIN: <do your magic>
-                    data_cache = []
-                    process_source_file(fp, collection=data_cache, logger=logger)
-                    for doc in data_cache:
-                        doc_cnt += 1
-                        events_cnt += len(doc.get('rows', []))
-                        if (not is_validating):
+        if (not is_validating):
+            with timer.Timer() as timer3:
+                try:
+                    for fp in skip_n:
+                        file_cnt += 1
+                        num_cells = (file_cnt / len(skip_n))
+                        print('{}{}::({:2f})'.format(repeat_char(' ', 2-len(str(proc_id))), proc_id, num_cells), end='\n')
+                        #BEGIN: <do your magic>
+                        data_cache = []
+                        process_source_file(fp, collection=data_cache, logger=logger)
+                        for doc in data_cache:
+                            doc_cnt += 1
+                            events_cnt += len(doc.get('rows', []))
                             file_bin_processor(doc_cleaner(doc, normalize=['_id']), stats=__stats__, logger=logger)
-                    #END!!! <do your magic>
+                        #END!!! <do your magic>
 
-            except Exception as e:
-                if (exception_logger):
-                    exception_logger.critical("Error in process_files", exc_info=True)
-                print('Error in process_files!')
+                except Exception as e:
+                    if (exception_logger):
+                        exception_logger.critical("Error in process_files", exc_info=True)
+                    print('Error in process_files!')
 
-        dest_stats_coll = db_coll(client, dest_db_name, dest_stats_coll_name)
-        s = {
-            'proc_id':proc_id,
-            'file_cnt':file_cnt,
-            'doc_cnt':doc_cnt,
-            'events_cnt':events_cnt,
-            'master_file_count':master_file_count,
-            'duration':timer3.duration
-        }
-        dest_stats_coll.find_one_and_update({'proc_id':proc_id}, {'$set': s}, upsert=True)
+        if (not is_networks):
+            dest_stats_coll = db_coll(client, dest_db_name, dest_stats_coll_name)
+            s = {
+                'proc_id':proc_id,
+                'file_cnt':file_cnt,
+                'doc_cnt':doc_cnt,
+                'events_cnt':events_cnt,
+                'master_file_count':master_file_count,
+                'duration':timer3.duration
+            }
+            dest_stats_coll.find_one_and_update({'proc_id':proc_id}, {'$set': s}, upsert=True)
 
-        _msg = 'master_file_count {}, file_cnt {}, events_cnt {} in {:.2f} secs'.format(master_file_count, file_cnt, events_cnt, timer3.duration)
-        print(_msg)
-        if (logger):
-            logger.info(_msg)
+            _msg = 'master_file_count {}, file_cnt {}, events_cnt {} in {:.2f} secs'.format(master_file_count, file_cnt, events_cnt, timer3.duration)
+            print(_msg)
+            if (logger):
+                logger.info(_msg)
+                
+        if (is_networks_commit):
+            __fpath = '{}{}{}{}{}'.format(os.path.dirname(__file__), os.sep, 'networks', os.sep, proc_id)
+
+            with timer.Timer() as timer4:
+                __items = []
+                for fp in iterate_directory(__fpath):
+                    with open(fp, 'rb') as fIn:
+                        data = json.load(fIn)
+                        for item in data:
+                            __items.append(item)
+                msg = 'Committing {} network docs.'.format(len(__items))
+                print(msg)
+                logger.info(msg)
+                if (len(__items) > 0):
+                    __batch_size = 2000
+                    for n in range(0, len(__items), __batch_size):
+                        msg = 'Committing {}:{} of {} network docs.'.format(n,n+__batch_size, len(__items))
+                        print(msg)
+                        logger.info(msg)
+                        
+                        dest_networks_coll.insert_many(__items[n:n+__batch_size])
+            msg = 'Commit network files from {} in {:.2f} secs'.format(__fpath, timer4.duration)
+            print(msg)
+            logger.info(msg)
     finally:
         client.close()
 
