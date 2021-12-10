@@ -865,8 +865,8 @@ def process_files(proc_id, skip_n, logger, exception_logger):
             print(_msg)
             if (logger):
                 logger.info(_msg)
-                
-        if (is_networks_commit):
+
+        if (0) and (not is_validating) and (is_networks_commit):
             __fpath = '{}{}{}{}{}'.format(os.path.dirname(__file__), os.sep, 'networks', os.sep, proc_id)
 
             with timer.Timer() as timer4:
@@ -916,7 +916,7 @@ with timer.Timer() as timer2:
     try:
         _num_events = 1
         events = []
-        if (1):
+        if (not is_validating):
             msg = 'bin_collector :: creating processes.'
             logger.info(msg)
             print(msg)
@@ -974,6 +974,31 @@ if (not is_validating) and (not is_networks):
             logger.info(msg)
         print(msg)
     db_insert([])
+
+if (is_validating) and (is_networks_commit):
+    __fpath = '{}{}{}'.format(os.path.dirname(__file__), os.sep, 'networks')
+
+    with timer.Timer() as timer4:
+        __items = []
+        for fp in iterate_directory(__fpath):
+            with open(fp, 'rb') as fIn:
+                data = json.load(fIn)
+                for item in data:
+                    __items.append(item)
+        msg = 'Committing {} network docs.'.format(len(__items))
+        print(msg)
+        logger.info(msg)
+        if (len(__items) > 0):
+            __batch_size = 2000
+            for n in range(0, len(__items), __batch_size):
+                msg = 'Committing {}:{} of {} network docs.'.format(n,n+__batch_size, len(__items))
+                print(msg)
+                logger.info(msg)
+                
+                dest_networks_coll.insert_many(__items[n:n+__batch_size])
+    msg = 'Commit network files from {} in {:.2f} secs'.format(__fpath, timer4.duration)
+    print(msg)
+    logger.info(msg)
 
 if (0):
     total_docs_count = aggregate_docs_count()
