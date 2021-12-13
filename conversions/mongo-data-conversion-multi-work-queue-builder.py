@@ -38,6 +38,8 @@ import multiprocessing
 
 from binner import collector as bin_collector
 
+from concurrent import futures
+
 ############################################################################
 from logging.handlers import RotatingFileHandler
 
@@ -59,21 +61,26 @@ __verbose_command_line_option__ = '--verbose'
 __validation_command_line_option__ = '--validation'
 __networks_command_line_option__ = '--networks'
 __networks_commit_command_line_option__ = '--networks-commit'
+__seeding_command_line_option__ = '--seeding'
 
 if (not is_running_production()):
+    #sys.argv.append(__seeding_command_line_option__)
     #sys.argv.append(__verbose_command_line_option__)
-    sys.argv.append(__validation_command_line_option__)
+    #sys.argv.append(__validation_command_line_option__)
     #sys.argv.append(__networks_command_line_option__)
-    sys.argv.append(__networks_commit_command_line_option__) # use validation to by-pass the collection of networks.
-    #pass
+    #sys.argv.append(__networks_commit_command_line_option__) # use validation to by-pass the collection of networks.
+    pass
     
 is_verbose = any([str(arg).find(__verbose_command_line_option__) > -1 for arg in sys.argv])
+is_seeding = any([str(arg).find(__seeding_command_line_option__) > -1 for arg in sys.argv])
+
 is_validating = any([str(arg).find(__validation_command_line_option__) > -1 for arg in sys.argv])
 is_networks = any([str(arg).find(__networks_command_line_option__) > -1 for arg in sys.argv])
 is_networks_commit = any([str(arg).find(__networks_commit_command_line_option__) > -1 for arg in sys.argv])
 
 print('is_running_production: {}'.format(is_running_production()))
 print('is_verbose: {}'.format(is_verbose))
+print('is_seeding: {}'.format(is_seeding))
 print('is_validating: {}'.format(is_validating))
 print('is_networks: {} -> Commit: {}'.format(is_networks, 'True' if (is_networks_commit) else 'False'))
 print()
@@ -177,10 +184,14 @@ from whois import ip_address_owner
 
 from postgres import Query
 
+from processing_bins_lib.binning import process_bins
+
 from vyperlogix.mongo.database import docs_generator
 from vyperlogix.mongo.database import get_pipeline_for
 
 from vyperlogix.contexts import timer
+
+from vyperlogix.decorators import threading
 
 __env__ = {}
 __literals__ = os.environ.get('LITERALS', [])
@@ -197,7 +208,7 @@ __env__['MONGO_AUTH_MECHANISM'] ='SCRAM-SHA-256'
 
 __securex_metadata__ = {}
 
-use_postgres_db = eval(os.environ.get('USE_POSTGRES_DB', False))
+use_postgres_db = eval(os.environ.get('USE_POSTGRES_DB', False)) and is_networks
 
 if (use_postgres_db):
     @Query('asset', 'hostname', None)
@@ -250,8 +261,14 @@ dest_bins_coll_name = os.environ.get('MONGO_WORK_QUEUE_BINS_COL')
 dest_bins_processed_coll_name = os.environ.get('MONGO_WORK_QUEUE_BINS_PROCD_COL')
 dest_bins_rejected_coll_name = os.environ.get('MONGO_WORK_QUEUE_REJECTED_BINS_COL')
 
+dest_bins_binned_coll_name = os.environ.get('MONGO_DEST_DATA_BINNED_COL')
+dest_bins_metadata_coll_name = os.environ.get('MONGO_DEST_DATA_METADATA_COL')
+
 dest_networks_coll_name = os.environ.get('MONGO_WORK_QUEUE_NETWORKS_COL')
 dest_networks_unique_coll_name = os.environ.get('MONGO_WORK_QUEUE_UNIQUE_NETWORKS_COL')
+
+vpcflowlogs_db_name = os.environ.get('VPCFLOWLOGS_DATA_DB')
+vpcflowlogs_db_coll_name = os.environ.get('VPCFLOWLOGS_DATA_COL')
 
 try:
     client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
@@ -319,6 +336,30 @@ try:
 except Exception:
     logger.error("Fatal error with .env, check MONGO_WORK_QUEUE_UNIQUE_NETWORKS_COL.", exc_info=True)
     sys.exit()
+    
+try:
+    assert is_really_something_with_stuff(vpcflowlogs_db_name, str), 'Cannot continue without the vpcflowlogs_db_name.'
+except Exception:
+    logger.error("Fatal error with .env, check VPCFLOWLOGS_DATA_DB.", exc_info=True)
+    sys.exit()
+
+try:
+    assert is_really_something_with_stuff(vpcflowlogs_db_coll_name, str), 'Cannot continue without the vpcflowlogs_db_coll_name.'
+except Exception:
+    logger.error("Fatal error with .env, check VPCFLOWLOGS_DATA_COL.", exc_info=True)
+    sys.exit()
+
+try:
+    assert is_really_something_with_stuff(dest_bins_binned_coll_name, str), 'Cannot continue without the dest_bins_binned_coll_name.'
+except Exception:
+    logger.error("Fatal error with .env, check MONGO_DEST_DATA_BINNED_COL.", exc_info=True)
+    sys.exit()
+
+try:
+    assert is_really_something_with_stuff(dest_bins_metadata_coll_name, str), 'Cannot continue without the dest_bins_metadata_coll_name.'
+except Exception:
+    logger.error("Fatal error with .env, check MONGO_DEST_DATA_METADATA_COL.", exc_info=True)
+    sys.exit()
 
 logger.info(str(client))
 
@@ -349,9 +390,14 @@ dest_bins_processed_coll = db_collection(client, dest_db_name, dest_bins_process
 
 dest_bins_rejected_coll = db_collection(client, dest_db_name, dest_bins_rejected_coll_name)
 
+dest_bins_binned_coll = db_collection(client, dest_db_name, dest_bins_binned_coll_name)
+dest_bins_metadata_coll = db_collection(client, dest_db_name, dest_bins_metadata_coll_name)
+
 dest_networks_coll = db_collection(client, dest_db_name, dest_networks_coll_name)
 
 dest_networks_unique_coll = db_collection(client, dest_db_name, dest_networks_unique_coll_name)
+
+vpcflowlogs_db_coll = db_collection(client, vpcflowlogs_db_name, vpcflowlogs_db_coll_name)
 
 n_cores = multiprocessing.cpu_count() - 1
 
@@ -360,12 +406,14 @@ deletable_cols = [
                     dest_work_queue_coll.full_name, 
                     dest_bins_coll.full_name, 
                     dest_bins_processed_coll.full_name, 
-                    dest_bins_rejected_coll.name
+                    dest_bins_rejected_coll.full_name,
+                    dest_bins_binned_coll.full_name,
+                    dest_bins_metadata_coll.full_name,
                 ]
 
 deletable_network_cols = [
-                    dest_networks_coll.name,
-                    dest_networks_unique_coll.name
+                    dest_networks_coll.full_name,
+                    dest_networks_unique_coll.full_name
                 ]
 
 if (not is_validating) and (not is_networks) and (not is_networks_commit):
@@ -389,6 +437,8 @@ def iterate_directory(root):
             fp = os.path.join(subdir, file)
             yield fp
 
+vpcflowlogs_col_names = ['account', 'bucket', 'region', 'name', 'timestamp', 'fname']
+
 if (is_data_source_mongodb):
     msg = 'BEGIN: Count docs in {}'.format(source_coll_name)
     print(msg)
@@ -407,6 +457,114 @@ elif (is_data_source_filesystem):
     msg = 'BEGIN: Count files in {}'.format(data_source)
     print(msg)
     logger.info(msg)
+
+    with timer.Timer() as timer1:
+        num_data_files = vpcflowlogs_db_coll.count_documents({})
+    msg = 'END!!! Count docs in {} :: num_data_files: {} in {:.2f} secs'.format(vpcflowlogs_db_coll.full_name, num_data_files, timer1.duration)
+    print(msg)
+    logger.info(msg)
+    
+    if (is_seeding):
+        executor = futures.ThreadPoolExecutor(max_workers=max(n_cores, 1))
+        
+        @threading.Threaded(executor=executor, logger=None)
+        def process_a_seed_file(fpath, seqNum, fcols=[], collection=None):
+            data_cache = []
+
+            def decompress_seed_gzip(fp=None, _id=None, environ=None, logger=None):
+                import gzip
+
+                with timer.Timer() as timer3:
+                    diff = -1
+                    num_rows = -1
+                    __status__ = []
+                    if (logger):
+                        logger.info('BEGIN: decompress_seed_gzip :: fp is "{}".'.format(fp))
+                    assert os.path.exists(fp) and os.path.isfile(fp), 'Cannot do much with the provided filename ("{}"). Please fix.'.format(fp)
+                    try:
+                        with gzip.open(fp, 'r') as infile:
+                            outfile_content = infile.read().decode('UTF-8')
+                        __status__.append({'gzip': True})
+                        if (logger):
+                            logger.info('INFO: decompress_seed_gzip :: __status__ is {}.'.format(__status__))
+                    except Exception as ex:
+                        __status__.append({'gzip': False})
+                        if (exception_logger):
+                            exception_logger.critical("Error in decompress_seed_gzip.1", exc_info=True)
+                    try:
+                        lines = [l.split() for l in outfile_content.split('\n')]
+                        rows = [{k:normalize_numeric(v) for k,v in dict(zip(lines[0], l)).items()} for l in lines[1:]]
+                        rows = [row for row in rows if (len(row) > 0)]
+                        diff = rows[-1].get('start', 0) - rows[0].get('start', 0)
+                        num_rows = len(rows)
+                    except Exception as ex:
+                        if (exception_logger):
+                            exception_logger.critical("Error in decompress_seed_gzip.2", exc_info=True)
+                    if (logger):
+                        logger.info('END!!! decompress_seed_gzip :: fp is "{}".'.format(fp))
+                        logger.info('INFO: decompress_seed_gzip :: __status__ is {}.'.format(__status__))
+                msg = 'decompress_seed_gzip :: {:.2f} secs'.format(timer3.duration)
+                print(msg)
+                logger.info(msg)
+                return {'status': __status__[0], 'diff': diff, 'num_rows':num_rows, 'rows':rows}
+
+            def ingest_seed_file(doc, collection=None, logger=None):
+                with timer.Timer() as timer2:
+                    try:
+                        fpath = doc.get('fpath')
+                        assert os.path.exists(fpath) and os.path.isfile(fpath), 'Cannot continue without a valid file path ({}).'.format(fpath)
+                        vector = decompress_seed_gzip(fp=fpath, logger=logger)
+                        if (isinstance(collection, list)):
+                            vector['tag'] = doc.get('tag')
+                            collection.append(vector)
+                    except Exception as ex:
+                        if (exception_logger):
+                            exception_logger.critical("Error in ingest_source_file", exc_info=True)
+                msg = 'ingest_source_file :: {:.2f} secs'.format(timer2.duration)
+                print(msg)
+                logger.info(msg)
+
+            def process_seed_file(fpath, fcols=[], collection=None, logger=None):
+                doc = dict(zip(*[fcols, os.path.basename(fpath).split('_')]))
+                if (str(doc.get('account')).isdigit()):
+                    doc['account'] = int(doc.get('account'))
+                if (isinstance(doc.get('timestamp'), str)):
+                    doc['timestamp'] = dt.datetime.strptime(doc.get('timestamp'), "%Y%m%dT%H%MZ")
+                doc['fpath'] = fpath
+                __source__ = doc.get('__source__', fpath)
+                if (__source__.find('/mnt/') > -1):
+                    toks = __source__.split(os.sep)
+                    doc['tag'] = os.sep.join(toks[index_of_item('vpcflowlogs',toks)-1:])
+                return ingest_seed_file(doc, collection=collection, logger=logger)
+
+            process_seed_file(fpath, collection=data_cache, logger=logger)
+
+            return {'fpath': fpath, 'seqNum': seqNum, 'fcols': fcols, 'collection': collection}
+
+        master_file_count = 0
+        with timer.Timer() as timer1:
+            files = []
+            for fp in iterate_directory(data_source):
+                master_file_count += 1
+                files.append(fp)
+                process_a_seed_file(fp, master_file_count, fcols=vpcflowlogs_col_names, collection=vpcflowlogs_db_coll)
+            num_files = len(files)
+        msg = 'END!!! Count files in {} :: num_files: {}, master_file_count {} in {:.2f} secs'.format(data_source, num_files, master_file_count, timer1.duration)
+        print(msg)
+        logger.info(msg)
+
+        @threading.JoinThreads(wait_for=threading.Threaded.__wait_for__, logger=logger)
+        def process_each_seeded_file(result=None, inserts=[], updates=[], logger=None):
+            if (result):
+                print()
+                if (logger):
+                    logger.info(result)
+
+        process_each_seeded_file(inserts='the_actual_inserts', updates='the_actual_updates', logger=logger)
+
+        if (master_file_count != num_data_files):
+            # make sure all the files are in the collection and in the proper sequence.
+            print()
 
     master_file_count = 0
     with timer.Timer() as timer1:
@@ -598,7 +756,7 @@ def process_cursor(proc_id, source_db_name, source_coll_name, sort, criteria, pr
     print(msg)
 
 ###########################################################################
-def process_files(proc_id, skip_n, logger, exception_logger):
+def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
     import binner
     
     assert isinstance(proc_id, int), 'int proc_id is required.'
@@ -612,7 +770,10 @@ def process_files(proc_id, skip_n, logger, exception_logger):
     
     dest_bins_coll = db_collection(client, dest_db_name, dest_bins_coll_name)
     dest_bins_rejected_coll = db_collection(client, dest_db_name, dest_bins_rejected_coll_name)
-    dest_bins_processed_coll = db_collection(client, dest_db_name, dest_bins_processed_coll_name)
+    #dest_bins_processed_coll = db_collection(client, dest_db_name, dest_bins_processed_coll_name) # ???
+    dest_bins_binned_coll = db_collection(client, dest_db_name, dest_bins_binned_coll_name)
+    dest_bins_metadata_coll = db_collection(client, dest_db_name, dest_bins_metadata_coll_name)
+
     dest_networks_coll = db_collection(client, dest_db_name, dest_networks_coll_name)
     dest_networks_unique_coll = db_collection(client, dest_db_name, dest_networks_unique_coll_name)
     
@@ -693,7 +854,6 @@ def process_files(proc_id, skip_n, logger, exception_logger):
                         os.makedirs(__fpath, exist_ok=True)
                         with open('{}{}{}.json'.format(__fpath, os.sep, uuid.uuid4()), 'w') as fOut:
                             fOut.write(json.dumps(networks_list, indent=4))
-                        #dest_networks_coll.insert_many(networks_list)
 
                 if (not is_networks):
                     @bin_collector(db=db, logger=logger)
@@ -703,6 +863,9 @@ def process_files(proc_id, skip_n, logger, exception_logger):
                         assert isinstance(_bin, list), '_bin must be a list.'
                         assert len(_bin) > 0, '_bin must be a list of length > 0.'
                         binid = _bin[0].get('BinID')
+                        BinD = _bin[0].get('BinID_X')
+                        BinH = _bin[0].get('BinID_Y')
+                        BinN = _bin[0].get('BinID_Z')
                         binid_doc = {'BinID':binid}
                         db.find_one_and_update(binid_doc, {'$set': binid_doc}, upsert=True)
                         filtered_bin = [b for b in _bin if (__criteria__(b.get('data', {})))]
@@ -711,6 +874,31 @@ def process_files(proc_id, skip_n, logger, exception_logger):
                             dest_bins_coll.insert_many(filtered_bin, ordered=False)
                         if (len(rejected_bin) > 0):
                             dest_bins_rejected_coll.insert_many(rejected_bin, ordered=False)
+                        ignorables = ['start', 'end', 'action', 'log-status']
+                        includables = ['dstport', 'bytes', 'packets']
+                        binnable_data = []
+                        for b in filtered_bin:
+                            d = {}
+                            for k,v in b.get('data', {}).items():
+                                if (k in includables):
+                                    d[k] = v
+                            if (all([isinstance(v, int) or isinstance(v, float) for v in d.values()])):
+                                binnable_data.append(d)
+                        results = process_bins(binnable_data)
+                        results_data = results.get('data', [])
+                        for r in results_data:
+                            r['BinID'] = binid
+                            r['BinD'] = BinD
+                            r['BinH'] = BinH
+                            r['BinN'] = BinN
+                        dest_bins_binned_coll.insert_many(results_data, ordered=False)
+                        results_metadata = results.get('metadata', [])
+                        for r in results_metadata:
+                            r['BinID'] = binid
+                            r['BinD'] = BinD
+                            r['BinH'] = BinH
+                            r['BinN'] = BinN
+                        dest_bins_metadata_coll.insert_many(results_metadata, ordered=False)
                         msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
                         if (logger):
                             logger.info(msg)
@@ -721,8 +909,6 @@ def process_files(proc_id, skip_n, logger, exception_logger):
                 exception_logger.critical("Error in process_files", exc_info=True)
             print('Error in process_files!')
             
-    fname_cols = ['account', 'bucket', 'region', 'name', 'timestamp', 'fname']
-
     first_item = lambda x: next(iter(x))
 
     index_of_item = lambda item,items: first_item([i for i,x in enumerate(items) if (x == item)])
@@ -923,7 +1109,7 @@ with timer.Timer() as timer2:
             if (is_data_source_mongodb):
                 processes = [ multiprocessing.Process(target=process_cursor, args=(_i, source_db_name, source_coll_name, __sort, criteria, projection, skip_n, batch_size, skip_n+batch_size, {}, logger, exception_logger)) for _i,skip_n in enumerate(skips)]
             elif (is_data_source_filesystem):
-                processes = [ multiprocessing.Process(target=process_files, args=(_i, skip_n, logger, exception_logger)) for _i,skip_n in enumerate(skips)]
+                processes = [ multiprocessing.Process(target=process_files, args=(_i, vpcflowlogs_col_names, skip_n, logger, exception_logger)) for _i,skip_n in enumerate(skips)]
             elif (is_data_source_s3):
                 processes = [ multiprocessing.Process(target=process_buckets, args=(_i, skip_n, logger, exception_logger)) for _i,skip_n in enumerate(skips)]
             else:
@@ -975,7 +1161,7 @@ if (not is_validating) and (not is_networks):
         print(msg)
     db_insert([])
 
-if (is_validating) and (is_networks_commit):
+if (0) and (is_validating) and (is_networks_commit):
     __fpath = '{}{}{}'.format(os.path.dirname(__file__), os.sep, 'networks')
 
     with timer.Timer() as timer4:
