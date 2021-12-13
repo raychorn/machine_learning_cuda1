@@ -16,7 +16,7 @@ def process_bins(input_events_list):
         
         resp = {}
         resp['metadata'] = metadata
-        resp['data'] =  df_d.values.tolist()
+        resp['data'] =  df_d.to_dict('records')
         return resp
 
 

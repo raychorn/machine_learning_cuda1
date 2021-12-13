@@ -893,18 +893,14 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                                 print('Error in process_files!\n{}'.format(formatted))
                             results_data = results.get('data', [])
                             n = 0
-                            _results_data = []
                             for r in results_data:
-                                d = {}
-                                d['BinID'] = binid
-                                d['BinD'] = BinD
-                                d['BinH'] = BinH
-                                d['BinN'] = BinN
-                                d['n'] = n
-                                d['data'] = r
-                                _results_data.append(d)
+                                r['BinID'] = binid
+                                r['BinD'] = BinD
+                                r['BinH'] = BinH
+                                r['BinN'] = BinN
+                                r['n'] = n
                                 n += 1
-                            dest_bins_binned_coll.insert_many(_results_data, ordered=False)
+                            dest_bins_binned_coll.insert_many(results_data, ordered=False)
                             results_metadata = results.get('metadata', [])
                             n = 0
                             for r in results_metadata:
