@@ -404,7 +404,7 @@ dest_networks_unique_coll = db_collection(client, dest_db_name, dest_networks_un
 
 vpcflowlogs_db_coll = db_collection(client, vpcflowlogs_db_name, vpcflowlogs_db_coll_name)
 
-n_cores = multiprocessing.cpu_count() / 2
+n_cores = multiprocessing.cpu_count()
 
 deletable_cols = [
                     dest_stats_coll.full_name, 
