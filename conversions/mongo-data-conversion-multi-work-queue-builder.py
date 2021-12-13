@@ -827,8 +827,6 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
         results['status'] = msg
         return results
 
-    process_each_seeded_file(inserts='the_actual_inserts', updates='the_actual_updates', logger=logger)
-    
     def file_bin_processor(doc, stats=None, db=dest_work_queue, logger=logger):
         try:
             for _doc in doc.get('rows', []):
