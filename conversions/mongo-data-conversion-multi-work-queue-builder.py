@@ -886,18 +886,28 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                                 binnable_data.append(d)
                         results = process_bins(binnable_data)
                         results_data = results.get('data', [])
+                        n = 0
+                        _results_data = []
                         for r in results_data:
-                            r['BinID'] = binid
-                            r['BinD'] = BinD
-                            r['BinH'] = BinH
-                            r['BinN'] = BinN
-                        dest_bins_binned_coll.insert_many(results_data, ordered=False)
+                            d = {}
+                            d['BinID'] = binid
+                            d['BinD'] = BinD
+                            d['BinH'] = BinH
+                            d['BinN'] = BinN
+                            d['n'] = n
+                            d['data'] = r
+                            _results_data.append(d)
+                            n += 1
+                        dest_bins_binned_coll.insert_many(_results_data, ordered=False)
                         results_metadata = results.get('metadata', [])
+                        n = 0
                         for r in results_metadata:
                             r['BinID'] = binid
                             r['BinD'] = BinD
                             r['BinH'] = BinH
                             r['BinN'] = BinN
+                            r['n'] = n
+                            n += 1
                         dest_bins_metadata_coll.insert_many(results_metadata, ordered=False)
                         msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
                         if (logger):
