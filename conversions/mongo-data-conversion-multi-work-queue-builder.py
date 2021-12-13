@@ -292,7 +292,7 @@ except Exception:
 try:
     assert is_really_something_with_stuff(dest_db_name, str), 'Cannot continue without the db_name.'
 except Exception:
-    logger.error("Fatal error with .env, check MONGO_DEST_DATA_DB.", exc_info=True)
+    logger.error("Fatal error with .env, check MONGO_WORK_QUEUE_DATA_DB.", exc_info=True)
     sys.exit()
 
 try:
