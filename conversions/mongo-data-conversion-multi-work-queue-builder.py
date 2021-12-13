@@ -249,6 +249,11 @@ msg = 'is_data_source_mongodb: {}'.format(is_data_source_mongodb)
 print(msg)
 logger.info(msg)
 
+try:
+    mongo_bulk_size = int(os.environ.get('MONGO_BULK_SIZE', 1000))
+except Exception as e:
+    mongo_bulk_size = 1000
+
 source_db_name = os.environ.get('MONGO_SOURCE_DATA_DB')
 source_coll_name = os.environ.get('MONGO_SOURCE_DATA_COL')
 
@@ -777,56 +782,9 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
     dest_networks_coll = db_collection(client, dest_db_name, dest_networks_coll_name)
     dest_networks_unique_coll = db_collection(client, dest_db_name, dest_networks_unique_coll_name)
     
-    executor = futures.ThreadPoolExecutor(max_workers=max(n_cores, 1))
+    cache_dest_bins_binned_coll = []
+    cache_dest_bins_metadata_coll = []
     
-    @threading.Threaded(executor=executor, logger=logger)
-    def process_bin_background(_filtered_bin):
-        results = {}
-        ignorables = ['start', 'end', 'action', 'log-status']
-        includables = ['dstport', 'bytes', 'packets']
-        binnable_data = []
-        for b in _filtered_bin:
-            d = {}
-            for k,v in b.get('data', {}).items():
-                if (k in includables):
-                    d[k] = v
-            if (all([isinstance(v, int) or isinstance(v, float) for v in d.values()])):
-                binnable_data.append(d)
-        if (len(binnable_data) > 0):
-            try:
-                results = process_bins(binnable_data)
-            except Exception as e:
-                extype, ex, tb = sys.exc_info()
-                formatted = traceback.format_exception_only(extype, ex)[-1]
-                results['error'] = formatted
-                print('Error in process_files!\n{}'.format(formatted))
-            results_data = results.get('data', [])
-            n = 0
-            for r in results_data:
-                r['BinID'] = binid
-                r['BinD'] = BinD
-                r['BinH'] = BinH
-                r['BinN'] = BinN
-                r['n'] = n
-                n += 1
-            dest_bins_binned_coll.insert_many(results_data, ordered=False)
-            results_metadata = results.get('metadata', [])
-            n = 0
-            for r in results_metadata:
-                r['BinID'] = binid
-                r['BinD'] = BinD
-                r['BinH'] = BinH
-                r['BinN'] = BinN
-                r['n'] = n
-                n += 1
-            dest_bins_metadata_coll.insert_many(results_metadata, ordered=False)
-        msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
-        if (logger):
-            logger.info(msg)
-        print(msg)
-        results['status'] = msg
-        return results
-
     def file_bin_processor(doc, stats=None, db=dest_work_queue, logger=logger):
         try:
             for _doc in doc.get('rows', []):
@@ -924,7 +882,53 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                             dest_bins_coll.insert_many(filtered_bin, ordered=False)
                         if (len(rejected_bin) > 0):
                             dest_bins_rejected_coll.insert_many(rejected_bin, ordered=False)
-                        process_bin_background(filtered_bin)
+                        ignorables = ['start', 'end', 'action', 'log-status']
+                        includables = ['dstport', 'bytes', 'packets']
+                        binnable_data = []
+                        for b in filtered_bin:
+                            d = {}
+                            for k,v in b.get('data', {}).items():
+                                if (k in includables):
+                                    d[k] = v
+                            if (all([isinstance(v, int) or isinstance(v, float) for v in d.values()])):
+                                binnable_data.append(d)
+                        if (len(binnable_data) > 0):
+                            try:
+                                results = process_bins(binnable_data)
+                            except Exception as e:
+                                extype, ex, tb = sys.exc_info()
+                                formatted = traceback.format_exception_only(extype, ex)[-1]
+                                print('Error in process_files!\n{}'.format(formatted))
+                            results_data = results.get('data', [])
+                            n = 0
+                            for r in results_data:
+                                r['BinID'] = binid
+                                r['BinD'] = BinD
+                                r['BinH'] = BinH
+                                r['BinN'] = BinN
+                                r['n'] = n
+                                n += 1
+                                cache_dest_bins_binned_coll.append(r)
+                                if (len(cache_dest_bins_binned_coll) >= mongo_bulk_size):
+                                    dest_bins_binned_coll.insert_many(cache_dest_bins_binned_coll, ordered=False)
+                                    del cache_dest_bins_binned_coll[:]
+                            results_metadata = results.get('metadata', [])
+                            n = 0
+                            for r in results_metadata:
+                                r['BinID'] = binid
+                                r['BinD'] = BinD
+                                r['BinH'] = BinH
+                                r['BinN'] = BinN
+                                r['n'] = n
+                                n += 1
+                                cache_dest_bins_metadata_coll.append(r)
+                                if (len(cache_dest_bins_metadata_coll) >= mongo_bulk_size):
+                                    dest_bins_metadata_coll.insert_many(cache_dest_bins_metadata_coll, ordered=False)
+                                    del cache_dest_bins_metadata_coll[:]
+                        msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
+                        if (logger):
+                            logger.info(msg)
+                        print(msg)
                     db_insert(__bin)
         except Exception as e:
             extype, ex, tb = sys.exc_info()
@@ -1060,6 +1064,14 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                     print('Error in process_files!')
 
         if (not is_networks):
+            if (len(cache_dest_bins_binned_coll) > 0):
+                dest_bins_binned_coll.insert_many(cache_dest_bins_binned_coll, ordered=False)
+                del cache_dest_bins_binned_coll[:]
+
+            if (len(cache_dest_bins_metadata_coll) > 0):
+                dest_bins_metadata_coll.insert_many(cache_dest_bins_metadata_coll, ordered=False)
+                del cache_dest_bins_metadata_coll[:]
+
             dest_stats_coll = db_coll(client, dest_db_name, dest_stats_coll_name)
             s = {
                 'proc_id':proc_id,
@@ -1075,15 +1087,6 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
             print(_msg)
             if (logger):
                 logger.info(_msg)
-
-            @threading.JoinThreads(wait_for=threading.Threaded.__wait_for__, logger=logger)
-            def complete_the_background_tasks(result=None, logger=None):
-                if (result):
-                    print()
-                    if (logger):
-                        logger.info(result)
-            complete_the_background_tasks(logger=logger)
-
 
         if (0) and (not is_validating) and (is_networks_commit):
             __fpath = '{}{}{}{}{}'.format(os.path.dirname(__file__), os.sep, 'networks', os.sep, proc_id)
