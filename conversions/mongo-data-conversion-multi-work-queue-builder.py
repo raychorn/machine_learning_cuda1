@@ -884,40 +884,48 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                                     d[k] = v
                             if (all([isinstance(v, int) or isinstance(v, float) for v in d.values()])):
                                 binnable_data.append(d)
-                        results = process_bins(binnable_data)
-                        results_data = results.get('data', [])
-                        n = 0
-                        _results_data = []
-                        for r in results_data:
-                            d = {}
-                            d['BinID'] = binid
-                            d['BinD'] = BinD
-                            d['BinH'] = BinH
-                            d['BinN'] = BinN
-                            d['n'] = n
-                            d['data'] = r
-                            _results_data.append(d)
-                            n += 1
-                        dest_bins_binned_coll.insert_many(_results_data, ordered=False)
-                        results_metadata = results.get('metadata', [])
-                        n = 0
-                        for r in results_metadata:
-                            r['BinID'] = binid
-                            r['BinD'] = BinD
-                            r['BinH'] = BinH
-                            r['BinN'] = BinN
-                            r['n'] = n
-                            n += 1
-                        dest_bins_metadata_coll.insert_many(results_metadata, ordered=False)
+                        if (len(binnable_data) > 0):
+                            try:
+                                results = process_bins(binnable_data)
+                            except Exception as e:
+                                extype, ex, tb = sys.exc_info()
+                                formatted = traceback.format_exception_only(extype, ex)[-1]
+                                print('Error in process_files!\n{}'.format(formatted))
+                            results_data = results.get('data', [])
+                            n = 0
+                            _results_data = []
+                            for r in results_data:
+                                d = {}
+                                d['BinID'] = binid
+                                d['BinD'] = BinD
+                                d['BinH'] = BinH
+                                d['BinN'] = BinN
+                                d['n'] = n
+                                d['data'] = r
+                                _results_data.append(d)
+                                n += 1
+                            dest_bins_binned_coll.insert_many(_results_data, ordered=False)
+                            results_metadata = results.get('metadata', [])
+                            n = 0
+                            for r in results_metadata:
+                                r['BinID'] = binid
+                                r['BinD'] = BinD
+                                r['BinH'] = BinH
+                                r['BinN'] = BinN
+                                r['n'] = n
+                                n += 1
+                            dest_bins_metadata_coll.insert_many(results_metadata, ordered=False)
                         msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
                         if (logger):
                             logger.info(msg)
                         print(msg)
                     db_insert(__bin)
         except Exception as e:
+            extype, ex, tb = sys.exc_info()
+            formatted = traceback.format_exception_only(extype, ex)[-1]
             if (exception_logger):
                 exception_logger.critical("Error in process_files", exc_info=True)
-            print('Error in process_files!')
+            print('Error in process_files!\n{}'.format(formatted))
             
     first_item = lambda x: next(iter(x))
 
