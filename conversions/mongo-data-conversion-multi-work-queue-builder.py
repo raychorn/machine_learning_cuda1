@@ -791,8 +791,8 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                 __bin = {}
                 __bin['BinID'] = the_binid = binner.BinID(_doc.get('start'))
                 toks = the_binid.split('.')
-                assert len(toks) == 3, 'BinID must be of the form: XXXXXXX.YY.Z'
-                __bin['BinID_X'], __bin['BinID_Y'], __bin['BinID_Z'] = int(toks[0]), int(toks[1]), int(toks[2])
+                assert len(toks) == 3, 'BinID must be of the form: DDDDDDD.HH.N'
+                __bin['BinD'], __bin['BinH'], __bin['BinN'] = int(toks[0]), int(toks[1]), int(toks[2])
                 __bin['data'] = doc_cleaner(_doc, normalize=['_id'])
                 __bin['tag'] = doc.get('tag')
                 __metadata__ = {}
@@ -856,9 +856,9 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                     if (len(__networks__) > 0):
                         networks_list = []
                         for k,v in __networks__.items():
-                            n_rec = {'CIDR': k, 'BinID_X': __bin.get('BinID_X'), 'links': __networks__}
+                            n_rec = {'CIDR': k, 'BinD': __bin.get('BinD'), 'links': __networks__}
                             networks_list.append(n_rec)
-                        __fpath = '{}{}{}{}{}{}{}'.format(os.path.dirname(__file__), os.sep, 'networks', os.sep, proc_id, os.sep, __bin.get('BinID_X'))
+                        __fpath = '{}{}{}{}{}{}{}'.format(os.path.dirname(__file__), os.sep, 'networks', os.sep, proc_id, os.sep, __bin.get('BinD'))
                         os.makedirs(__fpath, exist_ok=True)
                         with open('{}{}{}.json'.format(__fpath, os.sep, uuid.uuid4()), 'w') as fOut:
                             fOut.write(json.dumps(networks_list, indent=4))
@@ -871,9 +871,9 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                         assert isinstance(_bin, list), '_bin must be a list.'
                         assert len(_bin) > 0, '_bin must be a list of length > 0.'
                         binid = _bin[0].get('BinID')
-                        BinD = _bin[0].get('BinID_X')
-                        BinH = _bin[0].get('BinID_Y')
-                        BinN = _bin[0].get('BinID_Z')
+                        BinD = _bin[0].get('BinD')
+                        BinH = _bin[0].get('BinH')
+                        BinN = _bin[0].get('BinN')
                         binid_doc = {'BinID':binid}
                         db.find_one_and_update(binid_doc, {'$set': binid_doc}, upsert=True)
                         filtered_bin = [b for b in _bin if (__criteria__(b.get('data', {})))]
