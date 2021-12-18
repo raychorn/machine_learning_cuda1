@@ -1237,6 +1237,53 @@ if (0) and (is_validating) and (is_networks_commit):
     print(msg)
     logger.info(msg)
 
+if (is_validating) and (not is_networks_commit) and (not is_networks):
+    with timer.Timer() as timer1a:
+        num_bins = dest_work_queue_coll.count_documents({})
+    msg = 'END!!! Count bins in {} :: num_data_files: {} in {:.2f} secs'.format(dest_work_queue_coll.full_name, num_bins, timer1a.duration)
+    print(msg)
+    logger.info(msg)
+
+    if (0):
+        __sort = {'BinID': pymongo.ASCENDING}
+        for doc in docs_generator(dest_work_queue_coll, sort=__sort, criteria={}, projection={}, skip=0, limit=0, maxTimeMS=12*60*60*1000, verbose=True, logger=logger):
+            print(doc)
+            break
+        
+    __first_BinID = None
+    
+    query = {}
+    __sort = [ (u"BinID", 1) ]
+
+    cursor = dest_work_queue_coll.find(query, sort=__sort, limit=1)
+    try:
+        for doc in cursor:
+            __first_BinID = doc.get('BinID')
+            print(doc)
+        if (__first_BinID):
+            docs = []
+            binnable_data = []
+            with timer.Timer() as timer1b:
+                cursor = dest_bins_coll.find({'BinID': __first_BinID})
+                for doc in cursor:
+                    docs.append(doc)
+                    binnable_data.append(doc.get('data'))
+            msg = 'END!!! Count events in {} :: num_data_files: {} in {:.2f} secs'.format(dest_bins_coll.full_name, len(docs), timer1b.duration)
+            print(msg)
+            logger.info(msg)
+            
+            if (len(binnable_data) > 0):
+                try:
+                    results = process_bins(binnable_data)
+                    print(results)
+                except Exception as e:
+                    extype, ex, tb = sys.exc_info()
+                    formatted = traceback.format_exception_only(extype, ex)[-1]
+                    print('Error in process_files!\n{}'.format(formatted))
+    finally:
+        pass
+        
+
 if (0):
     total_docs_count = aggregate_docs_count()
     assert 'total' in list(total_docs_count.keys()), 'total not found in total_docs_count'

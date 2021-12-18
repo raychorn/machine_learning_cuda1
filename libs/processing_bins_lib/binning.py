@@ -1,12 +1,27 @@
 
+def freq_analysis(data, focus=[]):
+    freq_analysis_resp = {}
+    s_focus = set(focus)
+    for d in data:
+        if (set(list(d.keys())).intersection(s_focus)):
+            for k in focus:
+                v = d.get(k, -1)
+                freq_analysis_resp[v] = freq_analysis_resp.get(v,0) + 1
+    return freq_analysis_resp
+
+
 def process_bins(input_events_list):
         import numpy as np
         import pandas as pd
     #unit testing 
 
-        df = pd.DataFrame.from_records(input_events_list)
+        grouping = ["dstport"]
+        interesting = ['dstport', 'bytes', 'packets']
+        input_events_list = [{k:v for k,v in item.items() if (k in interesting)} for item in input_events_list]
 
-        df_d = df.groupby(["dstport"],  as_index=False).sum()
+        df = pd.DataFrame.from_records(input_events_list)
+        
+        df_d = df.groupby(grouping,  as_index=False).sum()
         metadata = df_d.to_dict('records')
         #BPP
         df_d["bpp"] = df_d["bytes"]/df_d["packets"] 
@@ -16,7 +31,15 @@ def process_bins(input_events_list):
         
         resp = {}
         resp['metadata'] = metadata
-        resp['data'] =  df_d.to_dict('records')
+        resp['len_input_events_list'] = len(input_events_list)
+        resp['data'] =  _data = df_d.to_dict('records')
+        resp['len_metadata'] = len(metadata)
+        resp['len_data'] = len(_data)
+        resp['len_data_eq_metadata'] = len(metadata) == len(_data)
+        resp['freq_analysis_data'] = _freq_data = freq_analysis(_data, grouping)
+        resp['freq_analysis_metadata'] = _freq_metadata = freq_analysis(metadata, grouping)
+        resp['freq_analysis_data_any_gt_1'] = any([v > 1 for v in list(_freq_data.values())])
+        resp['freq_analysis_metadata_any_gt_1'] = any([v > 1 for v in list(_freq_metadata.values())])
         return resp
 
 
