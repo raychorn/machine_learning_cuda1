@@ -5,7 +5,7 @@ def freq_analysis(data, focus=[]):
     for d in data:
         if (set(list(d.keys())).intersection(s_focus)):
             for k in focus:
-                v = d.get(k, -1)
+                v = str(d.get(k, -1))
                 freq_analysis_resp[v] = freq_analysis_resp.get(v,0) + 1
     return freq_analysis_resp
 
