@@ -875,7 +875,6 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                         BinH = _bin[0].get('BinH')
                         BinN = _bin[0].get('BinN')
                         binid_doc = {'BinID':binid}
-                        db.find_one_and_update(binid_doc, {'$set': binid_doc}, upsert=True)
                         filtered_bin = [b for b in _bin if (__criteria__(b.get('data', {})))]
                         rejected_bin = [b for b in _bin  if (not __criteria__(b.get('data', {})))]
                         if (len(filtered_bin) > 0):
@@ -925,6 +924,18 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                                 if (len(cache_dest_bins_metadata_coll) >= mongo_bulk_size):
                                     dest_bins_metadata_coll.insert_many(cache_dest_bins_metadata_coll, ordered=False)
                                     del cache_dest_bins_metadata_coll[:]
+                                    
+                            binid_doc['len_input_events_list_data'] = results.get('len_input_events_list', [])
+                            binid_doc['len_metadata'] = results.get('len_metadata', -1)
+                            binid_doc['len_data'] = results.get('len_data', -1)
+                            binid_doc['len_data_eq_metadata'] = results.get('len_data_eq_metadata', False)
+                            binid_doc['freq_analysis_data'] = results.get('freq_analysis_data', {})
+                            binid_doc['freq_analysis_metadata'] = results.get('freq_analysis_metadata', {})
+                            binid_doc['freq_analysis_data_any_gt_1'] = results.get('freq_analysis_data_any_gt_1', False)
+                            binid_doc['freq_analysis_metadata_any_gt_1'] = results.get('freq_analysis_metadata_any_gt_1', False)
+
+                            db.find_one_and_update(binid_doc, {'$set': binid_doc}, upsert=True)
+
                         msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
                         if (logger):
                             logger.info(msg)
