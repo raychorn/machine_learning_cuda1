@@ -65,7 +65,7 @@ __seeding_command_line_option__ = '--seeding'
 __analysis_command_line_option__ = '--analysis'
 
 if (not is_running_production()):
-    sys.argv.append(__analysis_command_line_option__)
+    #sys.argv.append(__analysis_command_line_option__)
     #sys.argv.append(__seeding_command_line_option__)
     #sys.argv.append(__verbose_command_line_option__)
     #sys.argv.append(__validation_command_line_option__)
@@ -391,13 +391,13 @@ source_coll = db_collection(client, source_db_name, source_coll_name)
 
 dest_work_queue_coll = db_collection(client, dest_db_name, dest_coll_work_queue_name)
 
-dest_stats_coll = db_collection(client, dest_db_name, dest_stats_coll_name)
+dest_stats_coll = db_collection(client, dest_db_name + '-metadata', dest_stats_coll_name)
 
-dest_bins_coll = db_collection(client, dest_db_name, dest_bins_coll_name)
+dest_bins_coll = db_collection(client, dest_db_name + '-metadata', dest_bins_coll_name)
 
-dest_bins_processed_coll = db_collection(client, dest_db_name, dest_bins_processed_coll_name)
+dest_bins_processed_coll = db_collection(client, dest_db_name + '-metadata', dest_bins_processed_coll_name)
 
-dest_bins_rejected_coll = db_collection(client, dest_db_name, dest_bins_rejected_coll_name)
+dest_bins_rejected_coll = db_collection(client, dest_db_name + '-metadata', dest_bins_rejected_coll_name)
 
 dest_bins_binned_coll = db_collection(client, dest_db_name, dest_bins_binned_coll_name)
 dest_bins_metadata_coll = db_collection(client, dest_db_name, dest_bins_metadata_coll_name)
@@ -777,8 +777,8 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
 
     dest_work_queue = db_coll(client, dest_db_name, dest_coll_work_queue_name)
     
-    dest_bins_coll = db_collection(client, dest_db_name, dest_bins_coll_name)
-    dest_bins_rejected_coll = db_collection(client, dest_db_name, dest_bins_rejected_coll_name)
+    dest_bins_coll = db_collection(client, dest_db_name + '-metadata', dest_bins_coll_name)
+    dest_bins_rejected_coll = db_collection(client, dest_db_name + '-metadata', dest_bins_rejected_coll_name)
     #dest_bins_processed_coll = db_collection(client, dest_db_name, dest_bins_processed_coll_name) # ???
     dest_bins_binned_coll = db_collection(client, dest_db_name, dest_bins_binned_coll_name)
     dest_bins_metadata_coll = db_collection(client, dest_db_name, dest_bins_metadata_coll_name)
@@ -854,7 +854,7 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                         __metadata__['dstaddr'][c] = _dstaddr
                         __networks__[c] = _dstaddr
                     __networks__[_dstaddr] = ','.join(_cidrs)
-                __bin['__metadata__'] = __metadata__
+                #__bin['__metadata__'] = __metadata__
                 
                 if (is_networks):
                     if (len(__networks__) > 0):
@@ -937,6 +937,13 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                             binid_doc['freq_analysis_metadata'] = results.get('freq_analysis_metadata', {})
                             binid_doc['freq_analysis_data_any_gt_1'] = results.get('freq_analysis_data_any_gt_1', False)
                             binid_doc['freq_analysis_metadata_any_gt_1'] = results.get('freq_analysis_metadata_any_gt_1', False)
+                            
+                            m = {k:v for k,v in __metadata__.items()}
+                            m['bin-start-start'] = _bin[0].get('start')
+                            m['bin-start-end'] = _bin[-1].get('start')
+                            m['bin-end-start'] = _bin[0].get('end')
+                            m['bin-end-end'] = _bin[-1].get('end')
+                            binid_doc['__metadata__'] = m
 
                             db.find_one_and_update(binid_doc, {'$set': binid_doc}, upsert=True)
 
