@@ -62,8 +62,10 @@ __validation_command_line_option__ = '--validation'
 __networks_command_line_option__ = '--networks'
 __networks_commit_command_line_option__ = '--networks-commit'
 __seeding_command_line_option__ = '--seeding'
+__analysis_command_line_option__ = '--analysis'
 
 if (not is_running_production()):
+    sys.argv.append(__analysis_command_line_option__)
     #sys.argv.append(__seeding_command_line_option__)
     #sys.argv.append(__verbose_command_line_option__)
     #sys.argv.append(__validation_command_line_option__)
@@ -73,6 +75,7 @@ if (not is_running_production()):
     
 is_verbose = any([str(arg).find(__verbose_command_line_option__) > -1 for arg in sys.argv])
 is_seeding = any([str(arg).find(__seeding_command_line_option__) > -1 for arg in sys.argv])
+is_analysis = any([str(arg).find(__analysis_command_line_option__) > -1 for arg in sys.argv])
 
 is_validating = any([str(arg).find(__validation_command_line_option__) > -1 for arg in sys.argv])
 is_networks = any([str(arg).find(__networks_command_line_option__) > -1 for arg in sys.argv])
@@ -81,6 +84,7 @@ is_networks_commit = any([str(arg).find(__networks_commit_command_line_option__)
 print('is_running_production: {}'.format(is_running_production()))
 print('is_verbose: {}'.format(is_verbose))
 print('is_seeding: {}'.format(is_seeding))
+print('is_analysis: {}'.format(is_analysis))
 print('is_validating: {}'.format(is_validating))
 print('is_networks: {} -> Commit: {}'.format(is_networks, 'True' if (is_networks_commit) else 'False'))
 print()
@@ -421,7 +425,7 @@ deletable_network_cols = [
                     dest_networks_unique_coll.full_name
                 ]
 
-if (not is_validating) and (not is_networks) and (not is_networks_commit):
+if (not is_validating) and (not is_analysis) and (not is_networks) and (not is_networks_commit):
     yn = input("Please approve {} delete all. (y/n)".format(', '.join(deletable_cols)))
     if (str(yn.upper()) == 'Y'):
         dest_stats_coll.delete_many({})
@@ -1053,7 +1057,7 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
         doc_cnt = 0
         file_cnt = 0
         events_cnt = 0
-        if (not is_validating):
+        if (not is_validating) and (not is_analysis):
             with timer.Timer() as timer3:
                 try:
                     for fp in skip_n:
@@ -1074,7 +1078,7 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                         exception_logger.critical("Error in process_files", exc_info=True)
                     print('Error in process_files!')
 
-        if (not is_networks):
+        if (not is_networks) and (not is_analysis):
             if (len(cache_dest_bins_binned_coll) > 0):
                 dest_bins_binned_coll.insert_many(cache_dest_bins_binned_coll, ordered=False)
                 del cache_dest_bins_binned_coll[:]
@@ -1099,7 +1103,7 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
             if (logger):
                 logger.info(_msg)
 
-        if (0) and (not is_validating) and (is_networks_commit):
+        if (0) and (not is_validating) and (not is_analysis) and (is_networks_commit):
             __fpath = '{}{}{}{}{}'.format(os.path.dirname(__file__), os.sep, 'networks', os.sep, proc_id)
 
             with timer.Timer() as timer4:
@@ -1149,7 +1153,7 @@ with timer.Timer() as timer2:
     try:
         _num_events = 1
         events = []
-        if (not is_validating):
+        if (not is_validating) and (not is_analysis):
             msg = 'bin_collector :: creating processes.'
             logger.info(msg)
             print(msg)
@@ -1182,7 +1186,7 @@ client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get
 
 dest_work_queue = db_coll(client, dest_db_name, dest_coll_work_queue_name)
 
-if (not is_validating) and (not is_networks):
+if (not is_validating) and (not is_analysis) and (not is_networks):
     @bin_collector(db=dest_work_queue, flush=True, logger=logger)
     def db_insert(_bin=None, db=None, logger=None):
         assert db is not None, 'db is required.'
@@ -1208,7 +1212,7 @@ if (not is_validating) and (not is_networks):
         print(msg)
     db_insert([])
 
-if (0) and (is_validating) and (is_networks_commit):
+if (0) and (is_validating) and (not is_analysis) and (is_networks_commit):
     __fpath = '{}{}{}'.format(os.path.dirname(__file__), os.sep, 'networks')
 
     with timer.Timer() as timer4:
@@ -1248,7 +1252,7 @@ if (0) and (is_validating) and (is_networks_commit):
     print(msg)
     logger.info(msg)
 
-if (is_validating) and (not is_networks_commit) and (not is_networks):
+if (is_validating) and (not is_analysis) and (not is_networks_commit) and (not is_networks):
     with timer.Timer() as timer1a:
         num_bins = dest_work_queue_coll.count_documents({})
     msg = 'END!!! Count bins in {} :: num_data_files: {} in {:.2f} secs'.format(dest_work_queue_coll.full_name, num_bins, timer1a.duration)
@@ -1294,6 +1298,44 @@ if (is_validating) and (not is_networks_commit) and (not is_networks):
     finally:
         pass
         
+if (is_analysis):
+    print('Starting analysis...')
+    with timer.Timer() as timer5:
+        num_bins = dest_work_queue_coll.count_documents({})
+    msg = 'Counted {} bins from {} in {:.2f} secs'.format(num_bins, dest_work_queue_coll.full_name, timer5.duration)
+    print(msg)
+    logger.info(msg)
+
+    query = {}
+    __sort = [ (u"BinID", 1) ]
+
+    bin_count = 0
+    total_secs = 0
+    
+    cursor = dest_work_queue_coll.find(query, sort=__sort)
+    for doc in cursor:
+        binID = doc.get('BinID')
+        print(binID)
+        
+        with timer.Timer() as timer5a:
+            docs = dest_bins_binned_coll.find_many({'BinID': binID}, sort=[('n', 1)])
+        msg = 'There are {} rows for Bin {} in {:.2f} secs'.format(len(docs), binID, timer5a.duration)
+        print(msg)
+        logger.info(msg)
+        
+        bin_count += 1
+        total_secs += timer5a.duration
+        
+        avg_secs = total_secs / bin_count
+        num_bins_remaining = num_bins - bin_count
+        expected_secs = avg_secs * num_bins_remaining
+        
+        msg = 'Average runtime per Bin {:.2f} secs. Expected runtime for {} Bins is {:.2f} secs'.format(avg_secs, num_bins_remaining, expected_secs)
+        print(msg)
+        logger.info(msg)
+        
+        
+
 
 if (0):
     total_docs_count = aggregate_docs_count()
