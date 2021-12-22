@@ -939,10 +939,10 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                             binid_doc['freq_analysis_metadata_any_gt_1'] = results.get('freq_analysis_metadata_any_gt_1', False)
                             
                             m = {k:v for k,v in __metadata__.items()}
-                            m['bin-start-start'] = _bin[0].get('start')
-                            m['bin-start-end'] = _bin[-1].get('start')
-                            m['bin-end-start'] = _bin[0].get('end')
-                            m['bin-end-end'] = _bin[-1].get('end')
+                            m['bin-start-start'] = _bin[0].get('data', {}).get('start')
+                            m['bin-start-end'] = _bin[-1].get('data', {}).get('start')
+                            m['bin-end-start'] = _bin[0].get('data', {}).get('end')
+                            m['bin-end-end'] = _bin[-1].get('data', {}).get('end')
                             binid_doc['__metadata__'] = m
 
                             db.find_one_and_update(binid_doc, {'$set': binid_doc}, upsert=True)
