@@ -1299,6 +1299,8 @@ if (is_validating) and (not is_analysis) and (not is_networks_commit) and (not i
         pass
         
 if (is_analysis):
+    from bson.son import SON
+    
     print('Starting analysis...')
     with timer.Timer() as timer5:
         num_bins = dest_work_queue_coll.count_documents({})
@@ -1306,20 +1308,43 @@ if (is_analysis):
     print(msg)
     logger.info(msg)
 
-    query = {}
-    __sort = [ (u"BinID", 1) ]
-
     bin_count = 0
     total_secs = 0
     
-    cursor = dest_work_queue_coll.find(query, sort=__sort)
+    pipeline = [
+        {
+            u"$sort": SON([ (u"BinID", 1) ])
+        }
+    ]
+
+    cursor = dest_work_queue_coll.aggregate(
+        pipeline, 
+        allowDiskUse = True
+    )
+
     for doc in cursor:
         binID = doc.get('BinID')
         print(binID)
         
         with timer.Timer() as timer5a:
-            docs = dest_bins_binned_coll.find_many({'BinID': binID}, sort=[('n', 1)])
-        msg = 'There are {} rows for Bin {} in {:.2f} secs'.format(len(docs), binID, timer5a.duration)
+            pipeline_n = [
+                {
+                    u"$match": {
+                        u"BinID": binID
+                    }
+                }, 
+                {
+                    u"$sort": SON([ (u"n", 1) ])
+                }
+            ]
+            cursor_n = dest_bins_binned_coll.aggregate(
+                pipeline_n, 
+                allowDiskUse = True
+            )
+            num_docs_in_bin = 0
+            for _doc in cursor_n:
+                num_docs_in_bin += 1
+        msg = 'There are {} rows for Bin {} in {:.2f} secs'.format(num_docs_in_bin, binID, timer5a.duration)
         print(msg)
         logger.info(msg)
         
