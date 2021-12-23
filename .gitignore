@@ -132,3 +132,4 @@ dmypy.json
 .pyre/
 charts/
 charts2/
+workspace.code-workspace
