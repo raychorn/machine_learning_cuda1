@@ -4,8 +4,10 @@
 			"path": "."
 		},
 		{
+			"path": "../../securex/attack-inferencer"
+		},
+		{
 			"path": "../private_vyperlogix_lib3"
 		}
-	],
-	"settings": {}
+	]
 }

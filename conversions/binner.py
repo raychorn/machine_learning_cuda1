@@ -6,24 +6,16 @@ from datetime import datetime
 import datetime
 from datetime import timezone
 
-if (0):
+###########################################
+def BinID(t):
     __ts = lambda t:datetime.datetime.fromtimestamp(datetime.datetime.fromtimestamp(t).timestamp(), tz=timezone.utc)
-    day_id = lambda t:int(int(((__ts(t).month-1) * (365.25/12)) + __ts(t).day) + (__ts(t).year * 365.25)) + (__ts(t).hour / 100)
     __bin_id = lambda t:(int(t / 600))
     _bin_id = lambda t:t - (int(t / 3600) * 3600)
     bin_id = lambda t:(t - (int(t / 86400) * 86400))
-
-    BinID = lambda t:'{}.{}'.format(day_id(t), __bin_id(_bin_id(bin_id(t))))
-
-###########################################
-__ts = lambda t:datetime.datetime.fromtimestamp(datetime.datetime.fromtimestamp(t).timestamp(), tz=timezone.utc)
-day_id1 = lambda t:int(int(((__ts(t).month-1) * (365.25/12)) + __ts(t).day) + (__ts(t).year * 365.25)) + (__ts(t).hour / 100)
-day_id2 = lambda t:int(int(((__ts(t).month-1) * (365.25/12)) + __ts(t).day) + (__ts(t).year * 365.25))
-__bin_id = lambda t:(int(t / 600))
-_bin_id = lambda t:t - (int(t / 3600) * 3600)
-bin_id = lambda t:(t - (int(t / 86400) * 86400))
-BinID1 = lambda t:'{}.{}'.format(day_id1(t), __bin_id(_bin_id(bin_id(t)))) # this is the DDDDDDD.HH.N   
-BinID = BinID2 = lambda t:'{}.{}.{}'.format(day_id2(t), __ts(t).hour, __bin_id(_bin_id(bin_id(t)))) # this is the DDDDDDD.HH.N                          
+    ts = __ts(t)
+    day_id2 = lambda t:int(int(((ts.month-1) * (365.25/12)) + ts.day) + (ts.year * 365.25))
+    BinID2 = lambda t:'{}.{}.{}'.format(day_id2(t), ts.hour, __bin_id(_bin_id(bin_id(t))))
+    return BinID2(t)
 ###########################################
 
 class processor(object):

@@ -65,7 +65,7 @@ __seeding_command_line_option__ = '--seeding'
 __analysis_command_line_option__ = '--analysis'
 
 if (not is_running_production()):
-    sys.argv.append(__analysis_command_line_option__)
+    #sys.argv.append(__analysis_command_line_option__)
     #sys.argv.append(__seeding_command_line_option__)
     #sys.argv.append(__verbose_command_line_option__)
     #sys.argv.append(__validation_command_line_option__)
@@ -272,6 +272,7 @@ dest_bins_rejected_coll_name = os.environ.get('MONGO_WORK_QUEUE_REJECTED_BINS_CO
 
 dest_bins_binned_coll_name = os.environ.get('MONGO_DEST_DATA_BINNED_COL')
 dest_bins_metadata_coll_name = os.environ.get('MONGO_DEST_DATA_METADATA_COL')
+dest_bins_legacy_metadata_name = os.environ.get('MONGO_LEGACY_METADATA_COL')
 
 dest_networks_coll_name = os.environ.get('MONGO_WORK_QUEUE_NETWORKS_COL')
 dest_networks_unique_coll_name = os.environ.get('MONGO_WORK_QUEUE_UNIQUE_NETWORKS_COL')
@@ -369,6 +370,12 @@ try:
 except Exception:
     logger.error("Fatal error with .env, check MONGO_DEST_DATA_METADATA_COL.", exc_info=True)
     sys.exit()
+    
+try:
+    assert is_really_something_with_stuff(dest_bins_legacy_metadata_name, str), 'Cannot continue without the dest_bins_legacy_metadata_name.'
+except Exception:
+    logger.error("Fatal error with .env, check MONGO_LEGACY_METADATA_COL.", exc_info=True)
+    sys.exit()
 
 logger.info(str(client))
 
@@ -387,20 +394,23 @@ def __criteria__(doc):
     '''
     return (doc.get('action') != 'REJECT') and (doc.get('srcaddr') != '-') and (doc.get('dstaddr') != '-') and (doc.get('srcport') != '0') and (doc.get('dstport') != '0')
 
+tag_database_as_metadata = lambda n:'{}{}'.format(n, '-metadata')
+
 source_coll = db_collection(client, source_db_name, source_coll_name)
 
 dest_work_queue_coll = db_collection(client, dest_db_name, dest_coll_work_queue_name)
 
-dest_stats_coll = db_collection(client, dest_db_name + '-metadata', dest_stats_coll_name)
+dest_stats_coll = db_collection(client, tag_database_as_metadata(dest_db_name), dest_stats_coll_name)
 
-dest_bins_coll = db_collection(client, dest_db_name + '-metadata', dest_bins_coll_name)
+dest_bins_coll = db_collection(client, tag_database_as_metadata(dest_db_name), dest_bins_coll_name)
 
-dest_bins_processed_coll = db_collection(client, dest_db_name + '-metadata', dest_bins_processed_coll_name)
+dest_bins_processed_coll = db_collection(client, tag_database_as_metadata(dest_db_name), dest_bins_processed_coll_name)
 
-dest_bins_rejected_coll = db_collection(client, dest_db_name + '-metadata', dest_bins_rejected_coll_name)
+dest_bins_rejected_coll = db_collection(client, tag_database_as_metadata(dest_db_name), dest_bins_rejected_coll_name)
 
 dest_bins_binned_coll = db_collection(client, dest_db_name, dest_bins_binned_coll_name)
 dest_bins_metadata_coll = db_collection(client, dest_db_name, dest_bins_metadata_coll_name)
+dest_bins_legacy_metadata = db_collection(client, dest_db_name, dest_bins_legacy_metadata_name)
 
 dest_networks_coll = db_collection(client, dest_db_name, dest_networks_coll_name)
 
@@ -418,6 +428,7 @@ deletable_cols = [
                     dest_bins_rejected_coll.full_name,
                     dest_bins_binned_coll.full_name,
                     dest_bins_metadata_coll.full_name,
+                    dest_bins_legacy_metadata.full_name,
                 ]
 
 deletable_network_cols = [
@@ -777,17 +788,21 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
 
     dest_work_queue = db_coll(client, dest_db_name, dest_coll_work_queue_name)
     
-    dest_bins_coll = db_collection(client, dest_db_name + '-metadata', dest_bins_coll_name)
-    dest_bins_rejected_coll = db_collection(client, dest_db_name + '-metadata', dest_bins_rejected_coll_name)
+    dest_bins_coll = db_collection(client, tag_database_as_metadata(dest_db_name), dest_bins_coll_name)
+    dest_bins_rejected_coll = db_collection(client, tag_database_as_metadata(dest_db_name), dest_bins_rejected_coll_name)
     #dest_bins_processed_coll = db_collection(client, dest_db_name, dest_bins_processed_coll_name) # ???
     dest_bins_binned_coll = db_collection(client, dest_db_name, dest_bins_binned_coll_name)
     dest_bins_metadata_coll = db_collection(client, dest_db_name, dest_bins_metadata_coll_name)
+    dest_bins_legacy_metadata = db_collection(client, dest_db_name, dest_bins_legacy_metadata_name)
 
     dest_networks_coll = db_collection(client, dest_db_name, dest_networks_coll_name)
     dest_networks_unique_coll = db_collection(client, dest_db_name, dest_networks_unique_coll_name)
     
     cache_dest_bins_binned_coll = []
     cache_dest_bins_metadata_coll = []
+    
+    cache_dest_bins_coll = []
+    cache_dest_bins_rejected_coll = []
     
     def file_bin_processor(doc, stats=None, db=dest_work_queue, logger=logger):
         try:
@@ -854,7 +869,7 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                         __metadata__['dstaddr'][c] = _dstaddr
                         __networks__[c] = _dstaddr
                     __networks__[_dstaddr] = ','.join(_cidrs)
-                #__bin['__metadata__'] = __metadata__
+                __bin['__metadata__'] = __metadata__
                 
                 if (is_networks):
                     if (len(__networks__) > 0):
@@ -879,13 +894,29 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                         BinH = _bin[0].get('BinH')
                         BinN = _bin[0].get('BinN')
                         binid_doc = {'BinID':binid}
-                        filtered_bin = [b for b in _bin if (__criteria__(b.get('data', {})))]
-                        rejected_bin = [b for b in _bin  if (not __criteria__(b.get('data', {})))]
+                        
+                        def strip_metadata_from(items):
+                            _items = []
+                            for item in items:
+                                if (item.get('__metadata__')):
+                                    del item['__metadata__']
+                                _items.append(item)
+                            return _items
+                        
+                        filtered_bin = strip_metadata_from([b for b in _bin if (__criteria__(b.get('data', {})))])
+                        rejected_bin = strip_metadata_from([b for b in _bin  if (not __criteria__(b.get('data', {})))])
                         if (len(filtered_bin) > 0):
-                            dest_bins_coll.insert_many(filtered_bin, ordered=False)
+                            for b in filtered_bin:
+                                cache_dest_bins_coll.append(b)
+                            if (len(cache_dest_bins_coll) > 2000):
+                                dest_bins_coll.insert_many(cache_dest_bins_coll, ordered=False)
+                                del cache_dest_bins_coll[:]
                         if (len(rejected_bin) > 0):
-                            dest_bins_rejected_coll.insert_many(rejected_bin, ordered=False)
-                        ignorables = ['start', 'end', 'action', 'log-status']
+                            for b in rejected_bin:
+                                cache_dest_bins_rejected_coll.append(b)
+                            if (len(cache_dest_bins_rejected_coll) > 2000):
+                                dest_bins_rejected_coll.insert_many(cache_dest_bins_rejected_coll, ordered=False)
+                                del cache_dest_bins_rejected_coll[:]
                         includables = ['dstport', 'bytes', 'packets']
                         binnable_data = []
                         for b in filtered_bin:
@@ -938,20 +969,28 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                             binid_doc['freq_analysis_data_any_gt_1'] = results.get('freq_analysis_data_any_gt_1', False)
                             binid_doc['freq_analysis_metadata_any_gt_1'] = results.get('freq_analysis_metadata_any_gt_1', False)
                             
+                            __metadata__ = _bin[0].get('__metadata__')
                             m = {k:v for k,v in __metadata__.items()}
                             m['bin-start-start'] = _bin[0].get('data', {}).get('start')
                             m['bin-start-end'] = _bin[-1].get('data', {}).get('start')
                             m['bin-end-start'] = _bin[0].get('data', {}).get('end')
                             m['bin-end-end'] = _bin[-1].get('data', {}).get('end')
-                            binid_doc['__metadata__'] = m
 
                             db.find_one_and_update(binid_doc, {'$set': binid_doc}, upsert=True)
+                            
+                            dest_bins_legacy_coll.find_one_and_update({'BinID':binid}, {'$set': {'__metadata__':m}}, upsert=True)
 
                         msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
                         if (logger):
                             logger.info(msg)
                         print(msg)
                     db_insert(__bin)
+            if (len(cache_dest_bins_coll) > 0):
+                dest_bins_coll.insert_many(cache_dest_bins_coll, ordered=False)
+                del cache_dest_bins_coll[:]
+            if (len(cache_dest_bins_rejected_coll) > 0):
+                dest_bins_rejected_coll.insert_many(cache_dest_bins_rejected_coll, ordered=False)
+                del cache_dest_bins_rejected_coll[:]
         except Exception as e:
             extype, ex, tb = sys.exc_info()
             formatted = traceback.format_exception_only(extype, ex)[-1]
@@ -1094,7 +1133,7 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                 dest_bins_metadata_coll.insert_many(cache_dest_bins_metadata_coll, ordered=False)
                 del cache_dest_bins_metadata_coll[:]
 
-            dest_stats_coll = db_coll(client, dest_db_name, dest_stats_coll_name)
+            dest_stats_coll = db_coll(client, tag_database_as_metadata(dest_db_name), dest_stats_coll_name)
             s = {
                 'proc_id':proc_id,
                 'file_cnt':file_cnt,
@@ -1164,12 +1203,16 @@ with timer.Timer() as timer2:
             msg = 'bin_collector :: creating processes.'
             logger.info(msg)
             print(msg)
+            is_analysis = False
             if (is_data_source_mongodb):
                 processes = [ multiprocessing.Process(target=process_cursor, args=(_i, source_db_name, source_coll_name, __sort, criteria, projection, skip_n, batch_size, skip_n+batch_size, {}, logger, exception_logger)) for _i,skip_n in enumerate(skips)]
+                is_analysis = True
             elif (is_data_source_filesystem):
                 processes = [ multiprocessing.Process(target=process_files, args=(_i, vpcflowlogs_col_names, skip_n, logger, exception_logger)) for _i,skip_n in enumerate(skips)]
+                is_analysis = True
             elif (is_data_source_s3):
                 processes = [ multiprocessing.Process(target=process_buckets, args=(_i, skip_n, logger, exception_logger)) for _i,skip_n in enumerate(skips)]
+                is_analysis = True
             else:
                 raise ValueError('Invalid data source')
 
@@ -1305,6 +1348,7 @@ if (is_validating) and (not is_analysis) and (not is_networks_commit) and (not i
     finally:
         pass
         
+analysis_results = []
 if (is_analysis):
     from bson.son import SON
     
@@ -1355,6 +1399,9 @@ if (is_analysis):
         print(msg)
         logger.info(msg)
         
+        if (num_docs_in_bin == 0):
+            analysis_results.append('Bin {} has no data'.format(binID))
+        
         bin_count += 1
         total_secs += timer5a.duration
         
@@ -1366,7 +1413,14 @@ if (is_analysis):
         print(msg)
         logger.info(msg)
         
-        
+    if (len(analysis_results) > 0):
+        msg = 'Analysis results:'
+        print(msg)
+        logger.info(msg)
+        for result in analysis_results:
+            msg = result
+            print(msg)
+            logger.info(msg)
 
 
 if (0):
