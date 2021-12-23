@@ -65,7 +65,7 @@ __seeding_command_line_option__ = '--seeding'
 __analysis_command_line_option__ = '--analysis'
 
 if (not is_running_production()):
-    #sys.argv.append(__analysis_command_line_option__)
+    sys.argv.append(__analysis_command_line_option__)
     #sys.argv.append(__seeding_command_line_option__)
     #sys.argv.append(__verbose_command_line_option__)
     #sys.argv.append(__validation_command_line_option__)
