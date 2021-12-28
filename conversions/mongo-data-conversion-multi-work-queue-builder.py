@@ -418,7 +418,7 @@ dest_networks_unique_coll = db_collection(client, dest_db_name, dest_networks_un
 
 vpcflowlogs_db_coll = db_collection(client, vpcflowlogs_db_name, vpcflowlogs_db_coll_name)
 
-n_cores = multiprocessing.cpu_count()
+n_cores = 1 #multiprocessing.cpu_count()
 
 deletable_cols = [
                     dest_stats_coll.full_name, 
@@ -804,6 +804,8 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
     cache_dest_bins_coll = []
     cache_dest_bins_rejected_coll = []
     
+    #cache_dest_bins_legacy_coll = []
+    
     def file_bin_processor(doc, stats=None, db=dest_work_queue, logger=logger):
         try:
             for _doc in doc.get('rows', []):
@@ -903,7 +905,7 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                                 _items.append(item)
                             return _items
                         
-                        filtered_bin = strip_metadata_from([b for b in _bin if (__criteria__(b.get('data', {})))])
+                        filtered_bin = [b for b in _bin if (__criteria__(b.get('data', {})))]
                         rejected_bin = strip_metadata_from([b for b in _bin  if (not __criteria__(b.get('data', {})))])
                         if (len(filtered_bin) > 0):
                             for b in filtered_bin:
@@ -919,6 +921,7 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                                 del cache_dest_bins_rejected_coll[:]
                         includables = ['dstport', 'bytes', 'packets']
                         binnable_data = []
+                        n = 0
                         for b in filtered_bin:
                             d = {}
                             for k,v in b.get('data', {}).items():
@@ -926,6 +929,20 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                                     d[k] = v
                             if (all([isinstance(v, int) or isinstance(v, float) for v in d.values()])):
                                 binnable_data.append(d)
+
+                            __metadata__ = b.get('__metadata__', {})
+                            assert isinstance(__metadata__, dict) and (len(__metadata__) > 0), '__metadata__ must be a non-empty dict.'
+                            m = {k:v for k,v in __metadata__.items()}
+                            m['bin-start-start'] = _bin[0].get('data', {}).get('start')
+                            m['bin-start-end'] = _bin[-1].get('data', {}).get('start')
+                            m['bin-end-start'] = _bin[0].get('data', {}).get('end')
+                            m['bin-end-end'] = _bin[-1].get('data', {}).get('end')
+
+                            m_doc = {'BinID':binid, 'n':n}
+                            dest_bins_legacy_coll.find_one_and_update(m_doc, {'$set': {'__metadata__':m}}, upsert=True)
+                            
+                            n += 1
+
                         if (len(binnable_data) > 0):
                             try:
                                 results = process_bins(binnable_data)
@@ -969,17 +986,8 @@ def process_files(proc_id, fname_cols, skip_n, logger, exception_logger):
                             binid_doc['freq_analysis_data_any_gt_1'] = results.get('freq_analysis_data_any_gt_1', False)
                             binid_doc['freq_analysis_metadata_any_gt_1'] = results.get('freq_analysis_metadata_any_gt_1', False)
                             
-                            __metadata__ = _bin[0].get('__metadata__')
-                            m = {k:v for k,v in __metadata__.items()}
-                            m['bin-start-start'] = _bin[0].get('data', {}).get('start')
-                            m['bin-start-end'] = _bin[-1].get('data', {}).get('start')
-                            m['bin-end-start'] = _bin[0].get('data', {}).get('end')
-                            m['bin-end-end'] = _bin[-1].get('data', {}).get('end')
-
                             db.find_one_and_update(binid_doc, {'$set': binid_doc}, upsert=True)
                             
-                            dest_bins_legacy_coll.find_one_and_update({'BinID':binid}, {'$set': {'__metadata__':m}}, upsert=True)
-
                         msg = 'bin_collector :: scheduled for binning: {} --> {} events'.format(binid, len(_bin))
                         if (logger):
                             logger.info(msg)
@@ -1203,16 +1211,12 @@ with timer.Timer() as timer2:
             msg = 'bin_collector :: creating processes.'
             logger.info(msg)
             print(msg)
-            is_analysis = False
             if (is_data_source_mongodb):
                 processes = [ multiprocessing.Process(target=process_cursor, args=(_i, source_db_name, source_coll_name, __sort, criteria, projection, skip_n, batch_size, skip_n+batch_size, {}, logger, exception_logger)) for _i,skip_n in enumerate(skips)]
-                is_analysis = True
             elif (is_data_source_filesystem):
                 processes = [ multiprocessing.Process(target=process_files, args=(_i, vpcflowlogs_col_names, skip_n, logger, exception_logger)) for _i,skip_n in enumerate(skips)]
-                is_analysis = True
             elif (is_data_source_s3):
                 processes = [ multiprocessing.Process(target=process_buckets, args=(_i, skip_n, logger, exception_logger)) for _i,skip_n in enumerate(skips)]
-                is_analysis = True
             else:
                 raise ValueError('Invalid data source')
 
@@ -1225,6 +1229,8 @@ with timer.Timer() as timer2:
             msg = 'bin_collector :: master records {}: {}'.format('created' if (len(events) > 0) else 'has', _num_events)
             logger.info(msg)
             print(msg)
+
+            is_analysis = True
 
         is_verbose = False
         
