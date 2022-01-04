@@ -133,22 +133,18 @@ if (is_really_something_with_stuff(docker_libs, str)):
 else:
     f_libs = os.environ.get('libs')
 
-f_libs = f_libs.split(';')
+f_libs = f_libs.split(':')
 for f in f_libs:
     if (os.path.exists(f) and os.path.isdir(f)):
         if (f not in sys.path):
             sys.path.insert(0, f)
-
-from utils2 import typeName
-from whois import ip_address_owner
-
-from database import docs_generator
 
 from vyperlogix import misc
 
 from vyperlogix.contexts import timer
 
 from vyperlogix.decorators import threading
+from vyperlogix.mongo.database import get_pipeline_for
 
 __env__ = {}
 __literals__ = os.environ.get('LITERALS', [])
@@ -163,10 +159,10 @@ __env__['MONGO_INITDB_USERNAME'] = os.environ.get("MONGO_INITDB_ROOT_USERNAME")
 __env__['MONGO_INITDB_PASSWORD'] = os.environ.get("MONGO_INITDB_ROOT_PASSWORD")
 __env__['MONGO_AUTH_MECHANISM'] ='SCRAM-SHA-1'
 
-raw_data_source = os.environ.get('VPCFLOWLOGS_DATA_DIR')
-
-dest_db_name = os.environ.get('MONGO_VPCFLOWLOGS_DATA_DB')
-dest_coll_name = os.environ.get('MONGO_VPCFLOWLOGS_COL')
+db_name = 'DataScience7'
+master_col_name = 'sx-vpclogss3-filtered-master'
+binned_coll_name = 'sx-vpclogss3-filtered-binned'
+binned_metadata_coll_name = 'sx-vpclogss3-filtered-binned-metadata'
 
 try:
     client = get_mongo_client(mongouri=__env__.get('MONGO_URI'), db_name=__env__.get('MONGO_INITDB_DATABASE'), username=__env__.get('MONGO_INITDB_USERNAME'), password=__env__.get('MONGO_INITDB_PASSWORD'), authMechanism=__env__.get('MONGO_AUTH_MECHANISM'))
@@ -174,155 +170,114 @@ except:
     sys.exit()
 
 try:
-    assert is_really_something_with_stuff(dest_db_name, str), 'Cannot continue without the db_name.'
+    assert is_really_something_with_stuff(master_col_name, str), 'Cannot continue without the db_name.'
 except Exception:
-    logger.error("Fatal error with .env, check MONGO_DEST_DATA_DB.", exc_info=True)
+    logger.error("Fatal error with .env, check master_col_name.", exc_info=True)
     sys.exit()
 
 try:
-    assert is_really_something_with_stuff(dest_coll_name, str), 'Cannot continue without the coll_name.'
+    assert is_really_something_with_stuff(binned_coll_name, str), 'Cannot continue without the coll_name.'
 except Exception:
-    logger.error("Fatal error with .env, check MONGO_DEST_DATA_COL.", exc_info=True)
+    logger.error("Fatal error with .env, check binned_coll_name.", exc_info=True)
     sys.exit()
     
 try:
-    assert is_really_something_with_stuff(raw_data_source, str), 'Cannot continue without the raw_data_source.'
-    assert os.path.exists(raw_data_source) and os.path.isdir(raw_data_source), 'Cannot continue without the raw_data_source and is must be a directory.'
+    assert is_really_something_with_stuff(binned_metadata_coll_name, str), 'Cannot continue without the coll_name.'
 except Exception:
-    logger.error("Fatal error with .env, check VPCFLOWLOGS_DATA_DIR.", exc_info=True)
+    logger.error("Fatal error with .env, check binned_metadata_coll_name.", exc_info=True)
     sys.exit()
-
+    
 logger.info(str(client))
 
 db = lambda cl,n:cl.get_database(n)
 db_collection = lambda cl,n,c:db(cl,n).get_collection(c)
 
-dest_coll = db_collection(client, dest_db_name, dest_coll_name)
-dest_coll.delete_many({})
+data_cache = {}
 
-__bulk_size__ = int(os.environ.get('MONGO_BULK_SIZE', 100))
+master_coll = db_collection(client, db_name, master_col_name)
+with timer.Timer() as timer1:
+    num_bins = master_coll.count_documents({})
+msg = 'Database {} scanned :: number of bins counted: {} in {:.2f} secs'.format(master_coll.full_name, num_bins, timer1.duration)
+print(msg)
+logger.info(msg)
 
-fname_cols = ['account', 'bucket', 'region', 'name', 'timestamp', 'fname']
+def bin_num_from_bin_id(bin_id):
+    DD,HH,NN = bin_id.split('.')
+    DD = int(DD)
+    HH = int(HH)
+    NN = int(NN)
+    return (DD*24*6) + (HH*6) + NN
 
-acceptable_numeric_special_chars = ['+','-','.',',']
-acceptable_numeric_digits = ['0','1','2','3','4','5','6','7','8','9']
-acceptable_numeric_chars = acceptable_numeric_digits + acceptable_numeric_special_chars
-is_numeric_char = lambda ch:(ch in acceptable_numeric_chars) if (len(ch) > 0) else False
-is_really_numeric = lambda s:(len(s) > 0) and (len(str(s).split('.')) < 2) and all([is_numeric_char(ch) for ch in s])
-only_numeric_chars = lambda s:''.join([ch for ch in s if (is_numeric_char(ch))])
-only_numeric_special_chars = lambda s:''.join([ch for ch in s if (ch in acceptable_numeric_special_chars)])
-def normalize_numeric(value):
-    value = str(value)
-    if (len(value) == len(only_numeric_chars(value)+only_numeric_special_chars(value))):
-        value = value.replace(',', '')
-        is_positive = value.find('+') > -1
-        if (is_positive):
-            value = value.replace('+', '')
-        is_negative = value.find('-') > -1
-        if (is_negative):
-            value = value.replace('-', '')
-        is_floating = len(value.split('.')) == 2
-        try:
-            value = int(value) if (not is_floating) else float(value)
-        except Exception as ex:
-            logger.exception(str(ex), exc_info=sys.exc_info())
-        if (is_negative):
-            value = -value
-    return value
-
-def iterate_directory(root):
-    for subdir, dirs, files in os.walk(root):
-        for file in files:
-            fp = os.path.join(subdir, file)
-            logger.info('{} :: {}'.format(misc.funcName(), fp))
-            yield fp
-
-def decompress_gzip(fp=None, _id=None, environ=None, logger=None):
-    import gzip
-
-    with timer.Timer() as timer3:
-        diff = -1
-        num_rows = -1
-        __status__ = []
-        if (logger):
-            logger.info('BEGIN: decompress_gzip :: fp is "{}".'.format(fp))
-        assert os.path.exists(fp) and os.path.isfile(fp), 'Cannot do much with the provided filename ("{}"). Please fix.'.format(fp)
-        try:
-            with gzip.open(fp, 'r') as infile:
-                outfile_content = infile.read().decode('UTF-8')
-            __status__.append({'gzip': True})
-            if (logger):
-                logger.info('INFO: decompress_gzip :: __status__ is {}.'.format(__status__))
-        except Exception as ex:
-            logger.exception(str(ex), exc_info=sys.exc_info())
-            __status__.append({'gzip': False})
-            if (logger):
-                logger.info('INFO: decompress_gzip :: __status__ is {}.'.format(__status__))
-        try:
-            lines = [l.split() for l in outfile_content.split('\n')]
-            rows = [{k:normalize_numeric(v) for k,v in dict(zip(lines[0], l)).items()} for l in lines[1:]]
-            rows = [row for row in rows if (len(row) > 0)]
-            diff = rows[-1].get('start', 0) - rows[0].get('start', 0)
-            num_rows = len(rows)
-        except Exception as ex:
-            if (logger):
-                logger.exception(str(ex), exc_info=sys.exc_info())
-        if (logger):
-            logger.info('END!!! decompress_gzip :: fp is "{}".'.format(fp))
-            logger.info('INFO: decompress_gzip :: __status__ is {}.'.format(__status__))
-    msg = 'decompress_gzip :: {:.2f} secs'.format(timer3.duration)
-    print(msg)
-    logger.info(msg)
-    return {'status': __status__[0], 'diff': diff, 'num_rows':num_rows}
-
-
-def ingest_source_file(doc, collection=None, logger=None):
-    with timer.Timer() as timer2:
-        try:
-            fpath = doc.get('fpath')
-            assert os.path.exists(fpath) and os.path.isfile(fpath), 'Cannot continue without a valid file path ({}).'.format(fpath)
-            vector = decompress_gzip(fp=fpath, logger=logger)
-            if (isinstance(collection, list)):
-                vector['tag'] = doc.get('tag')
-                collection.append(vector)
-                if (len(collection) >= __bulk_size__):
-                    dest_coll.insert_many(collection)
-                    collection.clear()
-        except Exception as ex:
-            logger.exception(str(ex), exc_info=sys.exc_info())
-    msg = 'ingest_source_file :: {:.2f} secs'.format(timer2.duration)
-    print(msg)
-    logger.info(msg)
+def compare_bin_ids(bin_id1, bin_id2):
+    b1_num = bin_num_from_bin_id(bin_id1)
+    b2_num = bin_num_from_bin_id(bin_id2)
     
+    is_eq = (b1_num == b2_num)
+    is_lt = (b1_num < b2_num)
+    is_gt = (b1_num > b2_num)
+    delta = max(b1_num, b2_num) - min(b1_num, b2_num)
+    return is_eq, is_lt, is_gt, delta
 
-def process_source_file(fpath, fcols=fname_cols, collection=None, logger=None):
-    doc = dict(zip(*[fcols, os.path.basename(fpath).split('_')]))
-    if (str(doc.get('account')).isdigit()):
-        doc['account'] = int(doc.get('account'))
-    if (isinstance(doc.get('timestamp'), str)):
-        doc['timestamp'] = dt.datetime.strptime(doc.get('timestamp'), "%Y%m%dT%H%MZ")
-    doc['fpath'] = fpath
-    __source__ = doc.get('__source__', fpath)
-    if (__source__.find('/mnt/') > -1):
-        toks = __source__.split(os.sep)
-        doc['tag'] = os.sep.join(toks[index_of_item('vpcflowlogs',toks)-1:])
-    return ingest_source_file(doc, collection=collection, logger=logger)
+def next_expected_bin_id(bin_id):
+    DD,HH,NN = bin_id.split('.')
+    DD = int(DD)
+    HH = int(HH)
+    NN = int(NN) + 1
+    if (NN > 5):
+        NN = 0
+        HH = int(HH) + 1
+        if (HH > 23):
+            HH = 0
+            DD = int(DD) + 1
+    return '{}.{}.{}'.format(DD, HH, NN)
 
-data_cache = []
+_sort = {'BinID':1}
+_criteria = {}
+_projection = {'BinID':1}
+
+missing_bins = []
+
+fname = '{}{}missing_bins_report.txt'.format(os.path.dirname(__file__), os.sep)
+fOut = open(fname, 'w')
 
 files_count = 0
 with timer.Timer() as timer1:
-    for fp in iterate_directory(raw_data_source):
-        process_source_file(fp, collection=data_cache, logger=logger)
-        files_count += 1
-        if (files_count % 100 == 0):
-            print(files_count)
-    if (len(data_cache) > 0):
-        dest_coll.insert_many(data_cache)
-        data_cache.clear()
-msg = 'Data read :: number of files: {} in {:.2f} secs'.format(files_count, timer1.duration)
-print(msg)
+    _pipeline = get_pipeline_for(_criteria, _projection, 0, num_bins, _sort)
+    _cursor = master_coll.aggregate(_pipeline, allowDiskUse=True, maxTimeMS=12*3600*1000)
+
+    expected_bin_id = None
+    current_bin_id = None
+    first_bin_id = None
+    bin_count = 0
+    for doc in _cursor:
+        bin_id = doc.get('BinID')
+        data_cache[bin_id] = data_cache.get(bin_id, 0) + 1
+        if (first_bin_id is None):
+            first_bin_id = bin_id
+        bin_count += 1
+    last_bin_id = bin_id
+    is_eq, is_lt, is_gt, delta = compare_bin_ids(first_bin_id, last_bin_id)
+    
+    first_bin_num = bin_num_from_bin_id(first_bin_id)
+    last_bin_num = bin_num_from_bin_id(last_bin_id)
+    expected_bin_id = first_bin_id
+    while (first_bin_num <= last_bin_num):
+        expected_bin_id = next_expected_bin_id(expected_bin_id)
+        if (data_cache.get(expected_bin_id, -1) == -1):
+            missing_bins.append(expected_bin_id)
+        elif (bin_num_from_bin_id(expected_bin_id) <= last_bin_num):
+            print('F {} :: E {} :: L {} :: Hit {}'.format(first_bin_id, expected_bin_id, last_bin_id, data_cache.get(expected_bin_id, -1)), file=fOut)
+        first_bin_num = bin_num_from_bin_id(expected_bin_id)
+msg = 'Database {} scanned :: number of bins scanned: {} in {:.2f} secs'.format(master_coll.full_name, bin_count, timer1.duration)
+print(msg, file=fOut)
 logger.info(msg)
+
+msg = 'Missing bins num: {}'.format(len(missing_bins))
+print(msg, file=fOut)
+logger.info(msg)
+
+fOut.flush()
+fOut.close()
 
 logger.info('Done.')
 
