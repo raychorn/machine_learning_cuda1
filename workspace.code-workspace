@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "../private_vyperlogix_lib3"
+		},
+		{
+			"path": "../../securex/datascience_server/securex_datascience_data_processor"
 		}
 	]
 }
