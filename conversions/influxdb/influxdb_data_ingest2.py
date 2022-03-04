@@ -2,6 +2,8 @@ import imp
 import os
 import sys
 
+import traceback
+
 import enum
 
 from io import StringIO
@@ -17,8 +19,8 @@ class options(enum.Enum):
     files = 1
     db = 2
     
-__options__ = options.files
-#__options__ = options.db
+#__options__ = options.files
+__options__ = options.db
 
 if (not any([str(f).find('vyperlogix_lib') > 0 for f in sys.path])):
     sys.path.insert(0, '/mnt/FourTB/__projects/vyperlogix/private_vyperlogix_lib3')
@@ -137,23 +139,39 @@ def dicts_to_csv(dicts=None, fp=None):
     return {'status': _status, 'num_rows':len(dicts), 'rows':dicts, 'is_StringIO': isinstance(fp, StringIO), 'csv':fp if (not isinstance(fp, StringIO)) else fp.getvalue()}
 
 
-def write_ro_db(data='mem,host=host1 used_percent=23.43234543'):
+def write_to_db(data='mem,host=host1 used_percent=23.43234543'):
     token = 'vEwNWbBIQd4KsBnO4ge_4QMN_FlR_X5juqoctBbjH3Z5w6abJqZ1AfRMTn-McvdF9vgIp_DVw4xHo64aXGb20w=='
     org = "raychorn@gmail.com"
     bucket = "vpcflowlogs"
 
-    with InfluxDBClient(url="https://us-east-1-1.aws.cloud2.influxdata.com", token=token, org=org) as client:
-        write_api = client.write_api(write_options=SYNCHRONOUS)
+    try:
+        with InfluxDBClient(url="https://us-east-1-1.aws.cloud2.influxdata.com", token=token, org=org) as client:
+            write_api = client.write_api(write_options=SYNCHRONOUS)
+            write_api.write(bucket, org, data)
+            client.close()
+    except Exception as ex:
+        traceback.print_exc()
+        
 
-        write_api.write(bucket, org, data)
+def write_point_to_db(point):
+    token = 'QrtgdNNGs7yJYTpFRW0B4MPq5cen9kZGNiaBrsq0K8gJvWDj_58L7chuKn9C21BO3bcqJRx-0UbThmL0A5GDMw=='
+    org = "raychorn@gmail.com"
+    bucket = "vpcflowlogs"
 
-        client.close()
+    try:
+        with InfluxDBClient(url="https://us-east-1-1.aws.cloud2.influxdata.com", token=token, org=org) as client:
+            write_api = client.write_api(write_options=SYNCHRONOUS)
+            write_api.write(bucket, org, point)
+            client.close()
+    except Exception as ex:
+        traceback.print_exc()
+        
 
 
 all_files = get_all_files_from(__data_root__)
 recent_files = list(all_files.keys())
 recent_files.sort()
-most_recent_files = recent_files[-10:]
+most_recent_files = recent_files[-100:]
 
 most_recent_files_list = []
 for _iso in most_recent_files:
@@ -164,36 +182,50 @@ print(len(most_recent_files_list))
 print('-'*80)
 print()
 
-if (__options__ == options.files):
-    fpath = '{}/most_recent_files.csv'.format(os.path.dirname(__file__))
-    with open(fpath, 'w') as fOut:
-        print('BEGIN:')
-        i = 0
-        first_row = True
-        defaults = '#default,0,0,,,,0,0,0,0,0,0,0,,,,'
-        print(defaults, file=fOut)
-        for f in most_recent_files_list:
-            print(f)
-            data = decompress_gzip(f)
-            csv = dicts_to_csv(data.get('rows', []), StringIO())
-            csv_rows = [l for l in csv.get('csv', '').split('\n') if (len(l) > 0)]
-            assert (len(csv_rows) - 1) == len(data.get('rows', [])), 'The number of rows in the csv file is not equal to the number of rows in the decompressed file.'
-            for _ii, l in enumerate(csv_rows[i:]):
-                if (_ii > i):
-                    items = l.split(',')
-                    dirty = False
-                    for _i,_a in enumerate(_annotation[1:]):
-                        if (_a == 'long') and (not str(items[_i]).isdigit()):
-                            items[_i] = '0' # TO-Do: use the #defaults for this.
-                            dirty = True
-                    if (dirty):
-                        l = ','.join(items)
-                    l += ',cpu'
-                elif (first_row):
-                    l = l + ',_measurement'
-                    first_row = False
-                print(','+l, file=fOut)
-            if (i == 0):
-                i += 1
-        print('END!!!')
-    print(fpath)
+fpath = '{}/most_recent_files.csv'.format(os.path.dirname(__file__))
+with open(fpath, 'w') as fOut:
+    print('BEGIN:')
+    i = 0
+    _header = []
+    defaults = '#default,0,0,,,,0,0,0,0,0,0,0,,,,'
+    print(defaults, file=fOut)
+    for f in most_recent_files_list:
+        print(f)
+        data = decompress_gzip(f)
+        csv = dicts_to_csv(data.get('rows', []), StringIO())
+        csv_rows = [l for l in csv.get('csv', '').split('\n') if (len(l) > 0)]
+        assert (len(csv_rows) - 1) == len(data.get('rows', [])), 'The number of rows in the csv file is not equal to the number of rows in the decompressed file.'
+        _ignores = ['account-id', 'interface-id']
+        _quoted = []
+        for _ii, l in enumerate(csv_rows[i:]):
+            if (_ii > i):
+                items = l.split(',')
+                _data = dict(list(zip(_header, items)))
+                data = []
+                for _i,_h in enumerate(_header):
+                    if (_h not in _ignores):
+                        data.append('{}={}'.format(_h.replace('-', '_'), items[_i] if (not _h in _quoted) else '"{}"'.format(items[_i])))
+                        #if (len(data) > 1):
+                        #    break
+                if (0):
+                    l = '{},host={} '.format(_data.get('account-id', 'missing'), _data.get('interface-id', 'missing')) + ' '.join(data)  # mem, aws, accountid works.
+                else:
+                    point = Point(_data.get('account-id', 'missing')) \
+                        .tag("host", _data.get('interface-id', 'missing'))
+                        
+                    for _d in data:
+                        toks = _d.split('=')
+                        point.field(toks[0], toks[-1])
+                        
+                        point.time(datetime.utcnow(), WritePrecision.NS)
+
+                if (__options__ == options.files):
+                    print(l, file=fOut)
+                elif (__options__ == options.db):
+                    write_point_to_db(point)
+            elif (len(_header) == 0):
+                _header = l.split(',')
+        if (i == 0):
+            i += 1
+    print('END!!!')
+print(fpath)
