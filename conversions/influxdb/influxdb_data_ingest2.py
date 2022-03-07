@@ -154,9 +154,12 @@ def write_to_db(data='mem,host=host1 used_percent=23.43234543'):
         
 
 def write_point_to_db(point):
-    token = 'QrtgdNNGs7yJYTpFRW0B4MPq5cen9kZGNiaBrsq0K8gJvWDj_58L7chuKn9C21BO3bcqJRx-0UbThmL0A5GDMw=='
+    # vpcflowlogs3
+    bucket = "vpcflowlogs3"
+    token = 'YeSvMwjCdYyorCIunw9itYRGAm9HELR4ED26SslUI0qyUZwjYfzyjsYisd3V_Nd-_UNnUHXiYCc104hVC_pOXQ=='
+    # vpcflowlogs2
+    #token = 'n77ag5hrxxrsQqWQEb1fpuqBoUKFVRxZXNtyobfkWS6zbvpZorBNCuv1kB0B-XSldo7UKS54xy8GwL7rlRSC3A=='
     org = "raychorn@gmail.com"
-    bucket = "vpcflowlogs"
 
     try:
         with InfluxDBClient(url="https://us-east-1-1.aws.cloud2.influxdata.com", token=token, org=org) as client:
@@ -171,7 +174,7 @@ def write_point_to_db(point):
 all_files = get_all_files_from(__data_root__)
 recent_files = list(all_files.keys())
 recent_files.sort()
-most_recent_files = recent_files[-100:]
+most_recent_files = recent_files[-1000:]
 
 most_recent_files_list = []
 for _iso in most_recent_files:
@@ -215,9 +218,9 @@ with open(fpath, 'w') as fOut:
                         
                     for _d in data:
                         toks = _d.split('=')
-                        point.field(toks[0], toks[-1])
+                        point.field(toks[0], toks[-1] if (not str(toks[-1]).isdigit()) else eval(toks[-1]))
                         
-                        point.time(datetime.utcnow(), WritePrecision.NS)
+                    point.time(datetime.utcnow(), WritePrecision.NS)
 
                 if (__options__ == options.files):
                     print(l, file=fOut)
